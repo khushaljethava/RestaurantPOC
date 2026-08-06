@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { LivePoll } from './live-poll';
-import { Card, PageTitle, StatusPill } from '@/components/ui';
+import { Card, EmptyState, PageTitle, SectionTitle, StatusPill } from '@/components/ui';
 
 export default async function LivePage() {
   const supabase = await createClient();
@@ -24,48 +24,66 @@ export default async function LivePage() {
 
   return (
     <div>
-      <PageTitle trailing={<LivePoll />}>Live board</PageTitle>
+      <PageTitle subtitle="Open bills and in-flight orders" trailing={<LivePoll />}>
+        Live board
+      </PageTitle>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section>
-          <h2 className="mb-3 text-base font-medium text-on-surface">
-            Open bills ({openBills?.length ?? 0})
-          </h2>
+          <SectionTitle>
+            Open bills{' '}
+            <span className="ml-1 rounded-full bg-surface-container-high px-2 py-0.5 text-xs font-medium tabular-nums text-on-surface-variant">
+              {openBills?.length ?? 0}
+            </span>
+          </SectionTitle>
           <div className="space-y-2">
             {(openBills ?? []).map((b) => (
-              <Card key={b.id} className="flex items-center justify-between gap-3 py-3">
+              <Card
+                key={b.id}
+                className="flex items-center justify-between gap-3 py-3.5 transition-shadow hover:shadow-card-hover"
+              >
                 <div>
-                  <p className="text-sm font-medium text-on-surface">
+                  <p className="text-sm font-semibold text-on-surface">
                     {b.table_label ? `Table ${b.table_label}` : 'Counter'}
                   </p>
-                  <p className="text-[11px] text-on-surface-variant">
+                  <p className="mt-0.5 text-xs text-on-surface-variant">
                     {nameOf(b.collected_by_stall_id)}
                   </p>
                 </div>
-                <p className="text-xl font-medium tabular-nums text-on-surface">
+                <p className="text-xl font-semibold tabular-nums text-on-surface">
                   ₹{(Number(b.total) - Number(b.discount)).toFixed(2)}
                 </p>
               </Card>
             ))}
             {(!openBills || openBills.length === 0) && (
-              <Card className="text-sm text-on-surface-variant">No open bills</Card>
+              <Card className="p-0">
+                <EmptyState icon="receipt_long" title="No open bills">
+                  Bills opened in the mobile app show up here.
+                </EmptyState>
+              </Card>
             )}
           </div>
         </section>
 
         <section>
-          <h2 className="mb-3 text-base font-medium text-on-surface">
-            Active orders ({activeOrders?.length ?? 0})
-          </h2>
+          <SectionTitle>
+            Active orders{' '}
+            <span className="ml-1 rounded-full bg-surface-container-high px-2 py-0.5 text-xs font-medium tabular-nums text-on-surface-variant">
+              {activeOrders?.length ?? 0}
+            </span>
+          </SectionTitle>
           <div className="space-y-2">
             {(activeOrders ?? []).map((o) => (
-              <Card key={o.id} className="flex items-center justify-between gap-3 py-3">
+              <Card
+                key={o.id}
+                className="flex items-center justify-between gap-3 py-3.5 transition-shadow hover:shadow-card-hover"
+              >
                 <div>
-                  <p className="text-sm font-medium text-on-surface">
+                  <p className="text-sm font-semibold text-on-surface">
                     Token #{o.token_no}
                     {o.table_label ? ` · T${o.table_label}` : ''}
                   </p>
-                  <p className="text-[11px] text-on-surface-variant">{nameOf(o.stall_id)}</p>
+                  <p className="mt-0.5 text-xs text-on-surface-variant">{nameOf(o.stall_id)}</p>
                 </div>
                 <StatusPill tone={o.status === 'ready' ? 'success' : 'warning'}>
                   {o.status === 'ready' ? 'Ready' : 'Pending'}
@@ -73,7 +91,11 @@ export default async function LivePage() {
               </Card>
             ))}
             {(!activeOrders || activeOrders.length === 0) && (
-              <Card className="text-sm text-on-surface-variant">No active orders</Card>
+              <Card className="p-0">
+                <EmptyState icon="restaurant" title="No active orders">
+                  Pending and ready orders appear here in real time.
+                </EmptyState>
+              </Card>
             )}
           </div>
         </section>

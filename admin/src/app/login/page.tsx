@@ -31,12 +31,12 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="w-full max-w-[400px] rounded-md bg-surface p-8">
+      <div className="w-full max-w-[400px] rounded-md border border-border bg-surface p-8 shadow-card-hover">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-container">
             <Icon name="storefront" filled className="text-[28px] text-primary" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary">StreetStall POS</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-on-surface">StreetStall POS</h1>
           <p className="mt-1 text-sm text-on-surface-variant">
             {mode === 'in' ? 'Sign in to your stall admin' : 'Create your account'}
           </p>

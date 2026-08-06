@@ -39,7 +39,9 @@ export default async function AppLayout({
       />
       <div className="ml-sidebar-width flex min-h-screen flex-col">
         <ShellTopbar />
-        <main className="flex-1 p-page-padding">{children}</main>
+        <main className="flex-1 p-page-padding">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        </main>
       </div>
     </div>
   );

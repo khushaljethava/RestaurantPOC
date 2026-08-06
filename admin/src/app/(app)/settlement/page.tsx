@@ -3,7 +3,19 @@ import { createClient } from '@/lib/supabase/server';
 import { parseRange } from '@/lib/dates';
 import { activeStallTimezone } from '@/lib/active-stall';
 import { ReportCsv } from '../reports/report-csv';
-import { Btn, Card, Field, PageTitle, TableWrap, Td, Th } from '@/components/ui';
+import {
+  Btn,
+  Card,
+  EmptyState,
+  Field,
+  Label,
+  PageTitle,
+  SectionTitle,
+  TableWrap,
+  Td,
+  Th,
+  Tr,
+} from '@/components/ui';
 
 type Pair = { stall_a: string; stall_b: string; a_owes_b: number };
 
@@ -42,9 +54,7 @@ export default async function SettlementPage({
       .in('status', ['paid'])
       .gte('paid_at', from)
       .lt('paid_at', to)
-      .or(
-        `collected_by_stall_id.eq.${drillA},collected_by_stall_id.eq.${drillB}`
-      );
+      .or(`collected_by_stall_id.eq.${drillA},collected_by_stall_id.eq.${drillB}`);
     const billIds = (bills ?? []).map((b) => b.id);
     if (billIds.length) {
       const { data: orders } = await supabase
@@ -56,9 +66,7 @@ export default async function SettlementPage({
     }
   }
 
-  const toDateDefault = new Date(new Date(to).getTime() - 86400000)
-    .toISOString()
-    .slice(0, 10);
+  const toDateDefault = new Date(new Date(to).getTime() - 86400000).toISOString().slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -79,19 +87,21 @@ export default async function SettlementPage({
         Settlement
       </PageTitle>
 
-      <form className="flex flex-wrap items-end gap-3">
-        <label className="text-sm text-on-surface">
-          From
-          <Field type="date" name="from" defaultValue={from.slice(0, 10)} className="mt-1 w-auto" />
-        </label>
-        <label className="text-sm text-on-surface">
-          To
-          <Field type="date" name="to" defaultValue={toDateDefault} className="mt-1 w-auto" />
-        </label>
-        <Btn type="submit" variant="outlined">
-          Apply
-        </Btn>
-      </form>
+      <Card>
+        <form className="flex flex-wrap items-end gap-3">
+          <div>
+            <Label className="mb-1.5">From</Label>
+            <Field type="date" name="from" defaultValue={from.slice(0, 10)} className="w-auto" />
+          </div>
+          <div>
+            <Label className="mb-1.5">To</Label>
+            <Field type="date" name="to" defaultValue={toDateDefault} className="w-auto" />
+          </div>
+          <Btn type="submit" variant="primary">
+            Apply
+          </Btn>
+        </form>
+      </Card>
 
       <TableWrap>
         <table className="w-full">
@@ -109,7 +119,7 @@ export default async function SettlementPage({
               const payee = Number(p.a_owes_b) > 0 ? p.stall_b : p.stall_a;
               const amt = Math.abs(Number(p.a_owes_b));
               return (
-                <tr key={`${p.stall_a}-${p.stall_b}`}>
+                <Tr key={`${p.stall_a}-${p.stall_b}`}>
                   <Td>{nameOf(payer)}</Td>
                   <Td>{nameOf(payee)}</Td>
                   <Td className="text-right tabular-nums">₹{amt.toFixed(2)}</Td>
@@ -121,13 +131,15 @@ export default async function SettlementPage({
                       Details
                     </Link>
                   </Td>
-                </tr>
+                </Tr>
               );
             })}
             {(!pairs || (pairs as Pair[]).length === 0) && (
               <tr>
-                <td colSpan={4} className="h-11 border-t border-border px-3 text-sm text-on-surface-variant">
-                  No cross-stall balances in this range.
+                <td colSpan={4} className="border-t border-border">
+                  <EmptyState icon="account_balance_wallet" title="Nothing to settle">
+                    No cross-stall balances in this range.
+                  </EmptyState>
                 </td>
               </tr>
             )}
@@ -137,9 +149,9 @@ export default async function SettlementPage({
 
       {drillA && drillB && (
         <div>
-          <h2 className="mb-3 text-base font-medium text-on-surface">
+          <SectionTitle>
             Orders behind {nameOf(drillA)} ↔ {nameOf(drillB)}
-          </h2>
+          </SectionTitle>
           <div className="space-y-2">
             {drillOrders.map((o) => (
               <Card key={o.id} className="flex justify-between py-3 text-sm">
@@ -152,7 +164,9 @@ export default async function SettlementPage({
               </Card>
             ))}
             {drillOrders.length === 0 && (
-              <Card className="text-sm text-on-surface-variant">No orders found</Card>
+              <Card className="p-0">
+                <EmptyState title="No orders found" />
+              </Card>
             )}
           </div>
         </div>

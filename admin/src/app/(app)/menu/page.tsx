@@ -12,14 +12,12 @@ import {
   uploadItemImage,
   clearItemImage,
 } from './actions';
-import { Btn, Card, Field, PageTitle, Select } from '@/components/ui';
+import { Btn, Card, EmptyState, Field, PageTitle, SectionTitle, Select } from '@/components/ui';
 
 /** Route /menu — App Router. Existing page restyled. Tables: category, menu_item. */
 export default async function MenuPage() {
   const supabase = await createClient();
-  const { data: memberships } = await supabase
-    .from('staff_membership')
-    .select('stall_id, role');
+  const { data: memberships } = await supabase.from('staff_membership').select('stall_id, role');
   if (!memberships?.length) return <p className="text-on-surface-variant">No stall</p>;
   const active = await resolveActiveStall(memberships);
   const myStallId = active.stall_id;
@@ -32,9 +30,7 @@ export default async function MenuPage() {
       .order('sort_order'),
     supabase
       .from('menu_item')
-      .select(
-        'id, stall_id, category_id, name, description, price, is_available, image_url'
-      )
+      .select('id, stall_id, category_id, name, description, price, is_available, image_url')
       .order('name'),
   ]);
 
@@ -43,12 +39,12 @@ export default async function MenuPage() {
 
   return (
     <div className="space-y-8">
-      <PageTitle>Menu</PageTitle>
+      <PageTitle subtitle="Categories and items for your stall">Menu</PageTitle>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
           <section>
-            <h2 className="mb-3 text-base font-medium text-on-surface">Categories</h2>
+            <SectionTitle>Categories</SectionTitle>
             <form action={createCategory} className="mb-3 flex gap-2">
               <input type="hidden" name="stall_id" value={myStallId} />
               <Field name="name" placeholder="Category" required className="flex-1" />
@@ -75,7 +71,12 @@ export default async function MenuPage() {
                       await moveCategory(c.id, myStallId!, -1);
                     }}
                   >
-                    <Btn type="submit" variant="outlined" className="h-9 w-9 px-0" aria-label="Move up">
+                    <Btn
+                      type="submit"
+                      variant="outlined"
+                      className="h-9 w-9 px-0"
+                      aria-label="Move up"
+                    >
                       ↑
                     </Btn>
                   </form>
@@ -85,7 +86,12 @@ export default async function MenuPage() {
                       await moveCategory(c.id, myStallId!, 1);
                     }}
                   >
-                    <Btn type="submit" variant="outlined" className="h-9 w-9 px-0" aria-label="Move down">
+                    <Btn
+                      type="submit"
+                      variant="outlined"
+                      className="h-9 w-9 px-0"
+                      aria-label="Move down"
+                    >
                       ↓
                     </Btn>
                   </form>
@@ -95,7 +101,7 @@ export default async function MenuPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-medium text-on-surface">Items</h2>
+            <SectionTitle>Items</SectionTitle>
             <div className="space-y-3">
               {mine.map((i) => (
                 <Card key={i.id} className="space-y-3">
@@ -115,7 +121,12 @@ export default async function MenuPage() {
                     <div className="min-w-0 flex-1 space-y-2">
                       <form action={updateItem} className="flex flex-wrap items-center gap-2">
                         <input type="hidden" name="id" value={i.id} />
-                        <Field name="name" defaultValue={i.name} required className="h-9 min-w-[8rem] flex-1" />
+                        <Field
+                          name="name"
+                          defaultValue={i.name}
+                          required
+                          className="h-9 min-w-[8rem] flex-1"
+                        />
                         <Field
                           name="price"
                           type="number"
@@ -150,7 +161,13 @@ export default async function MenuPage() {
                         <form action={uploadItemImage} className="flex items-center gap-2">
                           <input type="hidden" name="stall_id" value={myStallId} />
                           <input type="hidden" name="item_id" value={i.id} />
-                          <input type="file" name="image" accept="image/*" required className="text-xs" />
+                          <input
+                            type="file"
+                            name="image"
+                            accept="image/*"
+                            required
+                            className="text-xs"
+                          />
                           <Btn type="submit" variant="text" className="h-8 px-2 text-xs">
                             Upload
                           </Btn>
@@ -206,13 +223,17 @@ export default async function MenuPage() {
                 </Card>
               ))}
               {mine.length === 0 && (
-                <Card className="text-sm text-on-surface-variant">No items yet. Add one in the panel.</Card>
+                <Card className="p-0">
+                  <EmptyState icon="restaurant_menu" title="No items yet">
+                    Add your first item with the panel on the right.
+                  </EmptyState>
+                </Card>
               )}
             </div>
           </section>
 
-          <details className="rounded-md bg-surface p-4">
-            <summary className="cursor-pointer text-base font-medium text-on-surface-variant">
+          <details className="rounded-md border border-border bg-surface p-5 shadow-card">
+            <summary className="cursor-pointer text-sm font-semibold text-on-surface-variant">
               Peer stall menus
             </summary>
             <ul className="mt-3 divide-y divide-border text-sm text-on-surface-variant">
@@ -229,12 +250,19 @@ export default async function MenuPage() {
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
           <Card>
-            <h2 className="mb-4 text-base font-medium text-on-surface">Add item</h2>
+            <SectionTitle className="mb-4">Add item</SectionTitle>
             <form action={createItem} className="space-y-3">
               <input type="hidden" name="stall_id" value={myStallId} />
               <Field name="name" placeholder="Item name" required />
               <Field name="description" placeholder="Description" />
-              <Field name="price" type="number" step="0.01" placeholder="Price" required className="tabular-nums" />
+              <Field
+                name="price"
+                type="number"
+                step="0.01"
+                placeholder="Price"
+                required
+                className="tabular-nums"
+              />
               <Select name="category_id" className="w-full">
                 <option value="">No category</option>
                 {(categories ?? []).map((c) => (

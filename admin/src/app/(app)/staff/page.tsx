@@ -3,7 +3,18 @@ import { resolveActiveStall } from '@/lib/active-stall';
 import { createStallInvite } from '../group/actions';
 import { revokeInvite, changeRole, removeMember } from './actions';
 import { RedeemInviteForm } from './redeem-form';
-import { Btn, Card, PageTitle, Select, TableWrap, Td, Th } from '@/components/ui';
+import {
+  Btn,
+  Card,
+  EmptyState,
+  PageTitle,
+  SectionTitle,
+  Select,
+  TableWrap,
+  Td,
+  Th,
+  Tr,
+} from '@/components/ui';
 
 /**
  * Called by: App Router /staff.
@@ -39,13 +50,13 @@ export default async function StaffPage() {
 
   return (
     <div className="space-y-6">
-      <PageTitle>Staff</PageTitle>
+      <PageTitle subtitle="Invite codes and stall members">Staff</PageTitle>
 
       <RedeemInviteForm />
 
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-medium text-on-surface">Invite codes</h2>
+          <SectionTitle className="mb-0">Invite codes</SectionTitle>
           {isOwner && (
             <div className="flex gap-2">
               <form
@@ -91,13 +102,17 @@ export default async function StaffPage() {
             </Card>
           ))}
           {activeInvites.length === 0 && (
-            <Card className="text-sm text-on-surface-variant">No active codes</Card>
+            <Card className="p-0">
+              <EmptyState icon="key" title="No active codes">
+                Generate an invite code to add staff.
+              </EmptyState>
+            </Card>
           )}
         </div>
       </section>
 
       <section>
-        <h2 className="mb-3 text-base font-medium text-on-surface">Members</h2>
+        <SectionTitle>Members</SectionTitle>
         <TableWrap>
           <table className="w-full">
             <thead>
@@ -109,7 +124,7 @@ export default async function StaffPage() {
             </thead>
             <tbody>
               {memberships?.map((m) => (
-                <tr key={m.id}>
+                <Tr key={m.id}>
                   <Td>
                     <span className="font-mono text-xs">{m.user_id}</span>
                   </Td>
@@ -149,7 +164,7 @@ export default async function StaffPage() {
                       </form>
                     )}
                   </Td>
-                </tr>
+                </Tr>
               ))}
             </tbody>
           </table>

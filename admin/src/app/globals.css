@@ -2,9 +2,10 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #f5fbf6;
+  /* ponytail: background sits *below* surface so cards read as raised. */
+  --color-background: #eef3ef;
   --color-on-background: #181c1a;
-  --color-surface: #e9efeb;
+  --color-surface: #ffffff;
   --color-surface-dim: #d7dbd7;
   --color-surface-bright: #f7faf6;
   --color-surface-container-lowest: #ffffff;
@@ -25,8 +26,8 @@
   --color-secondary-container: #dae5de;
   --color-on-secondary-container: #5c6761;
   --color-outline: #6f7974;
-  --color-outline-variant: #bec9c3;
-  --color-border: #bfc9c3;
+  --color-outline-variant: #dbe3dd;
+  --color-border: #dbe3dd;
   --color-error: #ba1a1a;
   --color-on-error: #ffffff;
   --color-error-container: #ffdad6;
@@ -37,14 +38,16 @@
   --color-inverse-surface: #2d312f;
   --color-inverse-on-surface: #eef2ee;
   --font-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
-  --spacing-sidebar-width: 224px;
+  --spacing-sidebar-width: 260px;
   --spacing-page-padding: 32px;
   --spacing-table-row: 44px;
-  --radius-sm: 0.25rem;
-  --radius-DEFAULT: 0.5rem;
-  --radius-md: 0.75rem;
+  --radius-sm: 0.375rem;
+  --radius-DEFAULT: 0.625rem;
+  --radius-md: 0.875rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+  --shadow-card: 0 1px 2px rgb(16 24 20 / 0.04), 0 1px 3px rgb(16 24 20 / 0.06);
+  --shadow-card-hover: 0 2px 4px rgb(16 24 20 / 0.05), 0 6px 16px rgb(16 24 20 / 0.08);
 }
 
 body {

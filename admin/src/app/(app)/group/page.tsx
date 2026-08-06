@@ -8,7 +8,19 @@ import {
   createGroupInvite,
   leaveGroup,
 } from './actions';
-import { Btn, Card, Field, PageTitle, StatusPill, TableWrap, Th } from '@/components/ui';
+import {
+  Btn,
+  Card,
+  EmptyState,
+  Field,
+  PageTitle,
+  SectionTitle,
+  StatusPill,
+  TableWrap,
+  Td,
+  Th,
+  Tr,
+} from '@/components/ui';
 
 /**
  * Called by: App Router /group.
@@ -18,28 +30,18 @@ import { Btn, Card, Field, PageTitle, StatusPill, TableWrap, Th } from '@/compon
  */
 export default async function GroupPage() {
   const supabase = await createClient();
-  const { data: memberships } = await supabase
-    .from('staff_membership')
-    .select('stall_id, role');
+  const { data: memberships } = await supabase.from('staff_membership').select('stall_id, role');
   if (!memberships?.length) return <p className="text-on-surface-variant">No stall</p>;
   const active = await resolveActiveStall(memberships);
   const stallId = active.stall_id;
   const isOwner = active.role === 'owner';
 
   const { data: stall } = stallId
-    ? await supabase
-        .from('stall')
-        .select('id, name, group_id')
-        .eq('id', stallId)
-        .maybeSingle()
+    ? await supabase.from('stall').select('id, name, group_id').eq('id', stallId).maybeSingle()
     : { data: null };
 
   const { data: court } = stall?.group_id
-    ? await supabase
-        .from('food_court')
-        .select('id, name')
-        .eq('id', stall.group_id)
-        .maybeSingle()
+    ? await supabase.from('food_court').select('id, name').eq('id', stall.group_id).maybeSingle()
     : { data: null };
 
   const { data: invites } = stall?.group_id
@@ -62,19 +64,19 @@ export default async function GroupPage() {
 
   return (
     <div className="space-y-6">
-      <PageTitle>Food court</PageTitle>
+      <PageTitle subtitle="Share a group with neighbouring stalls">Food court</PageTitle>
 
       {stall?.group_id && court ? (
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-normal text-on-surface">{court.name}</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-on-surface">{court.name}</h2>
             <p className="mt-1 text-sm text-on-surface-variant">
               Your stall is a member of this food court.
             </p>
           </div>
 
           <section>
-            <h3 className="mb-3 text-base font-medium text-on-surface">Member stalls</h3>
+            <SectionTitle>Member stalls</SectionTitle>
             <div className="space-y-2">
               {(memberStalls ?? []).map((s) => (
                 <Card key={s.id} className="py-3 text-sm font-medium">
@@ -86,7 +88,7 @@ export default async function GroupPage() {
 
           <section>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-base font-medium text-on-surface">Invite codes</h3>
+              <SectionTitle className="mb-0">Invite codes</SectionTitle>
               {isOwner && (
                 <form
                   action={async () => {
@@ -107,7 +109,9 @@ export default async function GroupPage() {
                 </Card>
               ))}
               {activeInvites.length === 0 && (
-                <Card className="text-sm text-on-surface-variant">No active codes</Card>
+                <Card className="p-0">
+                  <EmptyState icon="key" title="No active codes" />
+                </Card>
               )}
             </div>
           </section>
@@ -129,7 +133,7 @@ export default async function GroupPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {isOwner && (
             <Card>
-              <h2 className="mb-3 text-base font-medium text-on-surface">Create a food court</h2>
+              <SectionTitle>Create a food court</SectionTitle>
               <form
                 action={async (formData: FormData) => {
                   'use server';
@@ -145,7 +149,7 @@ export default async function GroupPage() {
             </Card>
           )}
           <Card>
-            <h2 className="mb-3 text-base font-medium text-on-surface">Join with a code</h2>
+            <SectionTitle>Join with a code</SectionTitle>
             <form
               action={async (formData: FormData) => {
                 'use server';
@@ -163,7 +167,7 @@ export default async function GroupPage() {
       )}
 
       <section>
-        <h2 className="mb-3 text-base font-medium text-on-surface">Pending join requests</h2>
+        <SectionTitle>Pending join requests</SectionTitle>
         <TableWrap>
           <table className="w-full">
             <thead>
@@ -175,11 +179,11 @@ export default async function GroupPage() {
             </thead>
             <tbody>
               {requests?.map((r) => (
-                <tr key={r.id}>
-                  <td className="h-11 border-t border-border px-3 text-sm">
+                <Tr key={r.id}>
+                  <Td>
                     <span className="font-mono text-xs">{r.stall_id}</span>
-                  </td>
-                  <td className="h-11 border-t border-border px-3 text-sm">
+                  </Td>
+                  <Td>
                     <StatusPill
                       tone={
                         r.status === 'pending'
@@ -191,8 +195,8 @@ export default async function GroupPage() {
                     >
                       {r.status}
                     </StatusPill>
-                  </td>
-                  <td className="h-11 border-t border-border px-3 text-right text-sm">
+                  </Td>
+                  <Td className="text-right">
                     {r.status === 'pending' && (
                       <span className="inline-flex gap-2">
                         <form
@@ -217,13 +221,13 @@ export default async function GroupPage() {
                         </form>
                       </span>
                     )}
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
               {(!requests || requests.length === 0) && (
                 <tr>
-                  <td colSpan={3} className="h-11 border-t border-border px-3 text-sm text-on-surface-variant">
-                    No requests
+                  <td colSpan={3} className="border-t border-border">
+                    <EmptyState icon="how_to_reg" title="No join requests" />
                   </td>
                 </tr>
               )}

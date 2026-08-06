@@ -40,32 +40,23 @@ export function ShellSidebar({
     role === 'owner' ? 'Admin Access' : role === 'manager' ? 'Manager' : 'Staff';
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 flex w-sidebar-width flex-col border-r border-outline-variant bg-surface">
-      <div className="px-4 py-6">
-        <p className="text-2xl font-bold tracking-tight text-primary">StreetStall POS</p>
-        <p className="mt-1 text-[11px] font-medium text-on-surface-variant">{activeName}</p>
-      </div>
-
-      <div className="px-4 pb-4">
-        <button
-          type="button"
-          title="Orders are taken in the mobile app"
-          className="flex h-11 w-full cursor-default items-center justify-center gap-2 rounded-lg bg-surface-tint text-sm font-medium text-on-primary opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-surface-tint"
-        >
-          <Icon name="add" filled />
-          New Order
-        </button>
-        <p className="mt-1.5 text-center text-[11px] text-on-surface-variant">
-          Use the mobile app to take orders
+    <aside className="fixed inset-y-0 left-0 z-20 flex w-sidebar-width flex-col border-r border-border bg-surface">
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-tint text-on-primary">
+          <Icon name="storefront" filled />
+        </span>
+        <p className="text-[15px] font-semibold leading-tight tracking-tight text-on-surface">
+          StreetStall
+          <span className="block text-[11px] font-medium text-on-surface-variant">POS Admin</span>
         </p>
       </div>
 
-      <div className="px-4 pb-2">
+      <div className="px-3 pb-3">
         <StallSwitcher stalls={stalls} activeId={activeId} />
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-2">
-        <ul>
+      <nav className="flex-1 overflow-y-auto px-3 py-2">
+        <ul className="space-y-1">
           {NAV.filter((item) => !('ownerOnly' in item && item.ownerOnly) || isOwner).map(
             (item) => {
               const active =
@@ -76,11 +67,11 @@ export function ShellSidebar({
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={
+                    className={`flex h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
                       active
-                        ? 'flex items-center gap-3 border-l-4 border-primary bg-primary-container/10 py-3 pl-3 font-bold text-primary'
-                        : 'flex items-center gap-3 py-3 pl-4 font-normal text-on-surface-variant hover:bg-surface-container-highest'
-                    }
+                        ? 'bg-primary-container font-semibold text-on-primary-container'
+                        : 'font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                    }`}
                     aria-current={active ? 'page' : undefined}
                   >
                     <Icon name={item.icon} filled={active} />
@@ -93,9 +84,9 @@ export function ShellSidebar({
         </ul>
       </nav>
 
-      <div className="mt-auto border-t border-outline-variant p-4">
-        <div className="flex w-full items-center gap-3 rounded-lg p-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-container text-xs font-bold text-primary">
+      <div className="mt-auto border-t border-border p-3">
+        <div className="flex w-full items-center gap-3 rounded-lg bg-surface-container-low p-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-container text-xs font-bold text-on-primary-container">
             {initials(activeName)}
           </div>
           <div className="min-w-0 flex-1">

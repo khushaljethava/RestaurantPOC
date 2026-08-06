@@ -26,8 +26,8 @@ export default function OnboardingPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="w-full max-w-md rounded-md bg-surface p-8">
-        <h1 className="text-2xl font-normal tracking-tight text-on-surface">Name your stall</h1>
+      <div className="w-full max-w-md rounded-md border border-border bg-surface p-8 shadow-card-hover">
+        <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Name your stall</h1>
         <p className="mt-2 text-sm text-on-surface-variant">
           This creates your account&apos;s first stall. You can join a food court later, or run
           standalone.

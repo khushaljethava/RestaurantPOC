@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { dayEnd, dayStart } from '@/lib/dates';
 import { activeStallTimezone } from '@/lib/active-stall';
-import { Card, PageTitle } from '@/components/ui';
-import { Icon } from '@/components/icon';
+import { PageTitle, Stat } from '@/components/ui';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -39,45 +37,32 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <PageTitle>Dashboard</PageTitle>
+      <PageTitle subtitle="Today at a glance">Dashboard</PageTitle>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="relative">
-          <Icon name="trending_up" className="absolute right-4 top-4 text-success" />
-          <div className="text-[11px] font-medium text-on-surface-variant">Today&apos;s sales</div>
-          <div className="mt-2 text-[40px] font-medium leading-none tabular-nums text-on-surface">
-            ₹{todayRevenue.toFixed(2)}
-          </div>
-        </Card>
-        <Card className="relative">
-          <Icon name="receipt_long" className="absolute right-4 top-4 text-warning" />
-          <div className="text-[11px] font-medium text-on-surface-variant">Open bills</div>
-          <div className="mt-2 text-[40px] font-medium leading-none tabular-nums text-on-surface">
-            {openCount}
-          </div>
-          <Link
-            href="/live"
-            className="mt-3 inline-block text-sm font-medium text-surface-tint hover:underline"
-          >
-            Live board →
-          </Link>
-        </Card>
-        <Card className="relative">
-          <Icon name="account_balance_wallet" className="absolute right-4 top-4 text-error" />
-          <div className="text-[11px] font-medium text-on-surface-variant">
-            Net owed {netOwed >= 0 ? 'to peers' : 'to you'}
-          </div>
-          <div className="mt-2 text-[40px] font-medium leading-none tabular-nums text-on-surface">
-            ₹{Math.abs(netOwed).toFixed(2)}
-          </div>
-          <Link
-            href="/settlement"
-            className="mt-3 inline-block text-sm font-medium text-surface-tint hover:underline"
-          >
-            Go to settlement →
-          </Link>
-        </Card>
+        <Stat
+          label="Today's sales"
+          value={`₹${todayRevenue.toFixed(2)}`}
+          icon="trending_up"
+          tone="success"
+        />
+        <Stat
+          label="Open bills"
+          value={openCount}
+          icon="receipt_long"
+          tone="warning"
+          href="/live"
+          hrefLabel="Live board"
+        />
+        <Stat
+          label={`Net owed ${netOwed >= 0 ? 'to peers' : 'to you'}`}
+          value={`₹${Math.abs(netOwed).toFixed(2)}`}
+          icon="account_balance_wallet"
+          tone="error"
+          href="/settlement"
+          hrefLabel="Go to settlement"
+        />
       </div>
-      <p className="mt-8 text-center text-sm text-on-surface-variant">
+      <p className="mt-6 text-sm text-on-surface-variant">
         Stalls visible: {stalls?.length ?? 0}
       </p>
     </div>
