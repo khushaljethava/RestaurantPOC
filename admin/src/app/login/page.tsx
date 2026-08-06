@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Btn, Field } from '@/components/ui';
@@ -14,7 +14,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const router = useRouter();
 
-  async function handle() {
+  async function handle(e: FormEvent) {
+    e.preventDefault();
     setBusy(true);
     setError(null);
     const supabase = createClient();
@@ -41,13 +42,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <form onSubmit={handle} className="space-y-3">
           <Field
             type="email"
             placeholder="Email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
           <Field
             type="password"
@@ -55,14 +57,10 @@ export default function LoginPage() {
             autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
           {error && <p className="text-sm text-error">{error}</p>}
-          <Btn
-            type="button"
-            disabled={busy || !email || !password}
-            onClick={handle}
-            className="w-full"
-          >
+          <Btn type="submit" disabled={busy || !email || !password} className="w-full">
             {mode === 'in' ? 'Sign in' : 'Create account'}
           </Btn>
           <button
@@ -75,7 +73,7 @@ export default function LoginPage() {
           >
             {mode === 'in' ? 'Create an account' : 'Already have an account? Sign in'}
           </button>
-        </div>
+        </form>
       </div>
     </main>
   );
