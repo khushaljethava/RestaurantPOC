@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Management - StreetStall POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#3b0906",
+                        "error": "#BA1A1A",
+                        "surface-container-low": "#f1f4f1",
+                        "tertiary-fixed": "#ffdad5",
+                        "surface-bright": "#f7faf6",
+                        "outline-variant": "#bec9c3",
+                        "on-secondary-container": "#5c6761",
+                        "on-surface": "#171D1A",
+                        "primary-container": "#156b54",
+                        "tertiary": "#73332c",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e0e3e0",
+                        "border": "#BFC9C3",
+                        "surface": "#E9EFEB",
+                        "on-primary-fixed-variant": "#00513e",
+                        "inverse-primary": "#88d6b9",
+                        "inverse-surface": "#2d312f",
+                        "on-secondary-fixed-variant": "#3f4944",
+                        "on-secondary-fixed": "#141e19",
+                        "surface-container": "#ebefeb",
+                        "background": "#F5FBF6",
+                        "on-surface-variant": "#3f4944",
+                        "secondary-container": "#dae5de",
+                        "inverse-on-surface": "#eef2ee",
+                        "primary": "#00513e",
+                        "primary-fixed-dim": "#88d6b9",
+                        "surface-variant": "#e0e3e0",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#9ae9cb",
+                        "success": "#1B6C3D",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#a4f2d5",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#156b54",
+                        "warning": "#8A5300",
+                        "surface-container-high": "#e6e9e5",
+                        "on-tertiary-fixed-variant": "#73332c",
+                        "outline": "#6f7974",
+                        "on-tertiary-container": "#ffcdc6",
+                        "secondary-fixed": "#dae5de",
+                        "tertiary-container": "#904a42",
+                        "warning-container": "#FFF0D4",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb4aa",
+                        "secondary": "#56615b",
+                        "on-background": "#181c1a",
+                        "secondary-fixed-dim": "#bec9c2",
+                        "on-primary-fixed": "#002117"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "page-padding": "32px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "table-row-height": "44px",
+                        "sidebar-width": "224px"
+                    },
+                    "fontFamily": {
+                        "header-md": ["Roboto"],
+                        "headline-lg": ["Roboto"],
+                        "body-md": ["Roboto"],
+                        "table-cell": ["Roboto"],
+                        "currency-display": ["Roboto"],
+                        "label-sm": ["Roboto"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                    },
+                    "fontSize": {
+                        "header-md": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "table-cell": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "currency-display": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background h-full text-on-surface antialiased overflow-hidden flex font-body-md">
+<!-- SideNavBar -->
+<nav class="bg-surface fixed left-0 top-0 h-full w-sidebar-width flex flex-col border-r border-border z-20">
+<div class="p-4 border-b border-border">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">Street Bites</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Stall Switcher</p>
+</div>
+<div class="flex-1 overflow-y-auto py-4">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">live_tv</span>
+                        Live
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">payments</span>
+                        Settlement
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">bar_chart</span>
+                        Reports
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">restaurant_menu</span>
+                        Menu
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md font-bold text-primary border-l-4 border-primary bg-primary-container/10 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3 icon-fill">badge</span>
+                        Staff
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">storefront</span>
+                        Food Court
+                    </a>
+</li>
+<li>
+<a class="flex items-center px-4 py-3 font-header-md text-header-md text-on-surface-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<div class="p-4 border-t border-border">
+<button class="w-full flex items-center justify-center px-4 py-2 bg-primary-container text-on-primary-container font-header-md text-header-md rounded hover:bg-primary-container/90 transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
+<span class="material-symbols-outlined mr-2">add</span>
+                Add New Stall
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col ml-sidebar-width h-full w-[calc(100%-224px)] overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface-bright flex justify-between items-center h-[64px] px-page-padding w-full border-b border-border z-10 sticky top-0">
+<div class="flex items-center">
+<span class="font-headline-lg text-headline-lg font-black text-primary">StreetStall POS</span>
+</div>
+<div class="flex flex-1 items-center justify-start ml-8 max-w-md">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 h-[44px] bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-shadow" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="text-on-surface-variant hover:bg-primary-container/5 p-2 rounded-full transition-colors focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer active:scale-95 duration-150">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-primary-container/5 p-2 rounded-full transition-colors focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer active:scale-95 duration-150">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-variant border border-border overflow-hidden">
+<!-- Placeholder for Admin Profile -->
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-page-padding">
+<div class="max-w-5xl mx-auto space-y-8">
+<!-- Redeem Invite Code -->
+<section class="bg-surface rounded-xl p-6 border border-border">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Redeem an invite code</h2>
+<div class="flex gap-4 items-end">
+<div class="flex-1">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1" for="invite-code">Invite Code</label>
+<input class="w-full h-[44px] bg-background border border-border rounded-lg px-4 font-mono text-body-md focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none uppercase tracking-widest" id="invite-code" placeholder="XXXX-XXXX-XXXX" type="text"/>
+</div>
+<button class="h-[44px] px-6 bg-primary-container text-on-primary-container font-header-md text-header-md rounded-lg hover:bg-primary-container/90 transition-colors focus:ring-2 focus:ring-primary focus:outline-none active:scale-95 duration-150">
+                            Redeem
+                        </button>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Invite Codes List -->
+<section class="lg:col-span-1 space-y-6">
+<div class="bg-surface rounded-xl p-6 border border-border flex flex-col h-full">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-header-md text-header-md text-on-surface">Active Invite Codes</h2>
+</div>
+<ul class="space-y-0 divide-y divide-border mb-6 flex-1">
+<li class="py-3 flex justify-between items-center">
+<div>
+<div class="font-mono text-table-cell text-on-surface tracking-wider">A8F9-2B3C</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mt-1">Role: Manager</div>
+</div>
+<button class="text-error font-header-md text-table-cell hover:underline focus:outline-none">Revoke</button>
+</li>
+<li class="py-3 flex justify-between items-center">
+<div>
+<div class="font-mono text-table-cell text-on-surface tracking-wider">X7Y2-9P1Q</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mt-1">Role: Staff</div>
+</div>
+<button class="text-error font-header-md text-table-cell hover:underline focus:outline-none">Revoke</button>
+</li>
+</ul>
+<div class="mt-auto pt-4 border-t border-border">
+<h3 class="font-label-sm text-label-sm text-on-surface-variant mb-2">Generate New Invite</h3>
+<div class="flex gap-2">
+<select class="flex-1 h-[44px] bg-background border border-border rounded-lg px-3 font-body-md text-body-md focus:ring-2 focus:ring-primary focus:outline-none">
+<option>Staff</option>
+<option>Manager</option>
+<option>Owner</option>
+</select>
+<button class="h-[44px] px-4 bg-surface-variant text-on-surface font-header-md text-table-cell rounded-lg border border-border hover:bg-surface-dim transition-colors focus:ring-2 focus:ring-primary focus:outline-none active:scale-95 duration-150">
+                                        Generate
+                                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Members Table -->
+<section class="lg:col-span-2">
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<div class="p-6 border-b border-border flex justify-between items-center bg-surface-bright">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Members</h2>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-bright border-b border-border">
+<th class="px-6 py-3 font-header-md text-table-cell text-on-surface-variant font-medium">Member</th>
+<th class="px-6 py-3 font-header-md text-table-cell text-on-surface-variant font-medium">Role</th>
+<th class="px-6 py-3 font-header-md text-table-cell text-on-surface-variant font-medium text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border bg-background">
+<tr class="h-table-row-height hover:bg-primary-container/5 transition-colors">
+<td class="px-6 py-2">
+<div class="font-body-md text-table-cell text-on-surface font-medium">Sanjay Gupta</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">sanjay.g@streetbites.com</div>
+</td>
+<td class="px-6 py-2">
+<select class="h-8 bg-surface border border-border rounded px-2 font-table-cell text-table-cell focus:ring-2 focus:ring-primary focus:outline-none">
+<option selected="">Owner</option>
+<option>Manager</option>
+<option>Staff</option>
+</select>
+</td>
+<td class="px-6 py-2 text-right">
+<!-- Owners might not be removable by themselves, but showing for UI completeness based on prompt -->
+<button class="text-error font-header-md text-table-cell hover:underline focus:outline-none">Remove</button>
+</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary-container/5 transition-colors">
+<td class="px-6 py-2">
+<div class="font-body-md text-table-cell text-on-surface font-medium">Ramesh Kumar</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">ramesh.k@streetbites.com</div>
+</td>
+<td class="px-6 py-2">
+<span class="font-table-cell text-table-cell text-on-surface">Manager</span>
+</td>
+<td class="px-6 py-2 text-right">
+<button class="text-error font-header-md text-table-cell hover:underline focus:outline-none">Remove</button>
+</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary-container/5 transition-colors">
+<td class="px-6 py-2">
+<div class="font-body-md text-table-cell text-on-surface font-medium">Priya Sharma</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">priya.s@streetbites.com</div>
+</td>
+<td class="px-6 py-2">
+<span class="font-table-cell text-table-cell text-on-surface">Staff</span>
+</td>
+<td class="px-6 py-2 text-right">
+<button class="text-error font-header-md text-table-cell hover:underline focus:outline-none">Remove</button>
+</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary-container/5 transition-colors">
+<td class="px-6 py-2">
+<div class="font-body-md text-table-cell text-on-surface font-medium">Amit Patel</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">amit.p@streetbites.com</div>
+</td>
+<td class="px-6 py-2">
+<span class="font-table-cell text-table-cell text-on-surface">Staff</span>
+</td>
+<td class="px-6 py-2 text-right">
+<button class="text-error font-header-md text-table-cell hover:underline focus:outline-none">Remove</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+</body></html>

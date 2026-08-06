@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>QuickServe POS - The Dosa Man</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#885200",
+                        "surface-container-low": "#eff5f0",
+                        "primary-fixed": "#a4f2d5",
+                        "on-surface-variant": "#3f4944",
+                        "outline-variant": "#bec9c3",
+                        "on-secondary": "#ffffff",
+                        "primary": "#00513e",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "inverse-surface": "#2c322e",
+                        "on-secondary-container": "#237242",
+                        "on-primary-fixed": "#002117",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#9ae9cb",
+                        "tertiary": "#673d00",
+                        "primary-fixed-dim": "#88d6b9",
+                        "background": "#f5fbf5",
+                        "on-secondary-fixed": "#00210d",
+                        "on-primary-fixed-variant": "#00513e",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "inverse-on-surface": "#ecf2ed",
+                        "secondary-container": "#a4f4b8",
+                        "on-error-container": "#93000a",
+                        "on-background": "#171d1a",
+                        "surface-dim": "#d5dcd6",
+                        "surface-tint": "#156b54",
+                        "surface-container": "#e9efea",
+                        "on-tertiary-fixed": "#2b1700",
+                        "primary-container": "#156b54",
+                        "on-surface": "#171d1a",
+                        "on-tertiary-container": "#ffd0a0",
+                        "surface": "#f5fbf5",
+                        "surface-container-highest": "#dee4df",
+                        "secondary": "#1b6c3d",
+                        "secondary-fixed-dim": "#89d89e",
+                        "surface-variant": "#dee4df",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f5fbf5",
+                        "outline": "#6f7974",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#a4f4b8",
+                        "tertiary-fixed": "#ffdcbb",
+                        "inverse-primary": "#88d6b9",
+                        "surface-container-high": "#e4eae4",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#00522a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "48px",
+                        "bottom-action-height": "56px",
+                        "gutter": "16px",
+                        "margin-page": "16px"
+                    },
+                    "fontFamily": {
+                        "body-secondary": ["Roboto"],
+                        "money-display": ["Roboto"],
+                        "display-title": ["Roboto"],
+                        "section-header": ["Roboto"],
+                        "body-main": ["Roboto"],
+                        "label-caption": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "body-secondary": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "money-display": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "display-title": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "section-header": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "body-main": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caption": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background h-full flex flex-col font-body-main antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-dim flex items-center justify-between px-gutter h-14 bg-surface-container dark:bg-surface-container-highest shadow-sm">
+<div class="flex items-center gap-4">
+<button class="w-12 h-12 flex items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-primary/10 dark:hover:bg-primary-fixed/10 transition-colors duration-200 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+</button>
+<h1 class="font-display-title text-[22px] font-bold text-primary dark:text-primary-fixed-dim tracking-tight">QuickServe POS</h1>
+</div>
+<button class="w-12 h-12 flex items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-primary/10 dark:hover:bg-primary-fixed/10 transition-colors duration-200 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col pt-[56px] pb-[168px] overflow-hidden">
+<!-- Filter Chips -->
+<div class="px-margin-page py-3 bg-surface-container-low flex gap-2 overflow-x-auto no-scrollbar shrink-0">
+<button class="h-8 px-4 rounded-lg bg-primary-container text-on-primary-container font-section-header text-sm whitespace-nowrap active:scale-95 transition-transform">The Dosa Man</button>
+<button class="h-8 px-4 rounded-lg border border-outline-variant text-on-surface font-section-header text-sm whitespace-nowrap active:scale-95 transition-transform hover:bg-on-surface/5">Idli Express</button>
+<button class="h-8 px-4 rounded-lg border border-outline-variant text-on-surface font-section-header text-sm whitespace-nowrap active:scale-95 transition-transform hover:bg-on-surface/5">Chai Point</button>
+</div>
+<!-- Table Label Input -->
+<div class="px-margin-page py-2 shrink-0">
+<div class="bg-surface rounded-lg px-4 py-2 border-b-2 border-primary/20 focus-within:border-primary transition-colors">
+<input class="w-full h-6 bg-transparent text-on-surface placeholder-on-surface-variant focus:outline-none font-body-main text-base" placeholder="Table label (optional)" type="text"/>
+</div>
+</div>
+<!-- Menu List -->
+<div class="flex-grow overflow-y-auto px-margin-page py-2 space-y-2">
+<!-- Item 1 -->
+<div class="bg-surface-container rounded-xl p-3 flex items-center gap-4 active:bg-primary/5 transition-colors cursor-pointer group hover:shadow-sm">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A top-down view of a golden, crispy Masala Dosa served on a banana leaf in a modern, clean, light-mode food photography style. The Dosa is accompanied by small stainless steel bowls of coconut chutney and sambar. Bright, natural lighting enhances the warm yellow tones of the dosa against the vibrant green leaf, fitting a clean utilitarian POS system aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd26-Z97Fpeu2UBwTNvOMRVdcvMXoTMH3wOYbAgbAFWXF87niJcfba_BONANnBFbI1gNF7o4EgBKpPRK195UsWwYlqP1vQcjnS1BELpacEhrOGnFf3jhSlglqkYjg-qOReKshqLrRqY4Pj2bxenp849IW42P9jIrr3lf_lgR9EeErO41iRHuTCmvSyHXkps1Cfj_NoWkXIPjcNyeuOFaw-pPKxSPnIPyymFBZkAaq8aigc-GVOHRhe5g"/>
+</div>
+<div class="flex-grow min-w-0">
+<h3 class="font-section-header text-base text-on-surface font-medium truncate">Masala Dosa</h3>
+</div>
+<div class="flex flex-col items-end shrink-0 gap-1 min-w-[72px]">
+<span class="font-money-display text-base text-on-surface font-medium tabular-nums text-right w-full">₹120.00</span>
+<button class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center hover:bg-secondary/20 transition-colors group-active:scale-95">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container rounded-xl p-3 flex items-center gap-4 active:bg-primary/5 transition-colors cursor-pointer group hover:shadow-sm">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A close-up food shot of a Plain Dosa, folded neatly into a triangle on a white ceramic plate. The lighting is bright and even, highlighting the crispy texture and pale golden color of the dosa. Minimalist, modern plating suitable for a high-end food service digital menu, with a light and airy background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH8hIb5T6MMZociFdzt1fjwQKsht2SJkLD5JrKDCepITc6o1HmzMsrJiy49epYVfj5b69ZyZyw2MOfsPyNtv8lt2N2liVaLsLWLTzUO4hRNsVvyQQnVntOmwh7vMPDw_2TT5dMScqALineSWs6jncwq11CQAcIapsapCUAs6XA2KQrhMhdjzYWbu5aKSHiME4kH-8T3naG4NB9r__DN9FoM7FSnMV58ZE4jb8vhT17e1EyHwXbMP6o1Q"/>
+</div>
+<div class="flex-grow min-w-0">
+<h3 class="font-section-header text-base text-on-surface font-medium truncate">Plain Dosa</h3>
+</div>
+<div class="flex flex-col items-end shrink-0 gap-1 min-w-[72px]">
+<span class="font-money-display text-base text-on-surface font-medium tabular-nums text-right w-full">₹80.00</span>
+<button class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center hover:bg-secondary/20 transition-colors group-active:scale-95">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container rounded-xl p-3 flex items-center gap-4 active:bg-primary/5 transition-colors cursor-pointer group hover:shadow-sm">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-surface-variant flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-outline" data-icon="fastfood">fastfood</span>
+</div>
+<div class="flex-grow min-w-0">
+<h3 class="font-section-header text-base text-on-surface font-medium truncate">Vada (2 pcs)</h3>
+</div>
+<div class="flex flex-col items-end shrink-0 gap-1 min-w-[72px]">
+<span class="font-money-display text-base text-on-surface font-medium tabular-nums text-right w-full">₹60.00</span>
+<button class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center hover:bg-secondary/20 transition-colors group-active:scale-95">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+<!-- Item 4 (Sold Out) -->
+<div class="bg-surface-container rounded-xl p-3 flex items-center gap-4 opacity-50 grayscale cursor-not-allowed">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="An Onion Uttapam served on a rustic plate, shown from an overhead angle. The thick pancake-like dish is studded with chopped onions and cilantro. The image is styled for a modern POS interface, well-lit with natural light, but appears slightly muted to indicate an unavailable state in the UI context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuASdi6mCu0ixFhrX55OxXBfAVnjnhScsAHYVXBcPbXmmvcHEAA3_8iAfIJpbqCEAmLkkBjQ6CTIAn6KESniZ8bWcCQ81wSB2QmsQbNZlTGcSqsE9J-He2MnTdmrUxo3Nc4R7-ArENiEPNIOzZ6yk17BlIr07ap5zj-Nb2Jq8OOyQN2DRWhAK7kDmhsEdHU3RXwqUQTspcaV-TV9Lc0cQKDrCE13uZ57-IeirYsxXRaY9r-rYNJIx1GyyQ"/>
+</div>
+<div class="flex-grow min-w-0 flex flex-col gap-1">
+<h3 class="font-section-header text-base text-on-surface font-medium truncate">Onion Uttapam</h3>
+<span class="inline-block px-2 py-0.5 bg-outline-variant/30 text-on-surface-variant font-label-caption text-[10px] uppercase tracking-wider rounded-md self-start">Sold out</span>
+</div>
+<div class="flex flex-col items-end shrink-0 gap-1 min-w-[72px]">
+<span class="font-money-display text-base text-on-surface font-medium tabular-nums text-right w-full">₹90.00</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Persistent Cart Bottom Sheet Area -->
+<div class="fixed bottom-[56px] left-0 w-full bg-surface-container-highest rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-40 transition-transform duration-300 transform translate-y-[calc(100%-64px)]" id="cart-sheet">
+<!-- Collapsed Summary Bar -->
+<div class="h-16 px-margin-page flex items-center justify-between cursor-pointer active:bg-on-surface/5 rounded-t-2xl" onclick="document.getElementById('cart-sheet').classList.toggle('translate-y-[calc(100%-64px)]')">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-section-header text-sm font-medium">3</div>
+<span class="font-section-header text-base text-on-surface font-medium">Items</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-money-display text-base text-on-surface font-medium tabular-nums">₹240.00</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="expand_less">expand_less</span>
+</div>
+</div>
+<!-- Expanded Cart Details -->
+<div class="px-margin-page pb-4 max-h-[353px] overflow-y-auto">
+<!-- Cart Item 1 -->
+<div class="flex items-center justify-between py-3 border-t border-outline-variant/30">
+<div class="flex flex-col">
+<span class="font-section-header text-base text-on-surface font-medium">Masala Dosa</span>
+<span class="font-body-secondary text-sm text-on-surface-variant">₹120.00 each</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors active:bg-on-surface/5 rounded-full">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+</button>
+<div class="flex items-center bg-surface-container rounded-full h-10 border border-outline-variant/30">
+<button class="w-10 h-full flex items-center justify-center text-on-surface active:bg-on-surface/10 rounded-l-full">
+<span class="material-symbols-outlined text-[20px]" data-icon="remove">remove</span>
+</button>
+<span class="w-8 text-center font-section-header text-base font-medium tabular-nums">2</span>
+<button class="w-10 h-full flex items-center justify-center text-on-surface active:bg-on-surface/10 rounded-r-full">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cart Item 2 -->
+<div class="flex items-center justify-between py-3 border-t border-outline-variant/30">
+<div class="flex flex-col">
+<span class="font-section-header text-base text-on-surface font-medium">Vada (2 pcs)</span>
+<span class="font-body-secondary text-sm text-on-surface-variant">₹60.00 each</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors active:bg-on-surface/5 rounded-full">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+</button>
+<div class="flex items-center bg-surface-container rounded-full h-10 border border-outline-variant/30">
+<button class="w-10 h-full flex items-center justify-center text-on-surface active:bg-on-surface/10 rounded-l-full">
+<span class="material-symbols-outlined text-[20px]" data-icon="remove">remove</span>
+</button>
+<span class="w-8 text-center font-section-header text-base font-medium tabular-nums">1</span>
+<button class="w-10 h-full flex items-center justify-center text-on-surface active:bg-on-surface/10 rounded-r-full">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Actions Layer -->
+<div class="fixed bottom-0 left-0 w-full h-[56px] flex z-50">
+<button class="flex-[1] h-full bg-secondary-container text-on-secondary-container font-section-header text-base font-medium flex items-center justify-center active:bg-secondary/20 transition-colors">
+            Hold Order
+        </button>
+<button class="flex-[2] h-full bg-primary text-on-primary font-section-header text-base font-medium flex items-center justify-center active:bg-primary/80 transition-colors gap-2">
+<span>Place order</span>
+<span class="w-1 h-1 rounded-full bg-on-primary/50"></span>
+<span class="tabular-nums">₹240.00</span>
+</button>
+</div>
+</body></html>

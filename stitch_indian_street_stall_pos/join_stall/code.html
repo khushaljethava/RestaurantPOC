@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Join Stall - QuickServe POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "background": "#f5fbf5",
+                        "outline": "#6f7974",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#156b54",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#3f4944",
+                        "on-secondary-fixed": "#00210d",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#88d6b9",
+                        "on-primary-fixed": "#002117",
+                        "surface-tint": "#156b54",
+                        "tertiary-container": "#885200",
+                        "surface-dim": "#d5dcd6",
+                        "primary-fixed": "#a4f2d5",
+                        "surface-bright": "#f5fbf5",
+                        "surface": "#f5fbf5",
+                        "tertiary": "#673d00",
+                        "on-surface": "#171d1a",
+                        "on-secondary-container": "#237242",
+                        "on-secondary-fixed-variant": "#00522a",
+                        "secondary-container": "#a4f4b8",
+                        "on-primary-container": "#9ae9cb",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#00513e",
+                        "surface-container-highest": "#dee4df",
+                        "on-background": "#171d1a",
+                        "tertiary-fixed": "#ffdcbb",
+                        "inverse-on-surface": "#ecf2ed",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#dee4df",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-tertiary-container": "#ffd0a0",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "secondary-fixed-dim": "#89d89e",
+                        "secondary": "#1b6c3d",
+                        "secondary-fixed": "#a4f4b8",
+                        "inverse-surface": "#2c322e",
+                        "inverse-primary": "#88d6b9",
+                        "surface-container": "#e9efea",
+                        "on-primary-fixed-variant": "#00513e",
+                        "surface-container-low": "#eff5f0",
+                        "outline-variant": "#bec9c3",
+                        "on-tertiary-fixed": "#2b1700",
+                        "surface-container-high": "#e4eae4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "bottom-action-height": "56px",
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "margin-page": "16px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Roboto"],
+                        "label-caption": ["Roboto"],
+                        "display-title": ["Roboto"],
+                        "body-secondary": ["Roboto"],
+                        "section-header": ["Roboto"],
+                        "money-display": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caption": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                        "display-title": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-secondary": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "section-header": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "money-display": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        /* Auto-uppercase and formatting for the code input */
+        #invite-code {
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col font-body-main">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-dim flex items-center justify-between px-gutter h-14 bg-surface-container dark:bg-surface-container-highest transition-colors duration-200">
+<button aria-label="Navigate back" class="flex items-center justify-center w-touch-target-min h-touch-target-min text-on-surface-variant dark:text-outline-variant hover:bg-on-surface-variant/5 rounded-full transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-display-title text-display-title font-bold text-primary dark:text-primary-fixed-dim absolute left-1/2 transform -translate-x-1/2">
+            QuickServe POS
+        </h1>
+<!-- Empty div to balance flex layout with the absolute centered heading -->
+<div class="w-touch-target-min"></div>
+</header>
+<!-- Main Content Canvas - Centered Card -->
+<main class="flex-grow flex items-center justify-center p-margin-page pt-20 pb-20">
+<div class="w-full max-w-md bg-surface-container rounded-[12px] p-6 flex flex-col gap-6">
+<div class="text-center space-y-2">
+<span class="material-symbols-outlined text-primary text-5xl mb-2" data-icon="storefront">storefront</span>
+<h2 class="font-display-title text-display-title text-on-surface">Enter your invite code</h2>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">Ask your manager or stall owner for the 6-digit access code to join the workspace.</p>
+</div>
+<form class="flex flex-col gap-6 mt-4" id="join-form">
+<div class="flex flex-col gap-2">
+<label class="font-label-caption text-label-caption text-on-surface-variant sr-only" for="invite-code">Invite Code</label>
+<input autocapitalize="characters" autocomplete="off" autocorrect="off" class="w-full h-14 bg-surface border border-outline rounded-lg px-4 text-center text-2xl font-mono text-on-surface focus:border-2 focus:border-primary focus:ring-0 transition-all placeholder:text-outline-variant" id="invite-code" maxlength="6" name="invite-code" placeholder="XXXXXX" spellcheck="false" type="text"/>
+<span class="text-xs text-error hidden" id="error-message">Please enter a valid 6-digit code.</span>
+</div>
+</form>
+</div>
+</main>
+<!-- Fixed Bottom Action -->
+<footer class="fixed bottom-0 w-full z-40 bg-surface-container p-margin-page border-t-0 pb-[env(safe-area-inset-bottom,16px)]">
+<button class="w-full h-bottom-action-height bg-primary text-on-primary rounded font-section-header text-section-header flex items-center justify-center gap-2 active:bg-primary/90 transition-colors relative overflow-hidden group" form="join-form" type="submit">
+<span class="absolute inset-0 bg-on-primary/0 group-active:bg-on-primary/8 transition-colors"></span>
+<span>Join stall</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="login">login</span>
+</button>
+</footer>
+<script>
+        // Simple input formatting and validation for demonstration
+        const input = document.getElementById('invite-code');
+        const form = document.getElementById('join-form');
+        const errorMessage = document.getElementById('error-message');
+
+        input.addEventListener('input', function(e) {
+            // Remove non-alphanumeric characters
+            this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            
+            // Hide error if typing
+            if(errorMessage.classList.contains('hidden') === false) {
+                 errorMessage.classList.add('hidden');
+                 input.classList.remove('border-error', 'text-error', 'bg-error-container/10');
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (input.value.length !== 6) {
+                errorMessage.classList.remove('hidden');
+                input.classList.add('border-error', 'text-error', 'bg-error-container/10');
+                // Shake animation could go here
+            } else {
+                // Simulate success
+                const btn = document.querySelector('footer button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin" data-icon="progress_activity">progress_activity</span> Verifying...';
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span> Joined!';
+                    btn.classList.add('bg-secondary');
+                    btn.classList.remove('bg-primary');
+                    
+                    setTimeout(() => {
+                         // Reset for demo purposes
+                         btn.innerHTML = originalText;
+                         btn.classList.remove('bg-secondary');
+                         btn.classList.add('bg-primary');
+                         input.value = '';
+                    }, 2000);
+                }, 1500);
+            }
+        });
+    </script>
+</body></html>

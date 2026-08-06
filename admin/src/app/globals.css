@@ -1,0 +1,69 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap");
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #f5fbf6;
+  --color-on-background: #181c1a;
+  --color-surface: #e9efeb;
+  --color-surface-dim: #d7dbd7;
+  --color-surface-bright: #f7faf6;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f1f4f1;
+  --color-surface-container: #ebefeb;
+  --color-surface-container-high: #e6e9e5;
+  --color-surface-container-highest: #e0e3e0;
+  --color-surface-variant: #e0e3e0;
+  --color-on-surface: #171d1a;
+  --color-on-surface-variant: #3f4944;
+  --color-primary: #00513e;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #a4f2d5;
+  --color-on-primary-container: #002117;
+  --color-surface-tint: #156b54;
+  --color-secondary: #56615b;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dae5de;
+  --color-on-secondary-container: #5c6761;
+  --color-outline: #6f7974;
+  --color-outline-variant: #bec9c3;
+  --color-border: #bfc9c3;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-success: #1b6c3d;
+  --color-warning: #8a5300;
+  --color-warning-container: #fff0d4;
+  --color-inverse-surface: #2d312f;
+  --color-inverse-on-surface: #eef2ee;
+  --font-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+  --spacing-sidebar-width: 224px;
+  --spacing-page-padding: 32px;
+  --spacing-table-row: 44px;
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  font-size: 20px;
+  line-height: 1;
+  user-select: none;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

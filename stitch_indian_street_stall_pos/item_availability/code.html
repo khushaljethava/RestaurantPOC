@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Item Availability</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#9ae9cb",
+                    "primary-fixed-dim": "#88d6b9",
+                    "surface-container-low": "#eff5f0",
+                    "surface-bright": "#f5fbf5",
+                    "on-error": "#ffffff",
+                    "surface-container-highest": "#dee4df",
+                    "secondary": "#1b6c3d",
+                    "on-error-container": "#93000a",
+                    "outline": "#6f7974",
+                    "surface-variant": "#dee4df",
+                    "on-tertiary-container": "#ffd0a0",
+                    "surface-dim": "#d5dcd6",
+                    "on-secondary-fixed": "#00210d",
+                    "on-surface-variant": "#3f4944",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#171d1a",
+                    "surface-container": "#e9efea",
+                    "inverse-surface": "#2c322e",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#ecf2ed",
+                    "on-secondary-container": "#237242",
+                    "secondary-fixed-dim": "#89d89e",
+                    "on-primary-fixed": "#002117",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "primary": "#00513e",
+                    "outline-variant": "#bec9c3",
+                    "secondary-container": "#a4f4b8",
+                    "tertiary-fixed": "#ffdcbb",
+                    "surface-container-high": "#e4eae4",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "tertiary-container": "#885200",
+                    "surface": "#f5fbf5",
+                    "on-tertiary-fixed": "#2b1700",
+                    "primary-fixed": "#a4f2d5",
+                    "background": "#f5fbf5",
+                    "inverse-primary": "#88d6b9",
+                    "on-primary-fixed-variant": "#00513e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed-variant": "#00522a",
+                    "tertiary": "#673d00",
+                    "on-surface": "#171d1a",
+                    "secondary-fixed": "#a4f4b8",
+                    "primary-container": "#156b54",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#156b54"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "bottom-action-height": "56px",
+                    "margin-page": "16px",
+                    "gutter": "16px",
+                    "touch-target-min": "48px"
+            },
+            "fontFamily": {
+                    "body-secondary": ["Roboto"],
+                    "display-title": ["Roboto"],
+                    "section-header": ["Roboto"],
+                    "label-caption": ["Roboto"],
+                    "body-main": ["Roboto"],
+                    "money-display": ["Roboto"]
+            },
+            "fontSize": {
+                    "body-secondary": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-title": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "section-header": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "label-caption": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "body-main": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "money-display": ["16px", {"lineHeight": "24px", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: transparent;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #156b54;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+        .toggle-label {
+            width: 44px;
+            height: 24px;
+            background-color: #dee4df; /* surface-variant */
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .toggle-label:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-full flex flex-col antialiased">
+<!-- TopAppBar from JSON -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-dim flex items-center justify-between px-gutter h-14 bg-surface-container dark:bg-surface-container-highest transition-colors duration-200">
+<div class="flex items-center gap-3">
+<button class="h-touch-target-min w-touch-target-min flex items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-primary/10 dark:hover:bg-primary-fixed/10 rounded-full">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+</button>
+<h1 class="font-display-title text-display-title font-bold text-primary dark:text-primary-fixed-dim tracking-tight">QuickServe POS</h1>
+</div>
+<button class="h-touch-target-min w-touch-target-min flex items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-primary/10 dark:hover:bg-primary-fixed/10 rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<main class="flex-1 mt-14 mb-[64px] overflow-y-auto px-margin-page py-6">
+<div class="max-w-2xl mx-auto">
+<!-- Header Section -->
+<div class="mb-6 pb-4 border-b border-surface-container-highest">
+<h2 class="font-section-header text-section-header text-on-background mb-2">Item Availability</h2>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">
+                    Turn an item off when you run out. It disappears from the order screen.
+                </p>
+</div>
+<!-- Search/Filter (Optional but good for UX) -->
+<div class="relative mb-6">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary font-body-main text-body-main text-on-surface placeholder:text-outline" placeholder="Search menu items..." type="text"/>
+</div>
+<!-- Menu List -->
+<div class="bg-surface-container rounded-xl overflow-hidden flex flex-col divide-y divide-surface-container-highest">
+<!-- Item 1 (Available) -->
+<div class="flex items-center justify-between p-4 min-h-[56px] bg-surface active:bg-primary/5 transition-colors group">
+<div class="flex-1">
+<h3 class="font-body-main text-body-main text-on-background">Masala Dosa</h3>
+<span class="font-body-secondary text-body-secondary text-on-surface-variant">Breakfast • Vegan</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-money-display text-money-display text-on-background tabular-nums">$6.50</span>
+<div class="relative inline-block w-11 mr-2 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-10" id="toggle1" name="toggle1" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="toggle1"></label>
+</div>
+</div>
+</div>
+<!-- Item 2 (Available) -->
+<div class="flex items-center justify-between p-4 min-h-[56px] bg-surface active:bg-primary/5 transition-colors group">
+<div class="flex-1">
+<h3 class="font-body-main text-body-main text-on-background">Plain Dosa</h3>
+<span class="font-body-secondary text-body-secondary text-on-surface-variant">Breakfast • Vegan</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-money-display text-money-display text-on-background tabular-nums">$5.00</span>
+<div class="relative inline-block w-11 mr-2 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-10" id="toggle2" name="toggle2" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="toggle2"></label>
+</div>
+</div>
+</div>
+<!-- Item 3 (Unavailable / Muted) -->
+<div class="flex items-center justify-between p-4 min-h-[56px] bg-surface-container-low opacity-60 transition-opacity">
+<div class="flex-1">
+<h3 class="font-body-main text-body-main text-outline">Medu Vada</h3>
+<span class="font-body-secondary text-body-secondary text-outline-variant">Breakfast • Vegan</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-money-display text-money-display text-outline tabular-nums">$4.50</span>
+<div class="relative inline-block w-11 mr-2 align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-10" id="toggle3" name="toggle3" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="toggle3"></label>
+</div>
+</div>
+</div>
+<!-- Item 4 (Available) -->
+<div class="flex items-center justify-between p-4 min-h-[56px] bg-surface active:bg-primary/5 transition-colors group">
+<div class="flex-1">
+<h3 class="font-body-main text-body-main text-on-background">Idli (3 pcs)</h3>
+<span class="font-body-secondary text-body-secondary text-on-surface-variant">Breakfast</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-money-display text-money-display text-on-background tabular-nums">$4.00</span>
+<div class="relative inline-block w-11 mr-2 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-10" id="toggle4" name="toggle4" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="toggle4"></label>
+</div>
+</div>
+</div>
+<!-- Item 5 (Unavailable) -->
+<div class="flex items-center justify-between p-4 min-h-[56px] bg-surface-container-low opacity-60 transition-opacity">
+<div class="flex-1">
+<h3 class="font-body-main text-body-main text-outline">Filter Coffee</h3>
+<span class="font-body-secondary text-body-secondary text-outline-variant">Beverages</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-money-display text-money-display text-outline tabular-nums">$2.50</span>
+<div class="relative inline-block w-11 mr-2 align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-10" id="toggle5" name="toggle5" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="toggle5"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar from JSON (Rendered because this is a primary ecosystem tab setting) -->
+<!-- Assuming "Reports" or a generic settings state might map here if not perfectly fitting. However, "Register", "Orders", "History", "Reports" are given. 
+         Item Availability is usually an admin/manager function, likely under 'Reports' or a general POS view. Let's make "Register" active as default POS view fallback or none if strict, but JSON says 4 items. Let's make none fully active to indicate sub-menu, but JSON requires one. I'll highlight "Register" as a default state. -->
+<nav class="fixed bottom-0 w-full z-50 h-bottom-action-height bg-surface dark:bg-surface-dim flex justify-around items-center w-full bg-surface-container dark:bg-surface-container-highest">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-on-surface-variant/5 active:scale-95 transition-transform h-full w-full max-w-[80px]">
+<span class="material-symbols-outlined" data-icon="point_of_sale">point_of_sale</span>
+<span class="font-label-caption text-label-caption mt-1">Register</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-on-surface-variant/5 active:scale-95 transition-transform h-full w-full max-w-[80px]">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caption text-label-caption mt-1">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-on-surface-variant/5 active:scale-95 transition-transform h-full w-full max-w-[80px]">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-caption text-label-caption mt-1">History</span>
+</button>
+<!-- Highlighting Reports as setting availability might fall here, though loosely. -->
+<button class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-full px-5 py-1 hover:bg-on-surface-variant/5 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caption text-label-caption mt-1">Reports</span>
+</button>
+</nav>
+<script>
+        // Simple script to handle muting rows when toggled off
+        document.querySelectorAll('.toggle-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const row = this.closest('div.flex.items-center.justify-between.p-4');
+                const title = row.querySelector('h3');
+                const subtitle = row.querySelector('span.font-body-secondary');
+                const price = row.querySelector('span.font-money-display');
+
+                if (this.checked) {
+                    row.classList.remove('bg-surface-container-low', 'opacity-60');
+                    row.classList.add('bg-surface', 'active:bg-primary/5', 'group');
+                    
+                    title.classList.remove('text-outline');
+                    title.classList.add('text-on-background');
+                    
+                    subtitle.classList.remove('text-outline-variant');
+                    subtitle.classList.add('text-on-surface-variant');
+
+                    price.classList.remove('text-outline');
+                    price.classList.add('text-on-background');
+                } else {
+                    row.classList.add('bg-surface-container-low', 'opacity-60');
+                    row.classList.remove('bg-surface', 'active:bg-primary/5', 'group');
+
+                    title.classList.add('text-outline');
+                    title.classList.remove('text-on-background');
+                    
+                    subtitle.classList.add('text-outline-variant');
+                    subtitle.classList.remove('text-on-surface-variant');
+
+                    price.classList.add('text-outline');
+                    price.classList.remove('text-on-background');
+                }
+            });
+        });
+    </script>
+</body></html>

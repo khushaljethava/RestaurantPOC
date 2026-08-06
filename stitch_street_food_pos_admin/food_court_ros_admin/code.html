@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Food Court Management - StreetStall POS</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#3b0906",
+                        "on-error": "#ffffff",
+                        "on-surface": "#181c1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#dae5de",
+                        "outline-variant": "#bec9c3",
+                        "tertiary-container": "#904a42",
+                        "error-container": "#FFDAD6",
+                        "primary-container": "#A4F2D5",
+                        "tertiary-fixed-dim": "#ffb4aa",
+                        "on-background": "#181c1a",
+                        "surface-container-highest": "#e0e3e0",
+                        "secondary-fixed-dim": "#bec9c2",
+                        "on-tertiary-fixed-variant": "#73332c",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ffcdc6",
+                        "warning": "#8A5300",
+                        "inverse-surface": "#2d312f",
+                        "secondary": "#56615b",
+                        "tertiary": "#73332c",
+                        "surface-container": "#ebefeb",
+                        "surface-dim": "#d7dbd7",
+                        "success": "#1B6C3D",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#E9EFEB",
+                        "surface-container-high": "#e6e9e5",
+                        "outline": "#6f7974",
+                        "inverse-primary": "#88d6b9",
+                        "on-primary-fixed": "#002117",
+                        "tertiary-fixed": "#ffdad5",
+                        "on-primary-fixed-variant": "#00513e",
+                        "on-primary-container": "#9ae9cb",
+                        "error": "#BA1A1A",
+                        "inverse-on-surface": "#eef2ee",
+                        "surface-tint": "#156b54",
+                        "on-secondary-fixed": "#141e19",
+                        "border": "#BFC9C3",
+                        "secondary-container": "#dae5de",
+                        "surface-bright": "#f7faf6",
+                        "primary-fixed": "#a4f2d5",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e0e3e0",
+                        "primary-fixed-dim": "#88d6b9",
+                        "on-surface-variant": "#3f4944",
+                        "primary": "#00513e",
+                        "warning-container": "#FFF0D4",
+                        "surface-container-low": "#f1f4f1",
+                        "background": "#F5FBF6",
+                        "on-secondary-fixed-variant": "#3f4944",
+                        "on-secondary-container": "#5c6761"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "table-row-height": "44px",
+                        "margin-desktop": "32px",
+                        "gutter": "16px",
+                        "page-padding": "32px",
+                        "sidebar-width": "224px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "currency-display": ["Roboto"],
+                        "header-md": ["Roboto"],
+                        "table-cell": ["Roboto"],
+                        "headline-lg": ["Roboto"],
+                        "label-sm": ["Roboto"],
+                        "body-md": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "currency-display": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "header-md": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "table-cell": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md flex min-h-screen w-full overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 right-0 z-10 bg-surface-bright dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline flex items-center justify-between h-table-row-height ml-sidebar-width px-page-padding w-[calc(100%-224px)] hidden md:flex shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="h-8 pl-8 pr-3 rounded-lg border border-border bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 font-table-cell text-table-cell w-64 placeholder-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-primary-container/20 dark:hover:bg-primary-fixed-dim/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-primary-container/20 dark:hover:bg-primary-fixed-dim/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width bg-surface dark:bg-surface-dim border-r border-outline-variant dark:border-outline flex flex-col z-20">
+<!-- Header -->
+<div class="p-4 border-b border-border">
+<h1 class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed font-bold leading-tight">StreetStall POS</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Main Branch</p>
+</div>
+<!-- CTA -->
+<div class="p-4">
+<button class="w-full bg-primary text-on-primary h-[44px] rounded-lg font-header-md text-header-md flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Order
+            </button>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex-1 overflow-y-auto py-2">
+<ul class="flex flex-col gap-1">
+<!-- Dashboard -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<!-- Live -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">live_tv</span>
+<span>Live</span>
+</a>
+</li>
+<!-- Settlement -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span>Settlement</span>
+</a>
+</li>
+<!-- Reports -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span>Reports</span>
+</a>
+</li>
+<!-- Menu -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span>Menu</span>
+</a>
+</li>
+<!-- Staff -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span>Staff</span>
+</a>
+</li>
+<!-- Food Court (ACTIVE) -->
+<li>
+<a class="flex items-center gap-3 font-bold text-primary border-l-4 border-primary pl-3 py-3 bg-primary-container/10 transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span>Food Court</span>
+</a>
+</li>
+<!-- Settings -->
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200 mt-4 border-t border-border pt-4" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-sidebar-width mt-0 md:mt-table-row-height p-margin-mobile md:p-margin-desktop bg-background min-h-[calc(100vh-44px)] flex flex-col gap-6">
+<!-- Page Header -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background font-bold">Street Bites Food Court</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage member stalls and group settings.</p>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Column: Invite Code & Members -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Invite Code Card -->
+<div class="bg-surface rounded-xl border border-border p-5 flex flex-col gap-4">
+<div>
+<h3 class="font-header-md text-header-md text-on-surface mb-1">Group Invite Code</h3>
+<p class="font-table-cell text-table-cell text-on-surface-variant">Share this code with stall owners to join this food court group.</p>
+</div>
+<div class="bg-surface-container-low rounded-lg border border-border p-3 flex items-center justify-between">
+<span class="font-mono text-lg font-bold text-primary tracking-wider">SB-2024-XLR</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors focus:outline-none" title="Copy code">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container font-header-md text-header-md h-table-row-height rounded-lg border border-primary-container hover:bg-primary-container/80 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">autorenew</span>
+                        Generate new code
+                    </button>
+</div>
+<!-- Member Stalls Card -->
+<div class="bg-surface rounded-xl border border-border overflow-hidden flex flex-col">
+<div class="p-4 border-b border-border bg-surface-container-high flex justify-between items-center">
+<h3 class="font-header-md text-header-md text-on-surface">Member Stalls</h3>
+<span class="bg-primary-container text-on-primary-container font-label-sm text-label-sm px-2 py-0.5 rounded-full">3 Active</span>
+</div>
+<ul class="flex flex-col">
+<!-- Member 1 -->
+<li class="flex items-center gap-3 p-4 border-b border-border hover:bg-surface-container-lowest transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-dim overflow-hidden border border-border shrink-0">
+<img class="w-full h-full object-cover" data-alt="A stylized minimalist illustration of a South Indian Dosa stall with warm golden and orange hues on a clean white background, emphasizing speed and efficiency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbDEA4WwMtqEIzp-hh3ksPDNG6S55ngyv2Y8RxkDou21L16PgDzeaC9uqOuYOIuItf00Z62jehH8nYuI6hFXb2wGrkQ83WZ4BBP-hwfhcJlwgUUoG8F1fCbFRFsGjCCrqnotq-4Q-M7juL8VS_NhzxfP8tWPFjfWEUshfRc09VLwnRCP3MlVlTZoEZkaokKll22ATY_Mz9dnUtq_Nf2WLrAAcD_SFUw2KSnz2JzH1T988T4CTyUiXQ"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-header-md text-header-md text-on-surface truncate">Dosa Express</p>
+<p class="font-label-sm text-label-sm text-success flex items-center gap-1 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span> Online
+                                </p>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-1 focus:outline-none">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</li>
+<!-- Member 2 -->
+<li class="flex items-center gap-3 p-4 border-b border-border hover:bg-surface-container-lowest transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-dim overflow-hidden border border-border shrink-0">
+<img class="w-full h-full object-cover" data-alt="A graphic illustration of an Indian Chaat stall featuring vibrant green and tangy yellow colors, depicted in a modern flat design style suitable for an app interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBtAbDG9YOqr4lSh6DJj3rUlll28rzbt757rv7fnyFusE12r2XotmK6RcgaxvQ0ljxPbZlXuLpsWKhEDaClMW9gGAs7sDV2Ap6OYMiAsYlR-wo1nPC8AHSgKt9k3S6xXnFD6t1kfUvSdD_oaccCmAR3_p9aQLhbrfGio-Rl4phGNGbEGrBcUxWhJviJHq6olBiHTQdxc297hvLkziRJ_iWHfxbz-6Ag83CldPhPagBBtfUPVnTvRiR"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-header-md text-header-md text-on-surface truncate">Chaat Corner</p>
+<p class="font-label-sm text-label-sm text-success flex items-center gap-1 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span> Online
+                                </p>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-1 focus:outline-none">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</li>
+<!-- Member 3 -->
+<li class="flex items-center gap-3 p-4 hover:bg-surface-container-lowest transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-dim overflow-hidden border border-border shrink-0">
+<img class="w-full h-full object-cover" data-alt="A sleek, simple icon representing a momo or dumpling stall, using subtle red and soft beige tones against a plain background, projecting a clean hygienic brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2W8Bo5UHjGw6hlP6nqJlHrDcYm4yA7PW_aGN_sF0k7ZYJYGDft1E9aQeJx4R79SulYuDHz_DoGwVWA7VfrCiZj_jaXnT76knueGyewZW6Zd7bACU77p7mn2k0qZ2Otqvq4mTcK1ibDF0rwgeoRuja5M0HAYuGtloGwbyk_u_yxMtyO7-l8PfptZeW8-jJqF0QORtIY0r1BmVQ_LoD6xCDyvgw3aCuHAXWsxsHZxUP1PvIFSOGfJaH"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-header-md text-header-md text-on-surface truncate">Momo Magic</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> Offline
+                                </p>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-1 focus:outline-none">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</li>
+</ul>
+</div>
+</div>
+<!-- Right Column: Pending Requests Table -->
+<div class="lg:col-span-8 bg-surface rounded-xl border border-border overflow-hidden flex flex-col">
+<div class="p-4 border-b border-border bg-surface-container-high">
+<h3 class="font-header-md text-header-md text-on-surface">Pending Join Requests</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface sticky top-0 z-0">
+<tr>
+<th class="h-table-row-height px-4 border-b border-border font-label-sm text-label-sm text-on-surface-variant font-medium align-middle">Stall Name</th>
+<th class="h-table-row-height px-4 border-b border-border font-label-sm text-label-sm text-on-surface-variant font-medium align-middle">Owner</th>
+<th class="h-table-row-height px-4 border-b border-border font-label-sm text-label-sm text-on-surface-variant font-medium align-middle">Date Requested</th>
+<th class="h-table-row-height px-4 border-b border-border font-label-sm text-label-sm text-on-surface-variant font-medium align-middle text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface whitespace-nowrap">Spice Route Grill</td>
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface-variant whitespace-nowrap">Rahul Sharma</td>
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface-variant whitespace-nowrap">Today, 10:45 AM</td>
+<td class="h-table-row-height px-4 align-middle text-right whitespace-nowrap">
+<div class="flex justify-end gap-2">
+<button class="h-8 px-3 rounded-lg border border-border text-error hover:bg-error-container/10 font-label-sm text-label-sm focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-1 transition-colors">
+                                            Reject
+                                        </button>
+<button class="h-8 px-3 rounded-lg bg-primary text-on-primary hover:bg-primary/90 font-label-sm text-label-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-colors">
+                                            Approve
+                                        </button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface whitespace-nowrap">Biryani Bros</td>
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface-variant whitespace-nowrap">Tariq Ali</td>
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface-variant whitespace-nowrap">Yesterday, 4:20 PM</td>
+<td class="h-table-row-height px-4 align-middle text-right whitespace-nowrap">
+<div class="flex justify-end gap-2">
+<button class="h-8 px-3 rounded-lg border border-border text-error hover:bg-error-container/10 font-label-sm text-label-sm focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-1 transition-colors">
+                                            Reject
+                                        </button>
+<button class="h-8 px-3 rounded-lg bg-primary text-on-primary hover:bg-primary/90 font-label-sm text-label-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-colors">
+                                            Approve
+                                        </button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface whitespace-nowrap">Lassi Lounge</td>
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface-variant whitespace-nowrap">Priya Patel</td>
+<td class="h-table-row-height px-4 font-table-cell text-table-cell text-on-surface-variant whitespace-nowrap">Oct 24, 09:15 AM</td>
+<td class="h-table-row-height px-4 align-middle text-right whitespace-nowrap">
+<div class="flex justify-end gap-2">
+<button class="h-8 px-3 rounded-lg border border-border text-error hover:bg-error-container/10 font-label-sm text-label-sm focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-1 transition-colors">
+                                            Reject
+                                        </button>
+<button class="h-8 px-3 rounded-lg bg-primary text-on-primary hover:bg-primary/90 font-label-sm text-label-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-colors">
+                                            Approve
+                                        </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State (Hidden currently, but good practice for grids) -->
+<!-- <div class="p-8 flex flex-col items-center justify-center text-center text-on-surface-variant">
+                    <span class="material-symbols-outlined text-4xl mb-2 opacity-50">inbox</span>
+                    <p class="font-table-cell text-table-cell">No pending requests.</p>
+                </div> -->
+</div>
+</div>
+<!-- Danger Zone Footer -->
+<div class="mt-auto pt-8 flex justify-end">
+<button class="text-error hover:bg-error-container/20 px-4 py-2 rounded-lg font-label-sm text-label-sm transition-colors focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">logout</span>
+                Leave food court
+            </button>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Name your stall - Point-of-Sale Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#3b0906",
+                        "border": "#BFC9C3",
+                        "primary-container": "#A4F2D5",
+                        "outline": "#6f7974",
+                        "tertiary-fixed-dim": "#ffb4aa",
+                        "primary": "#00513e",
+                        "on-surface": "#181c1a",
+                        "tertiary-fixed": "#ffdad5",
+                        "surface-dim": "#d7dbd7",
+                        "inverse-on-surface": "#eef2ee",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e0e3e0",
+                        "warning-container": "#FFF0D4",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#a4f2d5",
+                        "surface-tint": "#156b54",
+                        "outline-variant": "#bec9c3",
+                        "on-secondary-fixed-variant": "#3f4944",
+                        "on-background": "#181c1a",
+                        "on-tertiary-container": "#ffcdc6",
+                        "surface-container": "#ebefeb",
+                        "on-primary-fixed": "#002117",
+                        "surface-bright": "#f7faf6",
+                        "secondary": "#56615b",
+                        "inverse-surface": "#2d312f",
+                        "primary-fixed-dim": "#88d6b9",
+                        "warning": "#8A5300",
+                        "surface-container-low": "#f1f4f1",
+                        "tertiary": "#73332c",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#dae5de",
+                        "surface-container-high": "#e6e9e5",
+                        "secondary-container": "#dae5de",
+                        "error": "#BA1A1A",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#88d6b9",
+                        "on-surface-variant": "#3f4944",
+                        "success": "#1B6C3D",
+                        "on-secondary-container": "#5c6761",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#73332c",
+                        "on-secondary-fixed": "#141e19",
+                        "tertiary-container": "#904a42",
+                        "on-primary-container": "#9ae9cb",
+                        "surface": "#E9EFEB",
+                        "on-primary-fixed-variant": "#00513e",
+                        "secondary-fixed-dim": "#bec9c2",
+                        "surface-variant": "#e0e3e0",
+                        "background": "#F5FBF6",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "page-padding": "32px",
+                        "sidebar-width": "224px",
+                        "table-row-height": "44px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Roboto"],
+                        "header-md": ["Roboto"],
+                        "currency-display": ["Roboto"],
+                        "body-md": ["Roboto"],
+                        "table-cell": ["Roboto"],
+                        "label-sm": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "header-md": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "currency-display": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "table-cell": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="h-full bg-background text-on-background font-body-md text-body-md antialiased flex items-center justify-center p-page-padding">
+<main class="w-full max-w-md">
+<!-- Brand Header (Centered for Onboarding) -->
+<div class="text-center mb-8">
+<h1 class="font-headline-lg text-headline-lg font-black text-on-surface mb-2">Point-of-Sale Admin</h1>
+<p class="text-on-surface-variant">Setup your environment</p>
+</div>
+<!-- Onboarding Card -->
+<div class="bg-surface rounded-xl p-8 shadow-sm border border-border">
+<h2 class="font-headline-lg text-headline-lg mb-6 text-on-surface">Name your stall</h2>
+<form action="#" class="space-y-6" method="POST">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2" for="stall-name">Stall Name</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline-variant" data-icon="storefront">storefront</span>
+</div>
+<input autofocus="" class="block w-full h-[44px] pl-10 pr-3 py-2 border border-border rounded-lg bg-surface-container-lowest text-on-surface placeholder-outline-variant focus:outline-none focus:ring-2 focus:ring-surface-tint focus:ring-offset-2 focus:ring-offset-background focus:border-transparent transition-shadow font-body-md text-body-md" id="stall-name" name="stall-name" placeholder="e.g. Spice Route Express" required="" type="text"/>
+</div>
+</div>
+<div class="flex items-start bg-secondary-container/30 p-4 rounded-lg">
+<span class="material-symbols-outlined text-secondary mr-3 mt-0.5" data-icon="info">info</span>
+<p class="font-table-cell text-table-cell text-on-surface-variant">
+                        This creates the primary stall for your account. You can rename it later or add more stalls from the dashboard once setup is complete.
+                    </p>
+</div>
+<div class="pt-4">
+<button class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm font-header-md text-header-md text-on-primary bg-[#156B54] hover:bg-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-surface-tint focus:ring-offset-background transition-colors h-[44px] items-center" type="submit">
+                        Create stall
+                    </button>
+</div>
+</form>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QuickServe POS - Checkout</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed": "#002117",
+                      "tertiary-fixed": "#ffdcbb",
+                      "secondary": "#1b6c3d",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-error": "#ffffff",
+                      "on-surface": "#171d1a",
+                      "surface-container-highest": "#dee4df",
+                      "inverse-primary": "#88d6b9",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-low": "#eff5f0",
+                      "secondary-container": "#a4f4b8",
+                      "on-primary-container": "#9ae9cb",
+                      "primary-fixed-dim": "#88d6b9",
+                      "primary-container": "#156b54",
+                      "tertiary-fixed-dim": "#ffb869",
+                      "primary": "#00513e",
+                      "surface-dim": "#d5dcd6",
+                      "outline": "#6f7974",
+                      "outline-variant": "#bec9c3",
+                      "on-surface-variant": "#3f4944",
+                      "on-primary-fixed-variant": "#00513e",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-high": "#e4eae4",
+                      "inverse-surface": "#2c322e",
+                      "on-tertiary-fixed": "#2b1700",
+                      "on-secondary-container": "#237242",
+                      "on-background": "#171d1a",
+                      "secondary-fixed": "#a4f4b8",
+                      "tertiary": "#673d00",
+                      "surface-container": "#e9efea",
+                      "tertiary-container": "#885200",
+                      "background": "#f5fbf5",
+                      "primary-fixed": "#a4f2d5",
+                      "surface-bright": "#f5fbf5",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed-variant": "#673d00",
+                      "on-secondary-fixed": "#00210d",
+                      "surface-variant": "#dee4df",
+                      "secondary-fixed-dim": "#89d89e",
+                      "surface-tint": "#156b54",
+                      "surface": "#f5fbf5",
+                      "on-tertiary-container": "#ffd0a0",
+                      "on-secondary-fixed-variant": "#00522a",
+                      "inverse-on-surface": "#ecf2ed"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "bottom-action-height": "56px",
+                      "margin-page": "16px",
+                      "gutter": "16px",
+                      "touch-target-min": "48px"
+              },
+              "fontFamily": {
+                      "display-title": [
+                              "Roboto"
+                      ],
+                      "money-display": [
+                              "Roboto"
+                      ],
+                      "label-caption": [
+                              "Roboto"
+                      ],
+                      "section-header": [
+                              "Roboto"
+                      ],
+                      "body-secondary": [
+                              "Roboto"
+                      ],
+                      "body-main": [
+                              "Roboto"
+                      ]
+              },
+              "fontSize": {
+                      "display-title": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "money-display": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-caption": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.5px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "section-header": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-secondary": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-main": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-main pb-[88px] md:pb-[72px]">
+<!-- TopAppBar -->
+<header class="bg-surface w-full top-0 sticky bg-surface-container flex items-center justify-between px-gutter w-full h-14 z-40">
+<div class="flex items-center">
+<button aria-label="storefront" class="p-2 hover:bg-surface-container-high transition-colors active:opacity-80 rounded-full mr-2 hidden md:block">
+<span class="material-symbols-outlined text-primary">storefront</span>
+</button>
+<!-- Back button for transactional flow context on mobile -->
+<button aria-label="back" class="p-2 hover:bg-surface-container-high transition-colors active:opacity-80 rounded-full mr-2 md:hidden">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-display-title text-display-title text-primary font-bold">QuickServe POS</h1>
+</div>
+<button aria-label="logout" class="p-2 hover:bg-surface-container-high transition-colors active:opacity-80 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant">logout</span>
+</button>
+</header>
+<main class="flex-grow flex flex-col md:max-w-2xl md:mx-auto md:w-full md:mt-8">
+<!-- Header Info -->
+<div class="px-margin-page py-6 flex justify-between items-center bg-surface-container md:rounded-t-xl">
+<div>
+<h2 class="font-display-title text-display-title text-on-surface">Table 4</h2>
+<div class="font-body-secondary text-on-surface-variant mt-1">Dine-in • Order #8492</div>
+</div>
+<div class="bg-[#FFF0D4] text-[#8A5300] px-3 py-1 rounded-full font-label-caption text-label-caption flex items-center">
+                Pending Payment
+            </div>
+</div>
+<!-- Order Items Canvas -->
+<div class="bg-surface px-margin-page py-4 flex-grow md:border md:border-outline-variant md:border-t-0 md:rounded-b-xl">
+<div class="space-y-6">
+<!-- Group 1 -->
+<div>
+<h3 class="font-section-header text-section-header text-on-surface-variant mb-2 pb-2 border-b border-surface-variant">Token #1</h3>
+<ul class="space-y-4 pt-2">
+<li class="flex justify-between items-start min-h-[56px] py-2">
+<div class="flex-grow">
+<div class="font-body-main text-on-surface">Masala Dosa <span class="text-on-surface-variant ml-1">x 2</span></div>
+<div class="font-body-secondary text-on-surface-variant">Extra sambar</div>
+</div>
+<div class="font-money-display text-money-display tabular-nums text-on-surface">$16.00</div>
+</li>
+<li class="flex justify-between items-start min-h-[56px] py-2">
+<div class="flex-grow">
+<div class="font-body-main text-on-surface">Filter Coffee <span class="text-on-surface-variant ml-1">x 2</span></div>
+</div>
+<div class="font-money-display text-money-display tabular-nums text-on-surface">$6.00</div>
+</li>
+</ul>
+</div>
+<!-- Group 2 -->
+<div>
+<h3 class="font-section-header text-section-header text-on-surface-variant mb-2 pb-2 border-b border-surface-variant">Token #2</h3>
+<ul class="space-y-4 pt-2">
+<li class="flex justify-between items-start min-h-[56px] py-2">
+<div class="flex-grow">
+<div class="font-body-main text-on-surface">Paneer Tikka <span class="text-on-surface-variant ml-1">x 1</span></div>
+</div>
+<div class="font-money-display text-money-display tabular-nums text-on-surface">$12.50</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Totals Section -->
+<div class="mt-8 pt-4 border-t-2 border-surface-variant flex flex-col items-end space-y-2">
+<div class="flex justify-between w-full md:w-1/2">
+<span class="font-body-secondary text-on-surface-variant">Total</span>
+<span class="font-money-display text-money-display tabular-nums text-on-surface">$34.50</span>
+</div>
+<!-- Discount UI (Collapsed/Expanded logic via JS below) -->
+<div class="w-full md:w-1/2 flex flex-col items-end" id="discount-container">
+<button class="text-primary font-body-secondary hover:bg-surface-container-high px-2 py-1 -mr-2 rounded transition-colors flex items-center" id="toggle-discount">
+<span class="material-symbols-outlined text-[18px] mr-1">add</span> Apply discount
+                    </button>
+<div class="hidden w-full mt-3 bg-surface-container-low p-4 rounded-xl border border-outline-variant" id="discount-panel">
+<div class="space-y-4">
+<div>
+<label class="block font-label-caption text-label-caption text-on-surface-variant mb-1" for="discount-amount">Discount Amount ($)</label>
+<input class="w-full h-touch-target-min border-outline rounded-lg bg-surface text-on-surface px-3 focus:border-primary focus:ring-1 focus:ring-primary focus:border-2 transition-all" id="discount-amount" placeholder="0.00" type="number"/>
+</div>
+<div>
+<label class="block font-label-caption text-label-caption text-on-surface-variant mb-1" for="discount-reason">Reason (Required)</label>
+<select class="w-full h-touch-target-min border-outline rounded-lg bg-surface text-on-surface px-3 focus:border-primary focus:ring-1 focus:ring-primary focus:border-2 transition-all" id="discount-reason">
+<option value="">Select reason...</option>
+<option value="staff">Staff Meal</option>
+<option value="comp">Comp / Issue</option>
+<option value="promo">Promo Code</option>
+</select>
+</div>
+<div class="flex justify-end space-x-2 pt-2">
+<button class="h-10 px-4 text-primary font-body-secondary hover:bg-surface-container-high rounded transition-colors" id="cancel-discount">Cancel</button>
+<button class="h-10 px-4 bg-primary text-on-primary font-body-secondary rounded-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" id="apply-discount-btn">Apply</button>
+</div>
+</div>
+</div>
+<!-- Applied Discount Display (hidden initially) -->
+<div class="hidden flex justify-between w-full text-primary mt-2" id="applied-discount-row">
+<span class="font-body-secondary flex items-center">
+<span class="material-symbols-outlined text-[16px] mr-1">sell</span>
+                             Discount (Staff)
+                         </span>
+<span class="font-money-display text-money-display tabular-nums">-$5.00</span>
+</div>
+</div>
+<div class="flex justify-between w-full md:w-1/2 mt-4 pt-4 border-t border-outline-variant">
+<span class="font-display-title text-display-title font-bold text-on-surface">Due</span>
+<span class="font-display-title text-display-title font-bold tabular-nums text-on-surface" id="due-amount">$34.50</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Bar (Transaction specific) -->
+<div class="fixed bottom-0 w-full bg-surface-container px-margin-page py-4 border-t border-surface-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:static md:shadow-none md:border-t-0 md:bg-transparent md:max-w-2xl md:mx-auto md:px-0 md:pt-6">
+<button class="w-full h-bottom-action-height bg-primary text-on-primary font-section-header text-section-header rounded-xl hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors active:opacity-80 flex items-center justify-center shadow-sm">
+            Take payment
+        </button>
+</div>
+<!-- No BottomNavBar generated as this is a transactional checkout screen (Linear/Transactional intent rule applied). -->
+<script>
+        // Simple interactions for discount UI
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('toggle-discount');
+            const panel = document.getElementById('discount-panel');
+            const cancelBtn = document.getElementById('cancel-discount');
+            const applyBtn = document.getElementById('apply-discount-btn');
+            const appliedRow = document.getElementById('applied-discount-row');
+            const dueAmount = document.getElementById('due-amount');
+
+            toggleBtn.addEventListener('click', () => {
+                toggleBtn.classList.add('hidden');
+                panel.classList.remove('hidden');
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                panel.classList.add('hidden');
+                toggleBtn.classList.remove('hidden');
+                appliedRow.classList.add('hidden');
+                dueAmount.textContent = '$34.50';
+            });
+
+            applyBtn.addEventListener('click', () => {
+                const amount = document.getElementById('discount-amount').value;
+                const reason = document.getElementById('discount-reason').value;
+
+                if (amount && reason) {
+                    panel.classList.add('hidden');
+                    appliedRow.classList.remove('hidden');
+                    appliedRow.classList.add('flex');
+                    // Mock calculation for visual
+                    appliedRow.innerHTML = `
+                         <span class="font-body-secondary flex items-center">
+                             <span class="material-symbols-outlined text-[16px] mr-1">sell</span>
+                             Discount
+                         </span>
+                         <span class="font-money-display text-money-display tabular-nums">-$${parseFloat(amount).toFixed(2)}</span>
+                    `;
+                    const newTotal = (34.50 - parseFloat(amount)).toFixed(2);
+                    dueAmount.textContent = `$${Math.max(0, newTotal).toFixed(2)}`;
+                    
+                    // Show a tiny edit button next to applied
+                    const editBtn = document.createElement('button');
+                    editBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] ml-2">edit</span>';
+                    editBtn.className = "text-primary hover:text-on-surface-variant";
+                    editBtn.onclick = () => {
+                        appliedRow.classList.add('hidden');
+                        panel.classList.remove('hidden');
+                    };
+                    appliedRow.querySelector('span').appendChild(editBtn);
+                }
+            });
+        });
+    </script>
+</body></html>

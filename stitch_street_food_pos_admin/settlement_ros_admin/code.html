@@ -1,0 +1,426 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>StreetStall POS - Settlement</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#3b0906",
+                        "error": "#BA1A1A",
+                        "surface-container-low": "#f1f4f1",
+                        "tertiary-fixed": "#ffdad5",
+                        "surface-bright": "#f7faf6",
+                        "outline-variant": "#bec9c3",
+                        "on-secondary-container": "#5c6761",
+                        "on-surface": "#171D1A",
+                        "primary-container": "#156b54",
+                        "tertiary": "#73332c",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e0e3e0",
+                        "border": "#BFC9C3",
+                        "surface": "#E9EFEB",
+                        "on-primary-fixed-variant": "#00513e",
+                        "inverse-primary": "#88d6b9",
+                        "inverse-surface": "#2d312f",
+                        "on-secondary-fixed-variant": "#3f4944",
+                        "on-secondary-fixed": "#141e19",
+                        "surface-container": "#ebefeb",
+                        "background": "#F5FBF6",
+                        "on-surface-variant": "#3f4944",
+                        "secondary-container": "#dae5de",
+                        "inverse-on-surface": "#eef2ee",
+                        "primary": "#00513e",
+                        "primary-fixed-dim": "#88d6b9",
+                        "surface-variant": "#e0e3e0",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#9ae9cb",
+                        "success": "#1B6C3D",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#a4f2d5",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#156b54",
+                        "warning": "#8A5300",
+                        "surface-container-high": "#e6e9e5",
+                        "on-tertiary-fixed-variant": "#73332c",
+                        "outline": "#6f7974",
+                        "on-tertiary-container": "#ffcdc6",
+                        "secondary-fixed": "#dae5de",
+                        "tertiary-container": "#904a42",
+                        "warning-container": "#FFF0D4",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb4aa",
+                        "secondary": "#56615b",
+                        "on-background": "#181c1a",
+                        "secondary-fixed-dim": "#bec9c2",
+                        "on-primary-fixed": "#002117"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "page-padding": "32px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "table-row-height": "44px",
+                        "sidebar-width": "224px"
+                    },
+                    "fontFamily": {
+                        "header-md": ["Roboto"],
+                        "headline-lg": ["Roboto"],
+                        "body-md": ["Roboto"],
+                        "table-cell": ["Roboto"],
+                        "currency-display": ["Roboto"],
+                        "label-sm": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "header-md": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "table-cell": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "currency-display": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for data dense tables */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #bec9c3; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6f7974; }
+        
+        .expandable-row { cursor: pointer; transition: background-color 0.15s ease; }
+        .expandable-row:hover { background-color: rgba(21, 107, 84, 0.04); }
+        .expandable-row:focus { outline: 2px solid #156B54; outline-offset: -2px; }
+        
+        .drilldown-content {
+            display: none;
+            background-color: #F5FBF6;
+        }
+        .drilldown-content.open {
+            display: table-row;
+            animation: slideDown 0.2s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Utility for tabular figures */
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-sidebar-width flex flex-col border-r border-border dark:border-outline-variant bg-surface dark:bg-surface-dim z-20">
+<!-- Header -->
+<div class="h-[64px] flex items-center px-gutter border-b border-border">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center mr-3 shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small, stylized profile avatar for a street food stall owner. The avatar is simple, modern, and vector-like, featuring a warm color palette with an orange and yellow motif hinting at spices and fire, set against a dark green background. It represents a culinary business identity in a clean, utilitarian aesthetic suitable for an administrative dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqWgExgzOt32YfeJiZu9GhVP2_4bKDgNBXDoFbkCzwfr1aUwIV9PGLkx2IvvDFK1lAPYLJ19KGRNfmHdgkYaTbskmNepLZCJ1mNDA2G0RWf4fQBJfaihps9_5REwzhKE0GxsmTOJ2cBaRLv2nTlqfE6hNxd9a1MeSUtsderbi2SE-8a6Stqqde0Mk2SSjuwkyofG-RvfX4FksYjmw6kxANjiA5GvV793MM-Lh9qxbBMGni2apoCIw0">
+</div>
+<div class="flex flex-col overflow-hidden">
+<span class="font-headline-lg text-headline-lg font-bold text-primary dark:text-on-primary-container truncate">Street Bites</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Stall Switcher</span>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">dashboard</span>
+<span class="font-header-md text-header-md">Dashboard</span>
+</a>
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">live_tv</span>
+<span class="font-header-md text-header-md">Live</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center h-[44px] px-3 rounded-lg font-bold text-primary dark:text-primary-fixed border-l-4 border-primary dark:border-primary-fixed bg-primary-container/10 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="fill" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-header-md text-header-md">Settlement</span>
+</a>
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">bar_chart</span>
+<span class="font-header-md text-header-md">Reports</span>
+</a>
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">restaurant_menu</span>
+<span class="font-header-md text-header-md">Menu</span>
+</a>
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">badge</span>
+<span class="font-header-md text-header-md">Staff</span>
+</a>
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">storefront</span>
+<span class="font-header-md text-header-md">Food Court</span>
+</a>
+<a class="flex items-center h-[44px] px-3 rounded-lg text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3" data-weight="regular">settings</span>
+<span class="font-header-md text-header-md">Settings</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="p-4 border-t border-border">
+<button class="w-full h-[44px] bg-primary-container text-on-primary-container rounded flex items-center justify-center font-header-md text-header-md hover:bg-primary-container/90 transition-colors focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface outline-none">
+<span class="material-symbols-outlined mr-2 text-[20px]">add</span>
+                Add New Stall
+            </button>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col ml-sidebar-width h-screen relative">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center h-[64px] px-page-padding w-full bg-surface-bright dark:bg-surface-container border-b border-border dark:border-outline-variant z-10 docked top-0 sticky">
+<!-- Brand / Search Area -->
+<div class="flex items-center flex-1">
+<h1 class="font-headline-lg text-headline-lg font-black text-primary dark:text-primary-fixed mr-8">StreetStall POS</h1>
+<!-- Search on_left -->
+<div class="relative w-64 max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full h-[44px] pl-10 pr-4 bg-surface rounded-lg border border-border text-on-surface font-body-md text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-shadow" placeholder="Search settlements..." type="text">
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center space-x-2">
+<button aria-label="Notifications" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-primary-container/5 transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button aria-label="Help" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-primary-container/5 transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border ml-2 cursor-pointer focus-within:ring-2 focus-within:ring-primary">
+<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="A small, professional profile picture of a food court administrator. The person is looking directly at the camera with a neutral, efficient expression, wearing a simple dark polo shirt. The background is a plain light grey to fit seamlessly into a clean, modern administrative UI. High resolution, evenly lit." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkdYG5dLR_yavYvKui6_V-JoSX7VvXxdH0Kdx71JNEaK1KwqR6J5y6vrk9WrhIe8idIQQjLBhINYFw2cnlsGzoCfp19rUhz8Mv4m7S_fgyELKm_UAIDendEvyx2TXK-MhYh7ZJ2i9uAPa-GmjbupvBDyjU8KPg7f4ZZi9yUb1sMqmEsKGcrFeM00f9VXzjDEuaU-sebPnwDigQt35FsiT82_IMkj9wRsYqXGU_FSXVmavJTjaTn1Fs">
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto bg-background p-page-padding">
+<!-- Page Header & Controls -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">Inter-Stall Settlements</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage shared orders and outstanding balances across the food court.</p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<!-- Date Range Picker -->
+<div class="relative">
+    <select class="h-[44px] pl-3 pr-8 bg-surface border border-border rounded-lg text-on-surface font-body-md text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none cursor-pointer transition-shadow">
+        <option value="custom">Custom Range</option>
+        <option value="3">Last 3 Days</option>
+        <option value="7">Last 7 Days</option>
+    </select>
+    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
+</div><div class="flex items-center bg-surface border border-border rounded-lg h-[44px] px-1 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-shadow">
+<div class="flex items-center px-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2">calendar_today</span>
+<input class="bg-transparent border-none text-on-surface font-body-md text-body-md p-0 focus:ring-0 w-[130px]" type="date" value="2023-10-24">
+</div>
+<div class="h-6 w-px bg-border mx-1"></div>
+<div class="flex items-center px-2">
+<span class="font-body-md text-body-md text-on-surface-variant mr-2">to</span>
+<input class="bg-transparent border-none text-on-surface font-body-md text-body-md p-0 focus:ring-0 w-[130px]" type="date" value="2023-10-31">
+</div>
+</div>
+<!-- Export Button -->
+<button class="h-[44px] px-4 rounded-lg border border-border text-primary font-header-md text-header-md flex items-center hover:bg-primary/5 transition-colors focus:ring-2 focus:ring-primary outline-none">
+<span class="material-symbols-outlined mr-2 text-[20px]">download</span>
+                        Export CSV
+                    </button>
+</div>
+</div>
+<!-- Settlement Data Table -->
+<div class="bg-surface rounded-[12px] border border-border overflow-hidden flex flex-col">
+<!-- Table Header -->
+<div class="flex items-center h-[44px] bg-[#E9EFEB] border-b border-border px-4 font-header-md text-header-md text-on-surface sticky top-0 z-10">
+<div class="w-10"></div> <!-- Chevron space -->
+<div class="flex-1 pl-2">Owes (Stall A)</div>
+<div class="flex-1">Owed To (Stall B)</div>
+<div class="flex-1 text-right pr-4">Net Amount</div>
+<div class="w-32 text-center">Status</div>
+<div class="w-24 text-right">Action</div>
+</div>
+<!-- Table Body -->
+<div class="flex-col">
+<!-- Row 1 -->
+<div class="flex items-center h-[44px] border-b border-border px-4 font-table-cell text-table-cell text-on-surface bg-background expandable-row" onclick="toggleDrilldown('drilldown-1', this)" tabindex="0">
+<div class="w-10 flex justify-center text-on-surface-variant">
+<span class="material-symbols-outlined transition-transform duration-200" id="icon-drilldown-1">chevron_right</span>
+</div>
+<div class="flex-1 pl-2 font-medium">Dosa Express</div>
+<div class="flex-1">Chaat Corner</div>
+<div class="flex-1 text-right pr-4 font-currency-display text-currency-display text-error tabular-nums">₹4,200.00</div>
+<div class="w-32 flex justify-center">
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">Unsettled</span>
+</div>
+<div class="w-24 text-right">
+<button class="text-primary font-header-md text-header-md hover:underline focus:outline-none" onclick="event.stopPropagation();">Settle</button>
+</div>
+</div>
+<!-- Drilldown 1 -->
+<div class="drilldown-content w-full border-b border-border" id="drilldown-1">
+<div class="p-4 pl-14 bg-surface-container-low">
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-2">Transaction Breakdown</div>
+<div class="w-full bg-background border border-border rounded">
+<div class="flex h-8 items-center px-3 border-b border-border bg-[#E9EFEB] font-label-sm text-label-sm text-on-surface-variant">
+<div class="w-20">Token #</div>
+<div class="w-32">Date/Time</div>
+<div class="flex-1">Description (Stall B Items)</div>
+<div class="w-24 text-right">Amount</div>
+</div>
+<div class="flex h-[44px] items-center px-3 border-b border-border font-table-cell text-table-cell tabular-nums">
+<div class="w-20 text-on-surface-variant">#4092</div>
+<div class="w-32 text-on-surface-variant">24 Oct, 18:30</div>
+<div class="flex-1">2x Papdi Chaat, 1x Bhel Puri</div>
+<div class="w-24 text-right">₹350.00</div>
+</div>
+<div class="flex h-[44px] items-center px-3 border-b border-border font-table-cell text-table-cell tabular-nums">
+<div class="w-20 text-on-surface-variant">#4105</div>
+<div class="w-32 text-on-surface-variant">24 Oct, 19:15</div>
+<div class="flex-1">5x Pani Puri Family Pack</div>
+<div class="w-24 text-right">₹1,250.00</div>
+</div>
+<div class="flex h-[44px] items-center px-3 font-table-cell text-table-cell tabular-nums">
+<div class="w-20 text-on-surface-variant">#4221</div>
+<div class="w-32 text-on-surface-variant">25 Oct, 20:45</div>
+<div class="flex-1">Multiple items (Group Order)</div>
+<div class="w-24 text-right">₹2,600.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center h-[44px] border-b border-border px-4 font-table-cell text-table-cell text-on-surface bg-background expandable-row" onclick="toggleDrilldown('drilldown-2', this)" tabindex="0">
+<div class="w-10 flex justify-center text-on-surface-variant">
+<span class="material-symbols-outlined transition-transform duration-200" id="icon-drilldown-2">chevron_right</span>
+</div>
+<div class="flex-1 pl-2 font-medium">Momos Hub</div>
+<div class="flex-1">Juice Bar</div>
+<div class="flex-1 text-right pr-4 font-currency-display text-currency-display text-error tabular-nums">₹1,850.00</div>
+<div class="w-32 flex justify-center">
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">Unsettled</span>
+</div>
+<div class="w-24 text-right">
+<button class="text-primary font-header-md text-header-md hover:underline focus:outline-none" onclick="event.stopPropagation();">Settle</button>
+</div>
+</div>
+<!-- Drilldown 2 -->
+<div class="drilldown-content w-full border-b border-border" id="drilldown-2">
+<div class="p-4 pl-14 bg-surface-container-low">
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-2">Transaction Breakdown</div>
+<div class="w-full bg-background border border-border rounded">
+<div class="flex h-8 items-center px-3 border-b border-border bg-[#E9EFEB] font-label-sm text-label-sm text-on-surface-variant">
+<div class="w-20">Token #</div>
+<div class="w-32">Date/Time</div>
+<div class="flex-1">Description (Stall B Items)</div>
+<div class="w-24 text-right">Amount</div>
+</div>
+<div class="flex h-[44px] items-center px-3 font-table-cell text-table-cell tabular-nums">
+<div class="w-20 text-on-surface-variant">#5011</div>
+<div class="w-32 text-on-surface-variant">26 Oct, 14:20</div>
+<div class="flex-1">3x Mango Shake, 2x Fresh Lime</div>
+<div class="w-24 text-right">₹1,850.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 3 (Settled Example) -->
+<div class="flex items-center h-[44px] px-4 font-table-cell text-table-cell text-on-surface-variant bg-background/50 expandable-row" onclick="toggleDrilldown('drilldown-3', this)" tabindex="0">
+<div class="w-10 flex justify-center text-on-surface-variant">
+<span class="material-symbols-outlined transition-transform duration-200" id="icon-drilldown-3">chevron_right</span>
+</div>
+<div class="flex-1 pl-2">Biryani House</div>
+<div class="flex-1">Kebab Corner</div>
+<div class="flex-1 text-right pr-4 font-currency-display text-currency-display text-on-surface-variant tabular-nums">₹5,400.00</div>
+<div class="w-32 flex justify-center">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Settled (27 Oct)</span>
+</div>
+<div class="w-24 text-right text-on-surface-variant/50">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<!-- Drilldown 3 -->
+<div class="drilldown-content w-full border-t border-border" id="drilldown-3">
+<div class="p-4 pl-14 bg-surface-container-low">
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-2">Transaction Breakdown</div>
+<div class="w-full bg-background border border-border rounded">
+<div class="flex h-8 items-center px-3 border-b border-border bg-[#E9EFEB] font-label-sm text-label-sm text-on-surface-variant">
+<div class="w-20">Token #</div>
+<div class="w-32">Date/Time</div>
+<div class="flex-1">Description (Stall B Items)</div>
+<div class="w-24 text-right">Amount</div>
+</div>
+<div class="flex h-[44px] items-center px-3 font-table-cell text-table-cell tabular-nums text-on-surface-variant">
+<div class="w-20">#3309</div>
+<div class="w-32">23 Oct, 21:00</div>
+<div class="flex-1">10x Chicken Tikka Platter (Party Order)</div>
+<div class="w-24 text-right">₹5,400.00</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Summary Footer -->
+<div class="mt-6 flex justify-end">
+<div class="bg-surface-bright border border-border rounded-lg p-4 w-72">
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Total Outstanding</span>
+<span class="font-currency-display text-currency-display text-error tabular-nums">₹6,050.00</span>
+</div>
+<div class="h-px w-full bg-border my-2"></div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Total Settled (Period)</span>
+<span class="font-currency-display text-currency-display text-on-surface tabular-nums">₹5,400.00</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        function toggleDrilldown(id, rowElement) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.style.transform = 'rotate(0deg)';
+                rowElement.style.backgroundColor = '';
+            } else {
+                // Close others (optional, depending on desired UX, leaving independent for now for comparison)
+                
+                content.classList.add('open');
+                icon.style.transform = 'rotate(90deg)';
+                rowElement.style.backgroundColor = 'rgba(21, 107, 84, 0.04)'; // Subtle active state
+            }
+        }
+
+        // Add keyboard support for expanding rows
+        document.querySelectorAll('.expandable-row').forEach(row => {
+            row.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        });
+    </script>
+
+
+</body></html>

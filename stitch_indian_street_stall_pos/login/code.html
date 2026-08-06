@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ROS - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "background": "#f5fbf5",
+                        "outline": "#6f7974",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#156b54",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#3f4944",
+                        "on-secondary-fixed": "#00210d",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#88d6b9",
+                        "on-primary-fixed": "#002117",
+                        "surface-tint": "#156b54",
+                        "tertiary-container": "#885200",
+                        "surface-dim": "#d5dcd6",
+                        "primary-fixed": "#a4f2d5",
+                        "surface-bright": "#f5fbf5",
+                        "surface": "#f5fbf5",
+                        "tertiary": "#673d00",
+                        "on-surface": "#171d1a",
+                        "on-secondary-container": "#237242",
+                        "on-secondary-fixed-variant": "#00522a",
+                        "secondary-container": "#a4f4b8",
+                        "on-primary-container": "#9ae9cb",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#00513e",
+                        "surface-container-highest": "#dee4df",
+                        "on-background": "#171d1a",
+                        "tertiary-fixed": "#ffdcbb",
+                        "inverse-on-surface": "#ecf2ed",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#dee4df",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-tertiary-container": "#ffd0a0",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "secondary-fixed-dim": "#89d89e",
+                        "secondary": "#1b6c3d",
+                        "secondary-fixed": "#a4f4b8",
+                        "inverse-surface": "#2c322e",
+                        "inverse-primary": "#88d6b9",
+                        "surface-container": "#e9efea",
+                        "on-primary-fixed-variant": "#00513e",
+                        "surface-container-low": "#eff5f0",
+                        "outline-variant": "#bec9c3",
+                        "on-tertiary-fixed": "#2b1700",
+                        "surface-container-high": "#e4eae4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "bottom-action-height": "56px",
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "margin-page": "16px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Roboto"],
+                        "label-caption": ["Roboto"],
+                        "display-title": ["Roboto"],
+                        "body-secondary": ["Roboto"],
+                        "section-header": ["Roboto"],
+                        "money-display": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caption": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                        "display-title": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-secondary": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "section-header": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "money-display": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-main text-body-main h-screen flex flex-col items-center justify-center p-margin-page relative">
+<div class="w-full max-w-sm flex flex-col h-full justify-center">
+<!-- Logo/Header Area -->
+<div class="text-center mb-12">
+<h1 class="font-display-title text-display-title text-primary font-bold tracking-tight">ROS</h1>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant mt-2">Restaurant Operating System</p>
+</div>
+<!-- Form Area -->
+<form class="space-y-6 w-full" id="loginForm">
+<!-- Email Input -->
+<div class="relative">
+<label class="block font-label-caption text-label-caption text-on-surface-variant mb-1 ml-1" for="email">Email</label>
+<input class="w-full h-touch-target-min px-4 py-2 bg-surface border border-outline rounded-lg text-on-surface font-body-main text-body-main focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-colors duration-200 placeholder:text-outline-variant" id="email" name="email" placeholder="Enter your email" required="" type="email"/>
+</div>
+<!-- Password Input -->
+<div class="relative">
+<label class="block font-label-caption text-label-caption text-on-surface-variant mb-1 ml-1" for="password">Password</label>
+<input class="w-full h-touch-target-min px-4 py-2 bg-surface border border-outline rounded-lg text-on-surface font-body-main text-body-main focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-colors duration-200 placeholder:text-outline-variant" id="password" name="password" placeholder="Enter your password" required="" type="password"/>
+</div>
+<!-- Optional Error Message (Hidden by default, shown via JS for demo) -->
+<div class="hidden flex items-center gap-2 p-3 bg-error-container text-on-error-container rounded-lg" id="errorMessage">
+<span class="material-symbols-outlined text-[20px]" data-icon="error">error</span>
+<span class="font-body-secondary text-body-secondary">Invalid credentials. Please try again.</span>
+</div>
+<!-- Create Account Link -->
+<div class="text-center mt-4">
+<button class="font-body-secondary text-body-secondary text-primary hover:text-primary-fixed-dim transition-colors h-touch-target-min px-4 inline-flex items-center justify-center" type="button">
+                    Create an account
+                </button>
+</div>
+</form>
+</div>
+<!-- Bottom Anchored Primary Button -->
+<div class="fixed bottom-0 left-0 w-full p-margin-page bg-background">
+<div class="w-full max-w-sm mx-auto">
+<button class="w-full h-bottom-action-height bg-primary text-on-primary font-section-header text-section-header rounded-full flex items-center justify-center shadow-sm hover:bg-primary/90 active:bg-primary/80 transition-colors duration-200" form="loginForm" type="submit">
+                Sign in
+            </button>
+</div>
+</div>
+<script>
+        // Simple demo interaction for the login form to show the error state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Simulate an error for demonstration purposes based on the prompt's mention of error messages
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMessage');
+            const emailInput = document.getElementById('email');
+            const passInput = document.getElementById('password');
+            
+            if(email && password) {
+                // Show error state styling
+                errorMsg.classList.remove('hidden');
+                
+                emailInput.classList.remove('border-outline', 'focus:ring-primary', 'focus:border-primary');
+                emailInput.classList.add('border-error', 'focus:ring-error', 'focus:border-error', 'bg-error-container/20');
+                
+                passInput.classList.remove('border-outline', 'focus:ring-primary', 'focus:border-primary');
+                passInput.classList.add('border-error', 'focus:ring-error', 'focus:border-error', 'bg-error-container/20');
+                
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    errorMsg.classList.add('hidden');
+                    emailInput.classList.add('border-outline', 'focus:ring-primary', 'focus:border-primary');
+                    emailInput.classList.remove('border-error', 'focus:ring-error', 'focus:border-error', 'bg-error-container/20');
+                    
+                    passInput.classList.add('border-outline', 'focus:ring-primary', 'focus:border-primary');
+                    passInput.classList.remove('border-error', 'focus:ring-error', 'focus:border-error', 'bg-error-container/20');
+                }, 3000);
+            }
+        });
+    </script>
+</body></html>

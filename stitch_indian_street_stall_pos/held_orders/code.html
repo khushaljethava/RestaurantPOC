@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QuickServe POS - Held Orders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#00513e",
+                        "tertiary-container": "#885200",
+                        "secondary": "#1b6c3d",
+                        "outline-variant": "#bec9c3",
+                        "on-surface-variant": "#3f4944",
+                        "on-surface": "#171d1a",
+                        "outline": "#6f7974",
+                        "on-primary-fixed": "#002117",
+                        "on-primary-container": "#9ae9cb",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#156b54",
+                        "tertiary-fixed": "#ffdcbb",
+                        "on-background": "#171d1a",
+                        "inverse-primary": "#88d6b9",
+                        "on-tertiary-fixed": "#2b1700",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f5fbf5",
+                        "on-secondary-fixed-variant": "#00522a",
+                        "surface-tint": "#156b54",
+                        "inverse-on-surface": "#ecf2ed",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "surface-container-highest": "#dee4df",
+                        "surface": "#f5fbf5",
+                        "surface-container-high": "#e4eae4",
+                        "inverse-surface": "#2c322e",
+                        "surface-variant": "#dee4df",
+                        "secondary-fixed-dim": "#89d89e",
+                        "surface-container": "#e9efea",
+                        "tertiary": "#673d00",
+                        "on-tertiary-container": "#ffd0a0",
+                        "surface-container-low": "#eff5f0",
+                        "secondary-fixed": "#a4f4b8",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "surface-dim": "#d5dcd6",
+                        "secondary-container": "#a4f4b8",
+                        "primary-fixed": "#a4f2d5",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f5fbf5",
+                        "on-secondary-container": "#237242",
+                        "primary-fixed-dim": "#88d6b9",
+                        "primary": "#00513e",
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#00210d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-page": "16px",
+                        "bottom-action-height": "56px",
+                        "touch-target-min": "48px"
+                    },
+                    "fontFamily": {
+                        "label-caption": ["Roboto"],
+                        "money-display": ["Roboto"],
+                        "display-title": ["Roboto"],
+                        "body-secondary": ["Roboto"],
+                        "section-header": ["Roboto"],
+                        "body-main": ["Roboto"]
+                    },
+                    "fontSize": {
+                        "label-caption": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                        "money-display": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "display-title": ["24px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body-secondary": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "section-header": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "body-main": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Roboto', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface h-full flex flex-col antialiased text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-surface w-full top-0 sticky flex items-center justify-between px-gutter w-full h-14 bg-surface-container border-b-0 shadow-none z-10">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="storefront">storefront</span>
+<h1 class="font-display-title text-display-title text-primary font-bold tracking-tight">QuickServe POS</h1>
+</div>
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-center hover:bg-surface-container-high transition-colors active:opacity-80 rounded-full text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto px-margin-page pb-bottom-action-height pt-4 md:pb-8">
+<div class="max-w-4xl mx-auto">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-section-header text-section-header text-on-surface">Held Orders</h2>
+<span class="bg-[#FFF0D4] text-[#8A5300] font-label-caption text-label-caption px-3 py-1 rounded-full">3 Pending</span>
+</div>
+<!-- Bento Grid Layout for Held Orders -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Held Order Card 1 -->
+<div class="bg-surface-container rounded-xl p-4 flex flex-col justify-between h-48 relative overflow-hidden group hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-section-header text-section-header text-on-surface">Table 4</h3>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">4 items</p>
+</div>
+<span class="font-label-caption text-label-caption text-on-surface-variant">5 mins ago</span>
+</div>
+<div class="flex-1">
+<div class="font-body-secondary text-body-secondary text-on-surface-variant line-clamp-2 mt-1">
+                             2x Burger, 1x Fries, 1x Cola
+                         </div>
+</div>
+<div class="flex items-center justify-between mt-4 border-t border-outline-variant/30 pt-3">
+<div class="font-money-display text-money-display text-on-surface tabular-nums">$32.50</div>
+<button class="bg-primary text-on-primary font-section-header text-section-header px-6 h-touch-target-min rounded-lg active:bg-primary/90 hover:opacity-95 transition-opacity flex items-center justify-center shadow-sm">
+                            Resume
+                        </button>
+</div>
+</div>
+<!-- Held Order Card 2 -->
+<div class="bg-surface-container rounded-xl p-4 flex flex-col justify-between h-48 relative overflow-hidden group hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-section-header text-section-header text-on-surface">No table</h3>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">1 item</p>
+</div>
+<span class="font-label-caption text-label-caption text-on-surface-variant">12 mins ago</span>
+</div>
+<div class="flex-1">
+<div class="font-body-secondary text-body-secondary text-on-surface-variant line-clamp-2 mt-1">
+                             1x Vanilla Shake
+                         </div>
+</div>
+<div class="flex items-center justify-between mt-4 border-t border-outline-variant/30 pt-3">
+<div class="font-money-display text-money-display text-on-surface tabular-nums">$4.99</div>
+<button class="bg-primary text-on-primary font-section-header text-section-header px-6 h-touch-target-min rounded-lg active:bg-primary/90 hover:opacity-95 transition-opacity flex items-center justify-center shadow-sm">
+                            Resume
+                        </button>
+</div>
+</div>
+<!-- Held Order Card 3 -->
+<div class="bg-surface-container rounded-xl p-4 flex flex-col justify-between h-48 relative overflow-hidden group hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-section-header text-section-header text-on-surface">Table 12</h3>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">8 items</p>
+</div>
+<span class="font-label-caption text-label-caption text-error">45 mins ago</span>
+</div>
+<div class="flex-1">
+<div class="font-body-secondary text-body-secondary text-on-surface-variant line-clamp-2 mt-1">
+                             Family Combo A, Extra Dips
+                         </div>
+</div>
+<div class="flex items-center justify-between mt-4 border-t border-outline-variant/30 pt-3">
+<div class="font-money-display text-money-display text-on-surface tabular-nums">$89.00</div>
+<button class="bg-primary text-on-primary font-section-header text-section-header px-6 h-touch-target-min rounded-lg active:bg-primary/90 hover:opacity-95 transition-opacity flex items-center justify-center shadow-sm">
+                            Resume
+                        </button>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden by default in this mockup) -->
+<!-- 
+            <div class="flex flex-col items-center justify-center py-20 text-center">
+                <span class="material-symbols-outlined text-6xl text-outline mb-4" data-icon="inbox">inbox</span>
+                <h3 class="font-section-header text-section-header text-on-surface mb-2">No held orders</h3>
+                <p class="font-body-secondary text-body-secondary text-on-surface-variant mb-6 max-w-sm">All parked orders have been processed or there are none currently on hold.</p>
+                <button class="bg-primary text-on-primary font-section-header text-section-header px-8 h-touch-target-min rounded-full active:bg-primary/90 hover:opacity-95 transition-opacity flex items-center justify-center">
+                    Start a new order
+                </button>
+            </div>
+            -->
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full h-bottom-action-height flex justify-around items-center px-2 bg-surface-container-low shadow-[0_-1px_3px_rgba(0,0,0,0.05)] z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant w-16 h-full transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="point_of_sale">point_of_sale</span>
+<span class="font-label-caption text-label-caption">Register</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant w-16 h-full transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caption text-label-caption">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-xl w-16 h-12 transition-colors active:scale-95 duration-150 relative" href="#">
+<span class="absolute top-1 right-2 w-2 h-2 bg-error rounded-full"></span>
+<span class="material-symbols-outlined mb-0.5" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-label-caption text-label-caption font-bold">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant w-16 h-full transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-label-caption text-label-caption">Reports</span>
+</a>
+</nav>
+</body></html>

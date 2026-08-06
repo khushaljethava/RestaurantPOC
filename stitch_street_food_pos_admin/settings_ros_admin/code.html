@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StreetStall POS - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2d312f",
+                      "surface-bright": "#f7faf6",
+                      "tertiary": "#73332c",
+                      "on-surface": "#171D1A",
+                      "error-container": "#ffdad6",
+                      "warning": "#8A5300",
+                      "surface-container-highest": "#e0e3e0",
+                      "on-tertiary-container": "#ffcdc6",
+                      "outline-variant": "#bec9c3",
+                      "warning-container": "#FFF0D4",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed": "#002117",
+                      "secondary-container": "#dae5de",
+                      "on-tertiary": "#ffffff",
+                      "inverse-primary": "#88d6b9",
+                      "primary-container": "#A4F2D5",
+                      "primary-fixed-dim": "#88d6b9",
+                      "surface": "#E9EFEB",
+                      "surface-variant": "#e0e3e0",
+                      "surface-container-low": "#f1f4f1",
+                      "surface-container": "#ebefeb",
+                      "tertiary-fixed": "#ffdad5",
+                      "error": "#BA1A1A",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-dim": "#d7dbd7",
+                      "tertiary-container": "#904a42",
+                      "outline": "#6f7974",
+                      "on-surface-variant": "#3f4944",
+                      "tertiary-fixed-dim": "#ffb4aa",
+                      "primary": "#00513e",
+                      "on-tertiary-fixed-variant": "#73332c",
+                      "on-primary-container": "#9ae9cb",
+                      "secondary": "#56615b",
+                      "primary-fixed": "#a4f2d5",
+                      "on-background": "#181c1a",
+                      "background": "#F5FBF6",
+                      "on-tertiary-fixed": "#3b0906",
+                      "on-secondary-fixed-variant": "#3f4944",
+                      "secondary-fixed": "#dae5de",
+                      "surface-tint": "#156b54",
+                      "on-secondary-fixed": "#141e19",
+                      "on-error-container": "#93000a",
+                      "border": "#BFC9C3",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#bec9c2",
+                      "surface-container-high": "#e6e9e5",
+                      "inverse-on-surface": "#eef2ee",
+                      "success": "#1B6C3D",
+                      "on-error": "#ffffff",
+                      "on-secondary-container": "#5c6761",
+                      "on-primary-fixed-variant": "#00513e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "sidebar-width": "224px",
+                      "margin-desktop": "32px",
+                      "page-padding": "32px",
+                      "table-row-height": "44px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "currency-display": [
+                              "Roboto"
+                      ],
+                      "headline-lg": [
+                              "Roboto"
+                      ],
+                      "label-sm": [
+                              "Roboto"
+                      ],
+                      "body-md": [
+                              "Roboto"
+                      ],
+                      "header-md": [
+                              "Roboto"
+                      ],
+                      "table-cell": [
+                              "Roboto"
+                      ]
+              },
+              "fontSize": {
+                      "currency-display": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "header-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "table-cell": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen overflow-x-hidden flex flex-col md:flex-row">
+<!-- SideNavBar (Desktop Shell) -->
+<nav class="bg-surface dark:bg-surface-dim fixed left-0 top-0 h-screen w-sidebar-width border-r border-outline-variant dark:border-outline flex flex-col w-sidebar-width fixed inset-y-0 hidden md:flex z-20">
+<div class="p-6">
+<h1 class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed font-bold">StreetStall POS</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Main Branch</p>
+</div>
+<div class="px-4 pb-4">
+<button class="w-full bg-primary text-on-primary font-header-md text-header-md rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">add</span>
+                New Order
+            </button>
+</div>
+<ul class="flex-1 overflow-y-auto py-2 flex flex-col gap-1 px-3">
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">live_tv</span>
+<span>Live</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">payments</span>
+<span>Settlement</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">assessment</span>
+<span>Reports</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">restaurant_menu</span>
+<span>Menu</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">badge</span>
+<span>Staff</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">storefront</span>
+<span>Food Court</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-bold text-primary border-l-4 border-primary pl-3 py-3 bg-primary-container/10 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+<div class="p-4 border-t border-outline-variant mt-auto">
+<button class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-highest w-full p-2 rounded-lg transition-colors">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
+                    SS
+                </div>
+<div class="text-left flex-1">
+<p class="font-label-sm text-label-sm leading-tight">Stall Switcher</p>
+</div>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="bg-surface-bright dark:bg-surface-container-lowest fixed top-0 right-0 z-10 border-b border-outline-variant dark:border-outline flex items-center justify-between h-table-row-height ml-sidebar-width px-page-padding w-full md:w-[calc(100%-224px)] md:ml-[224px]">
+<!-- Search -->
+<div class="flex-1 max-w-md hidden md:flex items-center">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="w-full h-8 pl-10 pr-4 rounded-full border border-outline-variant bg-surface-bright text-body-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow" placeholder="Search orders, items..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4 ml-auto">
+<button class="p-2 text-on-surface-variant hover:bg-primary-container/20 dark:hover:bg-primary-fixed-dim/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-primary-container/20 dark:hover:bg-primary-fixed-dim/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+<!-- Mobile Menu Trigger -->
+<button class="p-2 text-on-surface-variant md:hidden hover:bg-primary-container/20 rounded-lg">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-sidebar-width pt-[calc(var(--table-row-height)+1rem)] md:pt-[calc(44px+2rem)] px-margin-mobile md:px-page-padding pb-20 md:pb-8 flex justify-center w-full">
+<div class="w-full max-w-[640px] flex flex-col gap-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Stall Settings</h2>
+<p class="text-on-surface-variant font-body-md text-body-md">Manage your stall details and payment collection methods.</p>
+</div>
+<form class="flex flex-col gap-6 bg-surface rounded-[12px] p-6 border border-outline-variant/50">
+<!-- General Settings -->
+<div class="flex flex-col gap-5">
+<div class="flex flex-col gap-1.5">
+<label class="font-header-md text-header-md text-on-surface" for="stallName">Stall name</label>
+<input class="h-[44px] rounded-lg border border-border bg-surface-bright px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow text-body-md w-full" id="stallName" name="stallName" type="text" value="Main Branch"/>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+<div class="flex flex-col gap-1.5">
+<label class="font-header-md text-header-md text-on-surface" for="currency">Currency</label>
+<div class="relative">
+<select class="appearance-none h-[44px] w-full rounded-lg border border-border bg-surface-bright px-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow text-body-md" id="currency" name="currency">
+<option value="INR">INR (₹)</option>
+<option value="USD">USD ($)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-header-md text-header-md text-on-surface" for="timezone">Timezone</label>
+<div class="relative">
+<select class="appearance-none h-[44px] w-full rounded-lg border border-border bg-surface-bright px-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow text-body-md" id="timezone" name="timezone">
+<option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+<option value="UTC">UTC</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between py-2 mt-2">
+<div>
+<p class="font-header-md text-header-md text-on-surface">Accepting orders</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Toggle visibility on the food court menu.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<hr class="border-border my-2"/>
+<!-- UPI Settings -->
+<div class="flex flex-col gap-5">
+<h3 class="font-header-md text-header-md text-on-surface border-b border-border pb-2 inline-block w-fit">UPI collection</h3>
+<div class="flex flex-col gap-1.5">
+<label class="font-header-md text-header-md text-on-surface" for="upiVpa">UPI VPA</label>
+<input class="h-[44px] rounded-lg border border-border bg-surface-bright px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow text-body-md w-full" id="upiVpa" name="upiVpa" placeholder="merchant@paytm" type="text"/>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">From Paytm Business or any UPI app, e.g. merchant@paytm</p>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-header-md text-header-md text-on-surface" for="payeeName">Payee name</label>
+<input class="h-[44px] rounded-lg border border-border bg-surface-bright px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow text-body-md w-full" id="payeeName" name="payeeName" placeholder="StreetStall Main Branch" type="text"/>
+</div>
+</div>
+<div class="pt-4 mt-2">
+<button class="bg-surface-tint text-white h-[44px] px-6 rounded-lg font-header-md text-header-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors self-start inline-flex items-center justify-center" type="button">
+                        Save changes
+                    </button>
+</div>
+</form>
+</div>
+</main>
+</body></html>

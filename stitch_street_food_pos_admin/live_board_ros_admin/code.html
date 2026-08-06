@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Operations - StreetStall POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#3b0906",
+                      "on-error": "#ffffff",
+                      "on-surface": "#181c1a",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed": "#dae5de",
+                      "outline-variant": "#bec9c3",
+                      "tertiary-container": "#904a42",
+                      "error-container": "#FFDAD6",
+                      "primary-container": "#A4F2D5",
+                      "tertiary-fixed-dim": "#ffb4aa",
+                      "on-background": "#181c1a",
+                      "surface-container-highest": "#e0e3e0",
+                      "secondary-fixed-dim": "#bec9c2",
+                      "on-tertiary-fixed-variant": "#73332c",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-container": "#ffcdc6",
+                      "warning": "#8A5300",
+                      "inverse-surface": "#2d312f",
+                      "secondary": "#56615b",
+                      "tertiary": "#73332c",
+                      "surface-container": "#ebefeb",
+                      "surface-dim": "#d7dbd7",
+                      "success": "#1B6C3D",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "surface": "#E9EFEB",
+                      "surface-container-high": "#e6e9e5",
+                      "outline": "#6f7974",
+                      "inverse-primary": "#88d6b9",
+                      "on-primary-fixed": "#002117",
+                      "tertiary-fixed": "#ffdad5",
+                      "on-primary-fixed-variant": "#00513e",
+                      "on-primary-container": "#9ae9cb",
+                      "error": "#BA1A1A",
+                      "inverse-on-surface": "#eef2ee",
+                      "surface-tint": "#156b54",
+                      "on-secondary-fixed": "#141e19",
+                      "border": "#BFC9C3",
+                      "secondary-container": "#dae5de",
+                      "surface-bright": "#f7faf6",
+                      "primary-fixed": "#a4f2d5",
+                      "on-error-container": "#93000a",
+                      "surface-variant": "#e0e3e0",
+                      "primary-fixed-dim": "#88d6b9",
+                      "on-surface-variant": "#3f4944",
+                      "primary": "#00513e",
+                      "warning-container": "#FFF0D4",
+                      "surface-container-low": "#f1f4f1",
+                      "background": "#F5FBF6",
+                      "on-secondary-fixed-variant": "#3f4944",
+                      "on-secondary-container": "#5c6761"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "table-row-height": "44px",
+                      "margin-desktop": "32px",
+                      "gutter": "16px",
+                      "page-padding": "32px",
+                      "sidebar-width": "224px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "currency-display": ["Roboto"],
+                      "header-md": ["Roboto"],
+                      "table-cell": ["Roboto"],
+                      "headline-lg": ["Roboto"],
+                      "label-sm": ["Roboto"],
+                      "body-md": ["Roboto"]
+              },
+              "fontSize": {
+                      "currency-display": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "header-md": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "table-cell": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                      "label-sm": ["11px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="fixed left-0 top-0 h-screen w-sidebar-width bg-surface dark:bg-surface-dim border-r border-outline-variant dark:border-outline flex flex-col z-20">
+<div class="p-6 pb-4">
+<h1 class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed font-bold tracking-tight">StreetStall POS</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Main Branch</p>
+</div>
+<div class="px-4 pb-4">
+<button class="w-full bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-header-md text-header-md h-table-row-height rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                New Order
+            </button>
+</div>
+<ul class="flex flex-col flex-1 overflow-y-auto w-sidebar-width">
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<!-- ACTIVE STATE APPLIED HERE -->
+<a class="flex items-center gap-3 font-bold text-primary border-l-4 border-primary pl-3 py-3 bg-primary-container/10 cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined">live_tv</span>
+                    Live
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">payments</span>
+                    Settlement
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">assessment</span>
+                    Reports
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+                    Menu
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+                    Staff
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">storefront</span>
+                    Food Court
+                </a>
+</li>
+<li class="mt-auto border-t border-outline-variant">
+<a class="flex items-center gap-3 font-normal text-on-surface-variant pl-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 right-0 z-10 bg-surface-bright dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline flex items-center justify-between h-table-row-height ml-sidebar-width px-page-padding w-[calc(100%-224px)]">
+<div class="flex items-center gap-3">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
+</span>
+<h2 class="font-header-md text-header-md text-primary dark:text-primary-fixed">Live Operations Board</h2>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg text-on-surface-variant hover:bg-primary-container/20 dark:hover:bg-primary-fixed-dim/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-lg text-on-surface-variant hover:bg-primary-container/20 dark:hover:bg-primary-fixed-dim/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-sidebar-width mt-table-row-height p-page-padding h-[calc(100vh-44px)] overflow-hidden flex gap-gutter bg-surface-container-low">
+<!-- Left Column: Open Bills -->
+<section class="w-1/3 flex flex-col bg-surface rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="bg-surface-container-high px-4 flex items-center h-table-row-height border-b border-outline-variant">
+<h3 class="font-header-md text-header-md text-on-surface flex-1">Open Bills</h3>
+<span class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-2 py-0.5 rounded-full">4 Active</span>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="flex flex-col">
+<!-- Bill Item 1 -->
+<li class="flex items-center justify-between px-4 h-table-row-height border-b border-outline-variant hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col justify-center">
+<span class="font-header-md text-header-md text-on-surface leading-tight">Table 4</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ramesh</span>
+</div>
+<div class="font-currency-display text-currency-display text-primary text-right">
+                            ₹450.00
+                        </div>
+</li>
+<!-- Bill Item 2 -->
+<li class="flex items-center justify-between px-4 h-table-row-height border-b border-outline-variant hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col justify-center">
+<span class="font-header-md text-header-md text-on-surface leading-tight">Table 12</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Suresh</span>
+</div>
+<div class="font-currency-display text-currency-display text-primary text-right">
+                            ₹1,280.50
+                        </div>
+</li>
+<!-- Bill Item 3 -->
+<li class="flex items-center justify-between px-4 h-table-row-height border-b border-outline-variant hover:bg-surface-container-highest transition-colors cursor-pointer bg-error-container/20">
+<div class="flex flex-col justify-center">
+<span class="font-header-md text-header-md text-on-surface leading-tight">Table 7</span>
+<span class="font-label-sm text-label-sm text-error flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">timer</span> 45m waiting</span>
+</div>
+<div class="font-currency-display text-currency-display text-primary text-right">
+                            ₹890.00
+                        </div>
+</li>
+<!-- Bill Item 4 -->
+<li class="flex items-center justify-between px-4 h-table-row-height border-b border-outline-variant hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col justify-center">
+<span class="font-header-md text-header-md text-on-surface leading-tight">Takeaway #88</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Self Pickup</span>
+</div>
+<div class="font-currency-display text-currency-display text-primary text-right">
+                            ₹320.00
+                        </div>
+</li>
+</ul>
+</div>
+</section>
+<!-- Right Column: Active Orders -->
+<section class="w-2/3 flex flex-col gap-gutter overflow-hidden">
+<!-- Pending Group -->
+<div class="flex-1 flex flex-col bg-surface rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="bg-surface-container-high px-4 flex items-center h-table-row-height border-b border-outline-variant sticky top-0 z-10">
+<h3 class="font-header-md text-header-md text-on-surface flex-1">Kitchen Queue</h3>
+<span class="bg-warning-container text-warning font-label-sm text-label-sm px-2 py-0.5 rounded-full">Pending</span>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Order Table Header -->
+<div class="flex items-center px-4 h-table-row-height border-b border-outline-variant bg-surface sticky top-0 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<div class="w-1/4">Token / Source</div>
+<div class="w-1/4">Stall</div>
+<div class="w-2/4">Items</div>
+</div>
+<ul class="flex flex-col">
+<!-- Order Row 1 -->
+<li class="flex items-center px-4 min-h-[44px] py-1 border-b border-outline-variant hover:bg-surface-container-highest transition-colors">
+<div class="w-1/4 flex flex-col">
+<span class="font-header-md text-header-md text-on-surface">Token #22</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Table 4</span>
+</div>
+<div class="w-1/4">
+<span class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded">Dosa Corner</span>
+</div>
+<div class="w-2/4 font-table-cell text-table-cell text-on-surface">
+                                Masala Dosa x2, Filter Coffee x2
+                            </div>
+</li>
+<!-- Order Row 2 -->
+<li class="flex items-center px-4 min-h-[44px] py-1 border-b border-outline-variant hover:bg-surface-container-highest transition-colors">
+<div class="w-1/4 flex flex-col">
+<span class="font-header-md text-header-md text-on-surface">Token #23</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Takeaway</span>
+</div>
+<div class="w-1/4">
+<span class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded">Chaat Hub</span>
+</div>
+<div class="w-2/4 font-table-cell text-table-cell text-on-surface">
+                                Pani Puri (Pack) x1, Bhel Puri x1
+                            </div>
+</li>
+<!-- Order Row 3 -->
+<li class="flex items-center px-4 min-h-[44px] py-1 border-b border-outline-variant hover:bg-surface-container-highest transition-colors">
+<div class="w-1/4 flex flex-col">
+<span class="font-header-md text-header-md text-on-surface">Token #24</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Table 12</span>
+</div>
+<div class="w-1/4">
+<span class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded">Tandoor</span>
+</div>
+<div class="w-2/4 font-table-cell text-table-cell text-on-surface">
+                                Paneer Tikka x1, Naan x3, Dal Makhani x1
+                            </div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Ready Group -->
+<div class="flex-1 flex flex-col bg-surface rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="bg-surface-container-high px-4 flex items-center h-table-row-height border-b border-outline-variant sticky top-0 z-10">
+<h3 class="font-header-md text-header-md text-on-surface flex-1">Pickup Station</h3>
+<span class="bg-primary-container text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full">Ready</span>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Order Table Header -->
+<div class="flex items-center px-4 h-table-row-height border-b border-outline-variant bg-surface sticky top-0 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<div class="w-1/4">Token / Source</div>
+<div class="w-1/4">Stall</div>
+<div class="w-2/4 flex justify-between">
+<span>Items</span>
+<span>Action</span>
+</div>
+</div>
+<ul class="flex flex-col">
+<!-- Order Row Ready 1 -->
+<li class="flex items-center px-4 min-h-[44px] py-1 border-b border-outline-variant hover:bg-surface-container-highest transition-colors bg-primary-container/5">
+<div class="w-1/4 flex flex-col">
+<span class="font-header-md text-header-md text-on-surface">Token #18</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Table 7</span>
+</div>
+<div class="w-1/4">
+<span class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded">Beverages</span>
+</div>
+<div class="w-2/4 flex items-center justify-between">
+<span class="font-table-cell text-table-cell text-on-surface truncate pr-2">Mango Lassi x2</span>
+<button class="text-primary hover:bg-primary-container p-1 rounded transition-colors" title="Mark Delivered">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</button>
+</div>
+</li>
+<!-- Order Row Ready 2 -->
+<li class="flex items-center px-4 min-h-[44px] py-1 border-b border-outline-variant hover:bg-surface-container-highest transition-colors bg-primary-container/5">
+<div class="w-1/4 flex flex-col">
+<span class="font-header-md text-header-md text-on-surface">Token #19</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Takeaway</span>
+</div>
+<div class="w-1/4">
+<span class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded">Dosa Corner</span>
+</div>
+<div class="w-2/4 flex items-center justify-between">
+<span class="font-table-cell text-table-cell text-on-surface truncate pr-2">Idli Vada Combo x1</span>
+<button class="text-primary hover:bg-primary-container p-1 rounded transition-colors" title="Mark Delivered">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</button>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Digital Receipt - QuickServe POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed": "#002117",
+                      "tertiary-fixed": "#ffdcbb",
+                      "secondary": "#1b6c3d",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-error": "#ffffff",
+                      "on-surface": "#171d1a",
+                      "surface-container-highest": "#dee4df",
+                      "inverse-primary": "#88d6b9",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-low": "#eff5f0",
+                      "secondary-container": "#a4f4b8",
+                      "on-primary-container": "#9ae9cb",
+                      "primary-fixed-dim": "#88d6b9",
+                      "primary-container": "#156b54",
+                      "tertiary-fixed-dim": "#ffb869",
+                      "primary": "#00513e",
+                      "surface-dim": "#d5dcd6",
+                      "outline": "#6f7974",
+                      "outline-variant": "#bec9c3",
+                      "on-surface-variant": "#3f4944",
+                      "on-primary-fixed-variant": "#00513e",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-high": "#e4eae4",
+                      "inverse-surface": "#2c322e",
+                      "on-tertiary-fixed": "#2b1700",
+                      "on-secondary-container": "#237242",
+                      "on-background": "#171d1a",
+                      "secondary-fixed": "#a4f4b8",
+                      "tertiary": "#673d00",
+                      "surface-container": "#e9efea",
+                      "tertiary-container": "#885200",
+                      "background": "#f5fbf5",
+                      "primary-fixed": "#a4f2d5",
+                      "surface-bright": "#f5fbf5",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed-variant": "#673d00",
+                      "on-secondary-fixed": "#00210d",
+                      "surface-variant": "#dee4df",
+                      "secondary-fixed-dim": "#89d89e",
+                      "surface-tint": "#156b54",
+                      "surface": "#f5fbf5",
+                      "on-tertiary-container": "#ffd0a0",
+                      "on-secondary-fixed-variant": "#00522a",
+                      "inverse-on-surface": "#ecf2ed"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "bottom-action-height": "56px",
+                      "margin-page": "16px",
+                      "gutter": "16px",
+                      "touch-target-min": "48px"
+              },
+              "fontFamily": {
+                      "display-title": ["Roboto"],
+                      "money-display": ["Roboto"],
+                      "label-caption": ["Roboto"],
+                      "section-header": ["Roboto"],
+                      "body-secondary": ["Roboto"],
+                      "body-main": ["Roboto"]
+              },
+              "fontSize": {
+                      "display-title": ["24px", {"lineHeight": "32px", "fontWeight": "400"}],
+                      "money-display": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "label-caption": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                      "section-header": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "body-secondary": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-main": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .paper-texture {
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.05"/></svg>');
+        }
+        .jagged-edge-bottom {
+            mask-image: radial-gradient(circle at 10px 100%, transparent 10px, black 11px);
+            mask-size: 20px 100%;
+            mask-position: bottom;
+            mask-repeat: repeat-x;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-main flex flex-col md:flex-row pb-bottom-action-height md:pb-0">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed-dim font-section-header text-section-header w-full top-0 sticky bg-surface-container dark:bg-surface-container-highest flex items-center justify-between px-gutter w-full h-14 z-40 border-b-0 shadow-[0_1px_3px_rgba(0,0,0,0.05)] md:hidden">
+<button class="flex items-center justify-center w-12 h-12 text-on-surface-variant hover:bg-surface-container-high transition-colors active:opacity-80 rounded-full" onclick="history.back()">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<span class="font-display-title text-display-title text-primary dark:text-primary-fixed-dim font-bold tracking-tight">Receipt</span>
+<button class="flex items-center justify-center w-12 h-12 text-on-surface-variant hover:bg-surface-container-high transition-colors active:opacity-80 rounded-full">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</header>
+<!-- SideNav (Desktop) -->
+<nav class="hidden md:flex flex-col w-64 bg-surface-container-low border-r border-outline-variant/30 sticky top-0 h-screen z-40">
+<div class="h-14 flex items-center px-gutter mb-4 bg-surface">
+<span class="material-symbols-outlined mr-3 text-primary">storefront</span>
+<span class="font-display-title text-display-title text-primary font-bold">QuickServe POS</span>
+</div>
+<div class="flex-1 px-3 space-y-1 overflow-y-auto">
+<a class="flex items-center px-4 py-3 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">point_of_sale</span>
+<span class="font-section-header text-section-header">Register</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">receipt_long</span>
+<span class="font-section-header text-section-header">Orders</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-full bg-secondary-container text-on-secondary-container font-bold group" href="#">
+<span class="material-symbols-outlined mr-3" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-section-header text-section-header">History</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-section-header text-section-header">Reports</span>
+</a>
+</div>
+<div class="p-4 border-t border-outline-variant/30 mt-auto">
+<button class="flex items-center px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined mr-3">logout</span>
+<span class="font-section-header text-section-header">Sign Out</span>
+</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto w-full max-w-3xl mx-auto flex flex-col items-center py-8 px-gutter relative">
+<!-- Receipt Card -->
+<div class="w-full max-w-md bg-surface-container-lowest shadow-sm rounded-t-xl rounded-b-none p-6 pb-12 mb-8 relative paper-texture jagged-edge-bottom">
+<div class="text-center mb-6 border-b border-dashed border-outline-variant pb-6">
+<h1 class="font-display-title text-display-title font-bold text-on-surface mb-1 uppercase tracking-wider">The Dosa Man</h1>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">Bill Ref: #INV-20231027-042</p>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant">27 Oct 2023, 14:35</p>
+</div>
+<div class="space-y-4 mb-6">
+<!-- Item 1 -->
+<div class="flex justify-between items-start min-h-[48px]">
+<div class="flex-1">
+<div class="flex">
+<span class="w-6 font-body-main text-body-main text-on-surface font-medium">2x</span>
+<div>
+<span class="font-body-main text-body-main text-on-surface block">Masala Dosa</span>
+<span class="font-label-caption text-label-caption text-on-surface-variant block mt-0.5">Extra Spicy, Ghee Roast</span>
+</div>
+</div>
+</div>
+<span class="font-money-display text-money-display text-on-surface whitespace-nowrap pl-4">₹160.00</span>
+</div>
+<!-- Item 2 -->
+<div class="flex justify-between items-start min-h-[48px]">
+<div class="flex-1">
+<div class="flex">
+<span class="w-6 font-body-main text-body-main text-on-surface font-medium">1x</span>
+<div>
+<span class="font-body-main text-body-main text-on-surface block">Filter Coffee</span>
+</div>
+</div>
+</div>
+<span class="font-money-display text-money-display text-on-surface whitespace-nowrap pl-4">₹40.00</span>
+</div>
+<!-- Item 3 -->
+<div class="flex justify-between items-start min-h-[48px]">
+<div class="flex-1">
+<div class="flex">
+<span class="w-6 font-body-main text-body-main text-on-surface font-medium">1x</span>
+<div>
+<span class="font-body-main text-body-main text-on-surface block">Idli Vada Combo</span>
+</div>
+</div>
+</div>
+<span class="font-money-display text-money-display text-on-surface whitespace-nowrap pl-4">₹75.00</span>
+</div>
+</div>
+<div class="border-t border-dashed border-outline-variant pt-4 pb-4 border-b">
+<div class="flex justify-between items-center mb-1">
+<span class="font-section-header text-section-header text-on-surface font-bold">Total</span>
+<span class="font-money-display text-money-display text-on-surface font-bold text-lg">₹275.00</span>
+</div>
+</div>
+<div class="mt-4 text-center">
+<span class="font-label-caption text-label-caption text-on-surface-variant uppercase tracking-wide">Payment Method</span>
+<div class="font-body-main text-body-main text-on-surface mt-1 font-medium">UPI (PhonePe)</div>
+<div class="mt-4 flex justify-center">
+<span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-secondary text-on-secondary font-label-caption text-label-caption">
+<span class="material-symbols-outlined text-[14px] mr-1" data-icon="check_circle">check_circle</span> Paid
+                    </span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="w-full max-w-md flex space-x-4 mb-12">
+<button class="flex-1 h-touch-target-min rounded-lg border border-outline text-on-surface font-section-header text-section-header flex items-center justify-center hover:bg-surface-container-high transition-colors active:bg-outline-variant/30">
+<span class="material-symbols-outlined mr-2" data-icon="picture_as_pdf">picture_as_pdf</span>
+                Preview PDF
+            </button>
+<button class="flex-1 h-touch-target-min rounded-lg bg-primary text-on-primary font-section-header text-section-header flex items-center justify-center hover:opacity-90 transition-opacity active:bg-primary-fixed-dim">
+<span class="material-symbols-outlined mr-2" data-icon="share">share</span>
+                Share
+            </button>
+</div>
+<!-- Refund Section -->
+<div class="w-full max-w-md mt-auto pt-8 border-t border-outline-variant/50 flex flex-col items-center">
+<button class="h-touch-target-min px-4 rounded-lg text-error hover:bg-error-container transition-colors font-section-header text-section-header flex items-center justify-center active:opacity-80" id="refund-btn">
+<span class="material-symbols-outlined mr-2" data-icon="settings_backup_restore">settings_backup_restore</span>
+                Refund this bill
+            </button>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 w-full h-bottom-action-height flex justify-around items-center px-2 bg-surface-container-low dark:bg-surface-container-lowest z-50 md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-full hover:bg-surface-variant active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="point_of_sale">point_of_sale</span>
+<span class="font-label-caption text-label-caption">Register</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-full hover:bg-surface-variant active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caption text-label-caption">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-5 py-1 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-label-caption text-label-caption font-bold">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-full hover:bg-surface-variant active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-label-caption text-label-caption">Reports</span>
+</a>
+</nav>
+<!-- Refund Dialog Overlay -->
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-gutter" id="refund-dialog">
+<div class="bg-surface-container-lowest rounded-xl shadow-lg w-full max-w-sm p-6 transform transition-all scale-95 opacity-0" id="refund-dialog-content">
+<h3 class="font-display-title text-display-title text-on-surface mb-2 font-bold">Confirm Refund</h3>
+<p class="font-body-secondary text-body-secondary text-on-surface-variant mb-4">Are you sure you want to refund this bill? This action cannot be undone.</p>
+<div class="mb-6">
+<label class="block font-label-caption text-label-caption text-on-surface mb-1" for="refund-reason">Reason for refund <span class="text-error">*</span></label>
+<textarea class="w-full rounded-lg border-outline-variant bg-surface-container-low text-on-surface font-body-main text-body-main p-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow resize-none" id="refund-reason" placeholder="Enter reason (e.g., Customer dissatisfied, Wrong item billed)" rows="3"></textarea>
+</div>
+<div class="flex justify-end space-x-3">
+<button class="h-[40px] px-4 rounded-full border border-outline text-on-surface font-section-header text-section-header hover:bg-surface-container-high transition-colors" id="cancel-refund-btn">
+                    Cancel
+                </button>
+<button class="h-[40px] px-6 rounded-full bg-error text-on-error font-section-header text-section-header hover:opacity-90 transition-opacity opacity-50 cursor-not-allowed" disabled="" id="confirm-refund-btn">
+                    Refund ₹275.00
+                </button>
+</div>
+</div>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const refundBtn = document.getElementById('refund-btn');
+            const dialog = document.getElementById('refund-dialog');
+            const dialogContent = document.getElementById('refund-dialog-content');
+            const cancelBtn = document.getElementById('cancel-refund-btn');
+            const reasonInput = document.getElementById('refund-reason');
+            const confirmBtn = document.getElementById('confirm-refund-btn');
+
+            function openDialog() {
+                dialog.classList.remove('hidden');
+                // Trigger reflow
+                void dialog.offsetWidth;
+                dialogContent.classList.remove('scale-95', 'opacity-0');
+                dialogContent.classList.add('scale-100', 'opacity-100');
+                reasonInput.focus();
+            }
+
+            function closeDialog() {
+                dialogContent.classList.remove('scale-100', 'opacity-100');
+                dialogContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    dialog.classList.add('hidden');
+                    reasonInput.value = '';
+                    checkInput();
+                }, 150);
+            }
+
+            function checkInput() {
+                if (reasonInput.value.trim().length > 3) {
+                    confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    confirmBtn.removeAttribute('disabled');
+                } else {
+                    confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    confirmBtn.setAttribute('disabled', 'true');
+                }
+            }
+
+            refundBtn.addEventListener('click', openDialog);
+            cancelBtn.addEventListener('click', closeDialog);
+            reasonInput.addEventListener('input', checkInput);
+            
+            dialog.addEventListener('click', (e) => {
+                if (e.target === dialog) {
+                    closeDialog();
+                }
+            });
+        });
+    </script>
+</body></html>

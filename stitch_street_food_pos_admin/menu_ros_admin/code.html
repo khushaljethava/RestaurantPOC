@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StreetStall POS - Menu Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed": "#3b0906",
+                      "error": "#BA1A1A",
+                      "surface-container-low": "#f1f4f1",
+                      "tertiary-fixed": "#ffdad5",
+                      "surface-bright": "#f7faf6",
+                      "outline-variant": "#bec9c3",
+                      "on-secondary-container": "#5c6761",
+                      "on-surface": "#171D1A",
+                      "primary-container": "#156b54",
+                      "tertiary": "#73332c",
+                      "on-error-container": "#93000a",
+                      "surface-container-highest": "#e0e3e0",
+                      "border": "#BFC9C3",
+                      "surface": "#E9EFEB",
+                      "on-primary-fixed-variant": "#00513e",
+                      "inverse-primary": "#88d6b9",
+                      "inverse-surface": "#2d312f",
+                      "on-secondary-fixed-variant": "#3f4944",
+                      "on-secondary-fixed": "#141e19",
+                      "surface-container": "#ebefeb",
+                      "background": "#F5FBF6",
+                      "on-surface-variant": "#3f4944",
+                      "secondary-container": "#dae5de",
+                      "inverse-on-surface": "#eef2ee",
+                      "primary": "#00513e",
+                      "primary-fixed-dim": "#88d6b9",
+                      "surface-variant": "#e0e3e0",
+                      "on-secondary": "#ffffff",
+                      "on-primary-container": "#9ae9cb",
+                      "success": "#1B6C3D",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed": "#a4f2d5",
+                      "surface-dim": "#d7dbd7",
+                      "surface-tint": "#156b54",
+                      "warning": "#8A5300",
+                      "surface-container-high": "#e6e9e5",
+                      "on-tertiary-fixed-variant": "#73332c",
+                      "outline": "#6f7974",
+                      "on-tertiary-container": "#ffcdc6",
+                      "secondary-fixed": "#dae5de",
+                      "tertiary-container": "#904a42",
+                      "warning-container": "#FFF0D4",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb4aa",
+                      "secondary": "#56615b",
+                      "on-background": "#181c1a",
+                      "secondary-fixed-dim": "#bec9c2",
+                      "on-primary-fixed": "#002117"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "page-padding": "32px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px",
+                      "table-row-height": "44px",
+                      "sidebar-width": "224px"
+              },
+              "fontFamily": {
+                      "header-md": [
+                              "Roboto"
+                      ],
+                      "headline-lg": [
+                              "Roboto"
+                      ],
+                      "body-md": [
+                              "Roboto"
+                      ],
+                      "table-cell": [
+                              "Roboto"
+                      ],
+                      "currency-display": [
+                              "Roboto"
+                      ],
+                      "label-sm": [
+                              "Roboto"
+                      ]
+              },
+              "fontSize": {
+                      "header-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "table-cell": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "currency-display": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+          .toggle-checkbox:checked {
+              right: 0;
+              border-color: #156b54;
+          }
+          .toggle-checkbox:checked + .toggle-label {
+              background-color: #156b54;
+          }
+      </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface dark:bg-surface-dim fixed left-0 top-0 h-full w-sidebar-width flex flex-col w-[224px] border-r border-border dark:border-outline-variant z-20">
+<div class="p-gutter border-b border-border dark:border-outline-variant flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                SB
+            </div>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-on-primary-container truncate">Street Bites</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate">Stall Switcher</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-4">
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-header-md text-header-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="live_tv">live_tv</span>
+<span class="font-header-md text-header-md">Live</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-header-md text-header-md">Settlement</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-header-md text-header-md">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 font-bold text-primary dark:text-primary-fixed border-l-4 border-primary dark:border-primary-fixed bg-primary-container/10 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant_menu">restaurant_menu</span>
+<span class="font-header-md text-header-md">Menu</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+<span class="font-header-md text-header-md">Staff</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="font-header-md text-header-md">Food Court</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-on-surface/5 transition-colors cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-header-md text-header-md">Settings</span>
+</a>
+</div>
+<div class="p-gutter border-t border-border dark:border-outline-variant">
+<button class="w-full bg-primary-container text-on-primary-container py-2 rounded font-header-md text-header-md hover:opacity-90 transition-opacity">
+                Add New Stall
+            </button>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-[224px] flex flex-col h-full overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface-bright dark:bg-surface-container docked full-width top-0 sticky border-b border-border dark:border-outline-variant flex justify-between items-center h-[64px] px-page-padding w-full z-10">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-black text-primary dark:text-primary-fixed">StreetStall POS</span>
+</div>
+<div class="flex-1 max-w-md mx-8 hidden md:block">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface text-on-surface pl-10 pr-4 h-[44px] rounded-lg border border-border focus:ring-2 focus:ring-primary focus:outline-none placeholder:text-on-surface-variant" placeholder="Search menu items..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-primary-container/5 transition-colors p-2 rounded-full cursor-pointer active:scale-95 duration-150 focus:ring-2 focus:ring-primary focus:outline-none">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:bg-primary-container/5 transition-colors p-2 rounded-full cursor-pointer active:scale-95 duration-150 focus:ring-2 focus:ring-primary focus:outline-none">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container overflow-hidden ml-2 cursor-pointer border border-border">
+<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="A highly detailed close up portrait of an Indian stall owner in a crisp professional uniform standing against a blurred bustling street food background in bright daylight. The mood is confident and welcoming." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyokwB3tjH4NppD5gqmHv32N1AAlhb44TRCC9hfns2QX7Hgof33W0KAhuM8eU6GvSXHANwU77sLwHkqjj7bVkaS4F0DDPf4vF-vIBN5jiIrya9A7DrF6aIYly4jvuoRTrc-znrv42LiGHWUhBTiIPcbOKbSzCGlmJORNue4wWuBNMfK8mTYJVJRky_n4PPyYfhm7Knqzjp-uR7Nz9jDXgpFysFNNMgQo8XvmL7ikhalVKJ-H8KZLTb"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<main class="flex-1 flex overflow-hidden bg-background">
+<!-- Left: Menu List (2/3) -->
+<div class="flex-[2] overflow-y-auto p-page-padding border-r border-border">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">Menu Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Organize categories and items.</p>
+</div>
+<button class="bg-surface text-primary border border-border px-4 h-[44px] rounded-lg font-header-md text-header-md hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> New Category
+                    </button>
+</div>
+<!-- Category: Main Course -->
+<div class="mb-8">
+<div class="flex items-center justify-between mb-2 group">
+<div class="flex items-center gap-2 flex-1">
+<span class="material-symbols-outlined text-on-surface-variant cursor-grab hover:text-primary active:cursor-grabbing">drag_indicator</span>
+<h3 class="font-header-md text-header-md text-on-surface bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none px-1 py-1 min-w-[200px]" contenteditable="true">Main Course</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-sm opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 text-on-surface-variant hover:text-primary rounded hover:bg-surface"><span class="material-symbols-outlined">expand_less</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary rounded hover:bg-surface"><span class="material-symbols-outlined">expand_more</span></button>
+</div>
+</div>
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<!-- Item Row -->
+<div class="flex items-center h-[64px] px-gutter border-b border-border last:border-0 hover:bg-surface-variant/50 transition-colors group relative">
+<div class="w-8 flex justify-center text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
+<span class="material-symbols-outlined text-sm">drag_indicator</span>
+</div>
+<img alt="Masala Dosa" class="w-10 h-10 rounded object-cover mr-4" data-alt="A beautifully plated crispy Masala Dosa served on a fresh banana leaf with three vibrant chutneys in small steel bowls. The setting is a clean, modern Indian food stall with warm, appetizing overhead lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATmgQvkdvdxgbITYIzbNP5yIn4Naqs5M_2oKAFEU9044HjaMvR8d_MblxLzdEVt4IyMeEzs9j5KCIZGiG0p1egxKwIdgPHrwr5GQZrpATRkV6kjqcZCc2dq6eM0XbK2JynBsvS3OktJIkqH1c7jaScqPc2YZO24U5CaykFbM0nfcVyuGudRP3Kh-6jrtTpvTndrrUk__4ie2LBANNM6Nw67DsSdVaqHknmzpNn3-0lMsPW9IOC88Yc"/>
+<div class="flex-1 min-w-0 pr-4">
+<div class="font-header-md text-header-md text-on-surface truncate">Masala Dosa</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant truncate">Crispy crepe filled with spiced potato</div>
+</div>
+<div class="font-currency-display text-currency-display text-on-surface w-24 text-right pr-4">
+                                ₹80
+                            </div>
+<div class="flex items-center gap-4 w-32 justify-end">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-surface appearance-none cursor-pointer z-10 top-0.5 left-0.5 checked:border-primary-container checked:bg-white checked:translate-x-full transition-transform duration-200" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-border cursor-pointer transition-colors duration-200" for="toggle1"></label>
+</div>
+<div class="relative">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface cursor-pointer">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+<!-- Fake Dropdown for visual -->
+<div class="hidden absolute right-0 top-full mt-1 w-48 bg-surface-bright border border-border rounded-lg shadow-lg z-50 py-1">
+<a class="block px-4 py-2 text-sm text-on-surface hover:bg-surface" href="#">Edit</a>
+<a class="block px-4 py-2 text-sm text-on-surface hover:bg-surface" href="#">Duplicate</a>
+<a class="block px-4 py-2 text-sm text-error hover:bg-error/10" href="#">Delete</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Item Row -->
+<div class="flex items-center h-[64px] px-gutter border-b border-border last:border-0 hover:bg-surface-variant/50 transition-colors group relative">
+<div class="w-8 flex justify-center text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
+<span class="material-symbols-outlined text-sm">drag_indicator</span>
+</div>
+<div class="w-10 h-10 rounded bg-surface-dim flex items-center justify-center mr-4 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</div>
+<div class="flex-1 min-w-0 pr-4">
+<div class="font-header-md text-header-md text-on-surface truncate">Idli Sambar</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant truncate">Steamed rice cakes with lentil soup</div>
+</div>
+<div class="font-currency-display text-currency-display text-on-surface w-24 text-right pr-4">
+                                ₹50
+                            </div>
+<div class="flex items-center gap-4 w-32 justify-end">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-surface appearance-none cursor-pointer z-10 top-0.5 left-0.5 checked:border-primary-container checked:bg-white checked:translate-x-full transition-transform duration-200" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-border cursor-pointer transition-colors duration-200" for="toggle2"></label>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface cursor-pointer">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Beverages -->
+<div class="mb-8">
+<div class="flex items-center justify-between mb-2 group">
+<div class="flex items-center gap-2 flex-1">
+<span class="material-symbols-outlined text-on-surface-variant cursor-grab hover:text-primary">drag_indicator</span>
+<h3 class="font-header-md text-header-md text-on-surface bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none px-1 py-1 min-w-[200px]" contenteditable="true">Beverages</h3>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 text-on-surface-variant hover:text-primary rounded hover:bg-surface"><span class="material-symbols-outlined">expand_less</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary rounded hover:bg-surface"><span class="material-symbols-outlined">expand_more</span></button>
+</div>
+</div>
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<!-- Item Row -->
+<div class="flex items-center h-[64px] px-gutter border-b border-border last:border-0 hover:bg-surface-variant/50 transition-colors group relative">
+<div class="w-8 flex justify-center text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
+<span class="material-symbols-outlined text-sm">drag_indicator</span>
+</div>
+<img alt="Masala Chai" class="w-10 h-10 rounded object-cover mr-4" data-alt="A steaming cup of masala chai in a traditional small glass cup, sitting on a rustic wooden counter. Spices like cardamom and cinnamon are subtly visible in the warm, inviting lighting typical of an early morning street food stall." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu5nK8yaLvcop9-YPFkh-78CA5XLNPnEWirmenrXQ1zy6TpWBZfvz8YIK-NlS6i9k73imSCMVS6jiEalOadVte-dtnE_FAgGECMfFvybAS0uSmc323QarziAED9f_fBfmzpYXM4Rtr85JGLUciteFAhEvMVDY3LG2q8s9GiK0QNP9TkrzrKaKbnsiEjxXT47npR4lTAdO0AQAyu8NUThGBLhiICW-WmhF-wY46O6K6AgWDIvfwRpl-"/>
+<div class="flex-1 min-w-0 pr-4">
+<div class="font-header-md text-header-md text-on-surface truncate">Masala Chai</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant truncate">Spiced Indian tea</div>
+</div>
+<div class="font-currency-display text-currency-display text-on-surface w-24 text-right pr-4">
+                                ₹20
+                            </div>
+<div class="flex items-center gap-4 w-32 justify-end">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in opacity-50">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-surface appearance-none cursor-pointer z-10 top-0.5 left-0.5 checked:border-primary-container checked:bg-white checked:translate-x-full transition-transform duration-200" id="toggle3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-border cursor-pointer transition-colors duration-200" for="toggle3"></label>
+</div>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface cursor-pointer">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Peer stall menus (Collapsed) -->
+<div class="mt-12 border-t border-border pt-8">
+<button class="w-full flex items-center justify-between text-left group">
+<div>
+<h3 class="font-header-md text-header-md text-on-surface-variant group-hover:text-primary transition-colors">Peer stall menus</h3>
+<p class="font-label-sm text-label-sm text-outline">View items from other stalls in the food court (Read-only)</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">expand_more</span>
+</button>
+<!-- Collapsed content would go here -->
+</div>
+</div>
+<!-- Right: Add Item Panel (1/3) -->
+<div class="flex-[1] min-w-[320px] max-w-[400px] bg-surface-bright flex flex-col h-full border-l border-border relative">
+<div class="p-gutter border-b border-border bg-surface sticky top-0 z-10 flex justify-between items-center">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Add New Item</h2>
+<button class="text-on-surface-variant hover:text-on-surface p-1 rounded-full hover:bg-surface-variant"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex-1 overflow-y-auto p-gutter">
+<form class="flex flex-col gap-5">
+<!-- Image Upload Area -->
+<div class="w-full aspect-video bg-background border border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center text-on-surface-variant cursor-pointer hover:bg-surface-variant/30 transition-colors">
+<span class="material-symbols-outlined text-3xl mb-2">add_photo_alternate</span>
+<span class="font-label-sm text-label-sm">Upload Thumbnail (40x40 min)</span>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Item Name</label>
+<input class="w-full bg-surface h-[44px] border border-border rounded-lg px-3 focus:ring-2 focus:ring-primary focus:outline-none font-body-md text-body-md" placeholder="e.g. Vada Pav" type="text"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Description (Optional)</label>
+<textarea class="w-full bg-surface border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none font-body-md text-body-md min-h-[80px]" placeholder="Brief description of the item"></textarea>
+</div>
+<div class="flex gap-4">
+<div class="flex-1">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Price (₹)</label>
+<input class="w-full bg-surface h-[44px] border border-border rounded-lg px-3 focus:ring-2 focus:ring-primary focus:outline-none font-currency-display text-body-md text-right" placeholder="0.00" type="number"/>
+</div>
+<div class="flex-1">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Category</label>
+<select class="w-full bg-surface h-[44px] border border-border rounded-lg px-3 focus:ring-2 focus:ring-primary focus:outline-none font-body-md text-body-md appearance-none">
+<option>Main Course</option>
+<option>Beverages</option>
+<option>Snacks</option>
+<option>+ New Category</option>
+</select>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<span class="font-body-md text-body-md text-on-surface">Available immediately</span>
+<div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-surface appearance-none cursor-pointer z-10 top-0.5 left-0.5 checked:border-primary-container checked:bg-white checked:translate-x-full transition-transform duration-200" id="toggle_new" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-border cursor-pointer transition-colors duration-200" for="toggle_new"></label>
+</div>
+</div>
+</form>
+</div>
+<div class="p-gutter border-t border-border bg-surface mt-auto">
+<button class="w-full bg-primary text-on-primary h-[44px] rounded-lg font-header-md text-header-md hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none">
+                        Save Item
+                    </button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

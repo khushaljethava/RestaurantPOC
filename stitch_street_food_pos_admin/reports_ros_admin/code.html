@@ -1,0 +1,412 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Reports - Point-of-Sale Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#141e19",
+                    "secondary-fixed": "#dae5de",
+                    "primary-fixed": "#a4f2d5",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#5c6761",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#181c1a",
+                    "success": "#1B6C3D",
+                    "background": "#F5FBF6",
+                    "warning": "#8A5300",
+                    "tertiary-fixed-dim": "#ffb4aa",
+                    "error": "#BA1A1A",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#3f4944",
+                    "surface-container-highest": "#e0e3e0",
+                    "primary-container": "#A4F2D5",
+                    "inverse-surface": "#2d312f",
+                    "outline-variant": "#bec9c3",
+                    "on-primary-container": "#9ae9cb",
+                    "inverse-primary": "#88d6b9",
+                    "on-error-container": "#93000a",
+                    "primary": "#00513e",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#00513e",
+                    "tertiary-container": "#904a42",
+                    "primary-fixed-dim": "#88d6b9",
+                    "surface-variant": "#e0e3e0",
+                    "surface-container": "#ebefeb",
+                    "on-secondary-fixed-variant": "#3f4944",
+                    "surface-container-low": "#f1f4f1",
+                    "surface-tint": "#156b54",
+                    "on-tertiary-fixed-variant": "#73332c",
+                    "secondary-container": "#dae5de",
+                    "border": "#BFC9C3",
+                    "on-tertiary-container": "#ffcdc6",
+                    "surface-dim": "#d7dbd7",
+                    "inverse-on-surface": "#eef2ee",
+                    "tertiary-fixed": "#ffdad5",
+                    "surface-container-high": "#e6e9e5",
+                    "secondary": "#56615b",
+                    "on-primary-fixed": "#002117",
+                    "warning-container": "#FFF0D4",
+                    "on-background": "#181c1a",
+                    "on-tertiary-fixed": "#3b0906",
+                    "tertiary": "#73332c",
+                    "surface": "#E9EFEB",
+                    "outline": "#6f7974",
+                    "surface-bright": "#f7faf6",
+                    "secondary-fixed-dim": "#bec9c2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "32px",
+                    "page-padding": "32px",
+                    "table-row-height": "44px",
+                    "sidebar-width": "224px",
+                    "margin-mobile": "16px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "currency-display": [
+                            "Roboto"
+                    ],
+                    "headline-lg": [
+                            "Roboto"
+                    ],
+                    "table-cell": [
+                            "Roboto"
+                    ],
+                    "header-md": [
+                            "Roboto"
+                    ],
+                    "label-sm": [
+                            "Roboto"
+                    ],
+                    "body-md": [
+                            "Roboto"
+                    ]
+            },
+            "fontSize": {
+                    "currency-display": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-lg": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "table-cell": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "header-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-sm": [
+                            "11px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .table-numeric {
+            font-variant-numeric: tabular-nums;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #F5FBF6, 0 0 0 4px #156B54;
+        }
+        button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px #F5FBF6, 0 0 0 4px #156B54;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-[224px] bg-surface-container border-r border-border flex flex-col z-50">
+<div class="px-6 py-6 border-b border-border">
+<h1 class="font-header-md text-header-md font-bold text-primary truncate">Point-of-Sale Admin</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Manage Stalls</p>
+</div>
+<div class="flex-1 py-4 overflow-y-auto">
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">sensors</span>
+<span class="font-body-md text-body-md">Live</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">payments</span>
+<span class="font-body-md text-body-md">Settlement</span>
+</a>
+<a aria-current="page" class="flex items-center gap-3 font-bold text-primary border-l-4 border-primary bg-secondary-container/10 px-4 py-3 opacity-90 transition-all duration-200 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">badge</span>
+<span class="font-body-md text-body-md">Staff</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">storefront</span>
+<span class="font-body-md text-body-md">Food Court</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-primary/5 transition-colors focus-visible:bg-primary/5 focus-visible:outline-none" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+<div class="p-4 border-t border-border">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-primary font-bold">
+                    SA
+                </div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">System Admin</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant text-[10px]">Stall Switcher Avatar</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-[224px] flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 w-full bg-background bg-surface-container-high flex items-center justify-between px-margin-desktop h-[64px] border-b border-border">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-lg text-headline-lg font-black text-on-surface">Reports</h2>
+</div>
+<div class="flex items-center gap-6">
+<!-- Date Picker Group -->
+<div class="flex items-center gap-3">
+  <div class="relative">
+    <select class="bg-surface border border-border rounded-lg px-3 py-1.5 text-sm font-body-md text-on-surface focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer">
+      <option value="today">Today</option>
+      <option value="last-3-days">Last 3 Days</option>
+      <option selected="" value="custom">Custom Range</option>
+    </select>
+    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-sm">expand_more</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 bg-surface px-3 py-1.5 rounded-lg border border-border focus-within:border-primary transition-colors">
+      <label class="font-label-sm text-label-sm text-on-surface-variant" for="date-from">From</label>
+      <input class="bg-transparent border-none p-0 text-sm focus:ring-0 text-on-surface h-7 w-[120px]" id="date-from" type="date" value="2023-10-01">
+    </div>
+    <span class="text-on-surface-variant">-</span>
+    <div class="flex items-center gap-2 bg-surface px-3 py-1.5 rounded-lg border border-border focus-within:border-primary transition-colors">
+      <label class="font-label-sm text-label-sm text-on-surface-variant" for="date-to">To</label>
+      <input class="bg-transparent border-none p-0 text-sm focus:ring-0 text-on-surface h-7 w-[120px]" id="date-to" type="date" value="2023-10-31">
+    </div>
+  </div>
+</div>
+<div class="w-[1px] h-8 bg-border"></div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors focus-visible:text-primary" style="font-variation-settings: 'FILL' 0;">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors focus-visible:text-primary" style="font-variation-settings: 'FILL' 0;">account_circle</button>
+<button class="px-4 h-[44px] border border-border rounded-lg text-primary font-body-md text-body-md hover:bg-primary/5 transition-colors flex items-center justify-center whitespace-nowrap">
+                        Export CSV
+                    </button>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-page-padding bg-background">
+<div class="max-w-6xl mx-auto space-y-[32px]">
+<!-- Section 1: Sales by Stall -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-header-md text-header-md text-on-surface">Sales by stall</h3>
+<button class="px-3 h-[36px] border border-border rounded-lg text-primary font-body-md text-body-md text-sm hover:bg-primary/5 transition-colors">
+                            Export CSV
+                        </button>
+</div>
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-border h-table-row-height">
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider">Stall Name</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-32">Orders</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-40">Total Sales (₹)</th>
+</tr>
+</thead>
+<tbody class="bg-surface-container-lowest">
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Dosa Express</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">452</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹12,480.00</td>
+</tr>
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Chaat Corner</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">321</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹8,350.00</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Momo Magic</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">289</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹9,120.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 2: Sales by Item -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-header-md text-header-md text-on-surface">Sales by item</h3>
+<button class="px-3 h-[36px] border border-border rounded-lg text-primary font-body-md text-body-md text-sm hover:bg-primary/5 transition-colors">
+                            Export CSV
+                        </button>
+</div>
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-border h-table-row-height">
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider">Item Name</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-32">Qty</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-40">Total Sales (₹)</th>
+</tr>
+</thead>
+<tbody class="bg-surface-container-lowest">
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Masala Dosa</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">185</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹7,400.00</td>
+</tr>
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Masala Chai</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">310</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹4,650.00</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Pani Puri (Plate)</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">240</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹4,800.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 3: Sales by Payment Mode -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-header-md text-header-md text-on-surface">Sales by payment mode</h3>
+<button class="px-3 h-[36px] border border-border rounded-lg text-primary font-body-md text-body-md text-sm hover:bg-primary/5 transition-colors">
+                            Export CSV
+                        </button>
+</div>
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-border h-table-row-height">
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider">Mode</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-32">Count</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-40">Total Sales (₹)</th>
+</tr>
+</thead>
+<tbody class="bg-surface-container-lowest">
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">UPI</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">612</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹18,500.00</td>
+</tr>
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Cash</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">350</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹8,750.00</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Card</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">100</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹2,700.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 4: Sales by Collector -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-header-md text-header-md text-on-surface">Sales by collector</h3>
+<button class="px-3 h-[36px] border border-border rounded-lg text-primary font-body-md text-body-md text-sm hover:bg-primary/5 transition-colors">
+                            Export CSV
+                        </button>
+</div>
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-border h-table-row-height">
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider">Staff Name</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-32">Bills</th>
+<th class="px-4 font-label-sm text-label-sm text-on-surface-variant font-medium uppercase tracking-wider text-right w-40">Total Sales (₹)</th>
+</tr>
+</thead>
+<tbody class="bg-surface-container-lowest">
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Ramesh Kumar</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">410</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹11,500.00</td>
+</tr>
+<tr class="border-b border-border h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Suresh Singh</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">385</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹10,800.00</td>
+</tr>
+<tr class="h-table-row-height hover:bg-primary/5 transition-colors">
+<td class="px-4 font-table-cell text-table-cell text-on-surface">Amit Patel</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">267</td>
+<td class="px-4 font-table-cell text-table-cell text-on-surface text-right table-numeric">₹7,650.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+</div>
+
+
+</body></html>
