@@ -23,8 +23,13 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isPublic = request.nextUrl.pathname.startsWith('/login');
-  if (!user && !isPublic) {
+  const isPublic =
+    request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/onboarding');
+  const isDocument = request.headers.get('sec-fetch-dest') === 'document';
+  // Only redirect real navigations — never rewrite fetch/XHR (e.g. misconfigured
+  // Supabase URL posting to this origin) into POST /login → static 405.
+  if (!user && !isPublic && isDocument) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
   return response;
