@@ -23,14 +23,12 @@ class PushRegistration {
       final platform = kIsWeb
           ? 'web'
           : Platform.isIOS
-              ? 'ios'
-              : 'android';
+          ? 'ios'
+          : 'android';
       await upsertToken(stallId: stallId, token: token, platform: platform);
       debugPrint('PushRegistration: token upserted for $stallId');
     } catch (e) {
-      debugPrint(
-        'PushRegistration: Firebase unavailable — Realtime only ($e)',
-      );
+      debugPrint('PushRegistration: Firebase unavailable — Realtime only ($e)');
     }
   }
 

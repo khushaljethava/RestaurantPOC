@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../services/errors.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
-import '../theme/ros_theme.dart';
+import '../widgets/glass.dart';
 import '../widgets/ros_ui.dart';
 
 class TableBillScreen extends ConsumerStatefulWidget {
@@ -35,7 +36,8 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
       final rows = await Supabase.instance.client
           .from('orders')
           .select(
-              'id, token_no, status, bill_id, order_item(name, qty, line_total)')
+            'id, token_no, status, bill_id, order_item(name, qty, line_total)',
+          )
           .eq('table_label', widget.tableLabel)
           .isFilter('bill_id', null)
           .neq('status', 'held')
@@ -49,7 +51,7 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = mapError(e);
         _loading = false;
       });
     }
@@ -57,9 +59,9 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
 
   Future<void> _settle() async {
     if (!ref.read(isOnlineProvider)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Offline — cannot settle')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Offline — cannot settle')));
       return;
     }
     final recordedBy = ref.read(activeStallIdProvider);
@@ -84,7 +86,7 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
       context.push('/checkout/$billId');
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = mapError(e);
         _settling = false;
       });
     }
@@ -96,7 +98,9 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
       final items = o['order_item'] as List? ?? const [];
       return sum +
           items.fold<double>(
-              0, (s, i) => s + ((i['line_total'] as num?)?.toDouble() ?? 0));
+            0,
+            (s, i) => s + ((i['line_total'] as num?)?.toDouble() ?? 0),
+          );
     });
 
     return Scaffold(
@@ -116,7 +120,8 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: _orders.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
                           itemBuilder: (context, i) {
                             final o = _orders[i];
                             return RosSurfaceCard(
@@ -125,14 +130,17 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
                                 children: [
                                   Text(
                                     'Token #${o['token_no'] ?? '—'} · ${o['status']}',
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     ((o['order_item'] as List?) ?? const [])
-                                        .map((it) =>
-                                            '${it['name']} × ${it['qty']}')
+                                        .map(
+                                          (it) =>
+                                              '${it['name']} × ${it['qty']}',
+                                        )
                                         .join(', '),
                                   ),
                                 ],
@@ -141,8 +149,7 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
                           },
                         ),
                 ),
-                Material(
-                  color: RosColors.surfaceContainer,
+                GlassBar(
                   child: SafeArea(
                     top: false,
                     child: Padding(
@@ -152,9 +159,10 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
                         children: [
                           Row(
                             children: [
-                              Text('Unbilled',
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium),
+                              Text(
+                                'Unbilled',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                               const Spacer(),
                               MoneyText(total),
                             ],
@@ -162,7 +170,8 @@ class _TableBillScreenState extends ConsumerState<TableBillScreen> {
                           const SizedBox(height: 8),
                           OutlinedButton(
                             onPressed: () => context.push(
-                                '/pos?table=${Uri.encodeComponent(widget.tableLabel)}'),
+                              '/pos?table=${Uri.encodeComponent(widget.tableLabel)}',
+                            ),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
                             ),

@@ -19,9 +19,10 @@ Future<File> buildReceiptPdf({
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('ROS Receipt',
-                style: pw.TextStyle(
-                    fontSize: 20, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'ROS Receipt',
+              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 8),
             pw.Text('Bill ${billId.substring(0, 8)}…'),
             pw.SizedBox(height: 16),
@@ -37,9 +38,10 @@ Future<File> buildReceiptPdf({
               pw.SizedBox(height: 8),
             ],
             pw.Divider(),
-            pw.Text('Total ₹${total.toStringAsFixed(2)}',
-                style: pw.TextStyle(
-                    fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'Total ₹${total.toStringAsFixed(2)}',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 8),
             for (final p in payments)
               pw.Text('${p['method']}: ₹${p['amount']}'),

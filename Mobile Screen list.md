@@ -5,8 +5,8 @@
 > **Authoritative scope:** `docs/superpowers/specs/2026-08-05-cross-stall-pos-design.md`
 >
 > No inventory, CRM, loyalty, AI, franchise, printers, offline mode, or GST/tax.
-> "Stock" = item availability toggle only. Receipts are digital (PDF/share).
-> Prices are plain amounts.
+> "Stock" = availability plus item add/edit — not quantities. Receipts are
+> digital (PDF/share). Prices are plain amounts.
 
 ## Overview
 
@@ -21,7 +21,7 @@ Roles:
 
 ---
 
-# Shipped screens (13 routes)
+# Shipped screens (17 routes)
 
 | Route | Screen | Status |
 |-------|--------|--------|
@@ -31,8 +31,12 @@ Roles:
 | `/pos` | New order (cross-stall menu, cart, notes, hold/place) | Shipped |
 | `/held` | Held orders / resume | Shipped |
 | `/stall` | Stall order screen (Realtime, ready/complete) | Shipped |
-| `/stock` | Item availability toggles | Shipped |
-| `/tables` | Open table labels | Shipped |
+| `/stock` | Menu — availability, add/edit item, image upload | Shipped |
+| `/tables` | Tables — registered + occupied | Shipped |
+| `/manage/tables` | Manage tables (add/rename/deactivate) | Shipped |
+| `/manage/stall` | Stall settings — name, open/closed, UPI VPA | Shipped |
+| `/manage/group` | Food court — join, approve/reject, leave | Shipped |
+| `/reports` | Sales by item / payment mode / collector / stall | Shipped |
 | `/table/:label` | Table bill (add items / settle) | Shipped |
 | `/today` | Open bills + today's orders / cancel | Shipped |
 | `/settlement` | Settlement summary (owner/manager) | Shipped |
@@ -86,12 +90,19 @@ Not included: modifiers, favorites, coupons, customer lookup, merge/split, searc
 
 ---
 
-## 4. Tables (label only)
+## 4. Tables
 
-- Open tables
+- Registered tables (`restaurant_table`: label, seats, active) managed on
+  `/manage/tables`, or on the web admin's Menu page
+- `/tables` merges registered tables with any label currently holding unbilled
+  orders — a free table opens the POS on that label, an occupied one opens its
+  tab
 - Table bill (orders on that label)
 - Add more items → POS with `?table=`
 - Settle → open bill → checkout
+
+`orders.table_label` stays free text with no FK: a label typed ad-hoc still
+works, and renaming or deleting a table never rewrites past receipts.
 
 Not included: floor plan, reservations, waiter assignment, merge/split/transfer.
 
@@ -128,22 +139,31 @@ No payment gateway verification, no printers.
 
 ---
 
-## 8. Item availability
+## 8. Menu
 
 - Toggle `is_available` per menu item (own stall)
+- Add / edit item: name, price, category, availability (owner/manager)
+- Item photo: pick from gallery, uploaded to the `menu-images` bucket at
+  `<stall_id>/<item_id>.<ext>` — the same object the web admin writes
+- Items grouped under category headers; category chips filter the POS menu
+
+Categories themselves are created and ordered on the web admin; mobile only
+assigns an item to an existing one.
 
 Not inventory: no quantities, recipes, purchases, low-stock alerts.
 
 ---
 
-## 9. Settlement
+## 9. Settlement and reports
 
 - Today's settlement pairs
+- Reports (`/reports`): revenue and order count, top items, payment methods,
+  collected-by, and by-stall, over today / 7 days / 30 days
 
 The Home tile is shown only to owner/manager; the real boundary is the
 `settlement_pairs` RPC, which returns pairs involving the caller's own stalls.
 
-Full reports and CSV live on admin web.
+CSV export and long-range analysis stay on admin web.
 
 ---
 
@@ -154,20 +174,23 @@ Full reports and CSV live on admin web.
 | Home / POS / Tables / Stall screen | ✅ | ✅ | ✅ |
 | Billing / receipts | ✅ | ✅ | ✅ |
 | Item availability (own stall) | ✅ | ✅ | ✅ |
-| Settlement | ✅ | ✅ | ❌ |
-| Menu / staff / food court / UPI settings | ❌ (admin web) | ❌ (admin web) | ❌ |
+| Settlement / reports | ✅ | ✅ | ❌ |
+| Menu editing, tables, stall + UPI settings | ✅ | ✅ | ❌ |
+| Food court (join / approve / leave) | ✅ | ❌ | ❌ |
+| Staff invites, categories, stall onboarding | ❌ (admin web) | ❌ (admin web) | ❌ |
 
 ---
 
 # UI building blocks
 
-- Category / stall chips
+- Category chips (POS) / stall chips
 - Product tiles (optional image)
 - Cart + note dialog
 - Payment sheet
 - Receipt / PDF preview
 - Connection status banner
 - Stall switcher dropdown
+- Menu item sheet (name, price, category, photo)
 
 Not included: barcode scanners, offline queue, printer drivers.
 
@@ -177,6 +200,8 @@ Not included: barcode scanners, offline queue, printer drivers.
 
 - One-handed, rush-hour speed (&lt;30s order)
 - Always online — banner + blocked writes when disconnected
+- Errors are mapped to plain language (`services/errors.dart`), never raw
+  `PostgrestException` text
 - Realtime stall queue
 - Digital receipts only
 - No GST/tax, inventory, CRM, AI, or franchise surfaces

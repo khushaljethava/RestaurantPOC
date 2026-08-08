@@ -11,6 +11,9 @@ import {
   moveCategory,
   uploadItemImage,
   clearItemImage,
+  addTable,
+  setTableActive,
+  deleteTable,
 } from './actions';
 import { Btn, Card, EmptyState, Field, PageTitle, SectionTitle, Select } from '@/components/ui';
 
@@ -22,7 +25,7 @@ export default async function MenuPage() {
   const active = await resolveActiveStall(memberships);
   const myStallId = active.stall_id;
 
-  const [{ data: categories }, { data: items }] = await Promise.all([
+  const [{ data: categories }, { data: items }, { data: tables }] = await Promise.all([
     supabase
       .from('category')
       .select('id, stall_id, name, sort_order')
@@ -32,6 +35,12 @@ export default async function MenuPage() {
       .from('menu_item')
       .select('id, stall_id, category_id, name, description, price, is_available, image_url')
       .order('name'),
+    supabase
+      .from('restaurant_table')
+      .select('id, label, seats, is_active')
+      .eq('stall_id', myStallId!)
+      .order('sort_order')
+      .order('label'),
   ]);
 
   const mine = (items ?? []).filter((i) => i.stall_id === myStallId);
@@ -275,6 +284,62 @@ export default async function MenuPage() {
                 Add item
               </Btn>
             </form>
+          </Card>
+
+          <Card className="mt-8">
+            <SectionTitle className="mb-1">Tables</SectionTitle>
+            <p className="mb-4 text-xs text-on-surface-variant">
+              Offered in the POS table picker. Deactivating hides a table from new orders
+              without touching past ones.
+            </p>
+            <form action={addTable} className="mb-4 flex gap-2">
+              <input type="hidden" name="stall_id" value={myStallId} />
+              <Field name="label" placeholder="T1" required className="flex-1" />
+              <Field name="seats" type="number" min="1" placeholder="Seats" className="w-20" />
+              <Btn type="submit">Add</Btn>
+            </form>
+            {!tables?.length ? (
+              <p className="text-sm text-on-surface-variant">No tables yet.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {tables.map((t) => (
+                  <li key={t.id} className="flex items-center gap-2 py-2">
+                    <span
+                      className={`flex-1 text-sm ${
+                        t.is_active
+                          ? 'text-on-surface'
+                          : 'text-on-surface-variant line-through'
+                      }`}
+                    >
+                      {t.label}
+                      {t.seats != null && (
+                        <span className="ml-2 text-on-surface-variant">· {t.seats}</span>
+                      )}
+                    </span>
+                    <form
+                      action={async () => {
+                        'use server';
+                        await setTableActive(t.id, !t.is_active);
+                      }}
+                    >
+                      <Btn type="submit" variant="text">
+                        {t.is_active ? 'Deactivate' : 'Activate'}
+                      </Btn>
+                    </form>
+                    <form
+                      action={async () => {
+                        'use server';
+                        await deleteTable(t.id);
+                      }}
+                    >
+                      <Btn type="submit" variant="danger">
+                        Delete
+                      </Btn>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </aside>
       </div>

@@ -20,13 +20,13 @@ class CartLine {
   double get lineTotal => unitPrice * qty;
 
   CartLine copyWith({int? qty, String? notes}) => CartLine(
-        stallId: stallId,
-        menuItemId: menuItemId,
-        name: name,
-        unitPrice: unitPrice,
-        qty: qty ?? this.qty,
-        notes: notes ?? this.notes,
-      );
+    stallId: stallId,
+    menuItemId: menuItemId,
+    name: name,
+    unitPrice: unitPrice,
+    qty: qty ?? this.qty,
+    notes: notes ?? this.notes,
+  );
 }
 
 class CartNotifier extends Notifier<List<CartLine>> {
@@ -94,8 +94,9 @@ class CartNotifier extends Notifier<List<CartLine>> {
   }
 }
 
-final cartProvider =
-    NotifierProvider<CartNotifier, List<CartLine>>(CartNotifier.new);
+final cartProvider = NotifierProvider<CartNotifier, List<CartLine>>(
+  CartNotifier.new,
+);
 
 double billDue(double total, double discount) => total - discount;
 

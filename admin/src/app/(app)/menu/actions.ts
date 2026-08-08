@@ -144,3 +144,46 @@ export async function clearItemImage(itemId: string) {
   if (error) throw new Error(error.message);
   revalidatePath('/menu');
 }
+
+// --- Tables ---------------------------------------------------------------
+// Lives here rather than in settings/: /settings is owner-only in the sidebar,
+// but restaurant_table RLS allows owner *and* manager, same as menu_item.
+
+export async function addTable(formData: FormData) {
+  const supabase = await createClient();
+  const label = String(formData.get('label') || '').trim();
+  if (!label) throw new Error('label required');
+  const seatsRaw = String(formData.get('seats') || '').trim();
+  const seats = seatsRaw ? Number(seatsRaw) : null;
+  if (seats !== null && (!Number.isInteger(seats) || seats <= 0)) {
+    throw new Error('seats must be a positive whole number');
+  }
+  const { error } = await supabase.from('restaurant_table').insert({
+    stall_id: String(formData.get('stall_id')),
+    label,
+    seats,
+  });
+  if (error) {
+    throw new Error(
+      error.code === '23505' ? `A table called "${label}" already exists` : error.message,
+    );
+  }
+  revalidatePath('/menu');
+}
+
+export async function setTableActive(id: string, isActive: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('restaurant_table')
+    .update({ is_active: isActive })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/menu');
+}
+
+export async function deleteTable(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('restaurant_table').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/menu');
+}

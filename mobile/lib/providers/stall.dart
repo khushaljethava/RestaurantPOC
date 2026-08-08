@@ -60,6 +60,23 @@ final activeStallIdProvider = Provider<String?>((ref) {
   return memberships.first.stallId;
 });
 
+/// Role on the active stall; null until memberships load.
+final activeRoleProvider = Provider<String?>((ref) {
+  final memberships = ref.watch(membershipsProvider).asData?.value;
+  final id = ref.watch(activeStallIdProvider);
+  if (memberships == null || id == null) return null;
+  for (final m in memberships) {
+    if (m.stallId == id) return m.role;
+  }
+  return null;
+});
+
+/// Owner/manager can edit menu and tables — mirrors the RLS write policies.
+final canManageProvider = Provider<bool>((ref) {
+  final role = ref.watch(activeRoleProvider);
+  return role == 'owner' || role == 'manager';
+});
+
 final menuStallsProvider = FutureProvider<List<PeerStall>>((ref) async {
   final activeId = ref.watch(activeStallIdProvider);
   if (activeId == null) return [];

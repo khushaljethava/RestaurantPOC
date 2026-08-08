@@ -7,6 +7,7 @@ import '../providers/stall.dart';
 import '../services/push_registration.dart';
 import '../theme/ros_theme.dart';
 import '../widgets/ros_ui.dart';
+import '../services/errors.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -29,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'Join with invite',
-            onPressed: () => context.push('/join'),
+            onPressed: () => context.go('/join'),
             icon: const Icon(Icons.qr_code),
           ),
           IconButton(
@@ -44,13 +45,13 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: memberships.when(
         loading: () => const RosLoading(),
-        error: (e, _) => RosEmpty(message: '$e'),
+        error: (e, _) => RosEmpty(message: mapError(e)),
         data: (list) {
           if (list.isEmpty) {
             return RosEmpty(
               message: 'No stall membership yet.',
               action: FilledButton(
-                onPressed: () => context.push('/join'),
+                onPressed: () => context.go('/join'),
                 child: const Text('Enter invite code'),
               ),
             );
@@ -60,8 +61,10 @@ class HomeScreen extends ConsumerWidget {
             (m) => m.stallId == activeId,
             orElse: () => list.first,
           );
-          final canSettle =
-              active.role == 'owner' || active.role == 'manager';
+          final canSettle = active.role == 'owner' || active.role == 'manager';
+          // Same roles today, separate name because they answer different
+          // questions — settle is money, manage is menu/table editing.
+          final canManage = canSettle;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -69,9 +72,7 @@ class HomeScreen extends ConsumerWidget {
               if (list.length > 1) ...[
                 DropdownButtonFormField<String>(
                   initialValue: active.stallId,
-                  decoration: const InputDecoration(
-                    labelText: 'Active stall',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Active stall'),
                   items: [
                     for (final m in list)
                       DropdownMenuItem(
@@ -90,17 +91,19 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 active.stallName,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      height: 40 / 32,
-                    ),
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  height: 40 / 32,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: RosColors.primaryContainer,
                       borderRadius: BorderRadius.circular(999),
@@ -131,16 +134,17 @@ class HomeScreen extends ConsumerWidget {
                     const CircleAvatar(
                       radius: 24,
                       backgroundColor: RosColors.primary,
-                      child: Icon(Icons.add_circle,
-                          color: RosColors.onPrimary),
+                      child: Icon(Icons.add_circle, color: RosColors.onPrimary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('New order',
-                              style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            'New order',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           Text(
                             'Start a fresh transaction',
                             style: Theme.of(context).textTheme.labelSmall,
@@ -148,8 +152,10 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right,
-                        color: RosColors.onSurfaceVariant),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: RosColors.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ),
@@ -179,15 +185,36 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     RosNavTile(
                       icon: Icons.inventory_2,
-                      label: 'Item availability',
+                      label: 'Menu',
                       showDivider: true,
                       onTap: () => context.push('/stock'),
                     ),
                     RosNavTile(
                       icon: Icons.table_restaurant,
                       label: 'Open tables',
+                      showDivider: canManage,
                       onTap: () => context.push('/tables'),
                     ),
+                    if (canManage)
+                      RosNavTile(
+                        icon: Icons.event_seat,
+                        label: 'Manage tables',
+                        showDivider: true,
+                        onTap: () => context.push('/manage/tables'),
+                      ),
+                    if (canManage)
+                      RosNavTile(
+                        icon: Icons.storefront,
+                        label: 'Stall settings',
+                        showDivider: active.role == 'owner',
+                        onTap: () => context.push('/manage/stall'),
+                      ),
+                    if (active.role == 'owner')
+                      RosNavTile(
+                        icon: Icons.groups,
+                        label: 'Food court',
+                        onTap: () => context.push('/manage/group'),
+                      ),
                   ],
                 ),
               ),
@@ -206,7 +233,14 @@ class HomeScreen extends ConsumerWidget {
                       RosNavTile(
                         icon: Icons.account_balance_wallet,
                         label: "Today's settlement",
+                        showDivider: true,
                         onTap: () => context.go('/settlement'),
+                      ),
+                    if (canSettle)
+                      RosNavTile(
+                        icon: Icons.insights,
+                        label: 'Reports',
+                        onTap: () => context.push('/reports'),
                       ),
                   ],
                 ),

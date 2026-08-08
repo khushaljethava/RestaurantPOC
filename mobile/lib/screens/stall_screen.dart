@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/errors.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
 import '../widgets/ros_ui.dart';
@@ -34,7 +35,8 @@ class _StallScreenState extends ConsumerState<StallScreen> {
       final rows = await Supabase.instance.client
           .from('orders')
           .select(
-              'id, token_no, status, table_label, created_at, order_item(name, qty, notes)')
+            'id, token_no, status, table_label, created_at, order_item(name, qty, notes)',
+          )
           .eq('stall_id', stallId)
           .inFilter('status', ['pending', 'ready'])
           .order('created_at');
@@ -45,7 +47,7 @@ class _StallScreenState extends ConsumerState<StallScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) setState(() => _error = mapError(e));
     }
   }
 
@@ -70,9 +72,9 @@ class _StallScreenState extends ConsumerState<StallScreen> {
 
   Future<void> _setStatus(String id, String status) async {
     if (!ref.read(isOnlineProvider)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Offline — cannot update')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Offline — cannot update')));
       return;
     }
     try {
@@ -83,8 +85,9 @@ class _StallScreenState extends ConsumerState<StallScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(mapError(e))));
       }
     }
   }
@@ -109,63 +112,64 @@ class _StallScreenState extends ConsumerState<StallScreen> {
       body: _error != null
           ? RosEmpty(message: _error!)
           : _orders.isEmpty
-              ? const RosEmpty(message: 'No open orders')
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _orders.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) {
-                    final o = _orders[i];
-                    final status = o['status'] as String;
-                    final items = (o['order_item'] as List?)
-                            ?.map((e) {
-                              final n = e['notes'] as String?;
-                              return '${e['name']} × ${e['qty']}'
-                                  '${n != null && n.isNotEmpty ? ' ($n)' : ''}';
-                            })
-                            .join('\n') ??
-                        '';
-                    return RosSurfaceCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+          ? const RosEmpty(message: 'No open orders')
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _orders.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, i) {
+                final o = _orders[i];
+                final status = o['status'] as String;
+                final items =
+                    (o['order_item'] as List?)
+                        ?.map((e) {
+                          final n = e['notes'] as String?;
+                          return '${e['name']} × ${e['qty']}'
+                              '${n != null && n.isNotEmpty ? ' ($n)' : ''}';
+                        })
+                        .join('\n') ??
+                    '';
+                return RosSurfaceCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Token #${o['token_no'] ?? '—'}'
-                                  '${o['table_label'] != null ? ' · ${o['table_label']}' : ''}',
-                                  style: Theme.of(context).textTheme.titleMedium,
-                                ),
-                              ),
-                              StatusChip(
-                                label: status,
-                                kind: status == 'ready'
-                                    ? StatusKind.ready
-                                    : StatusKind.pending,
-                              ),
-                            ],
+                          Expanded(
+                            child: Text(
+                              'Token #${o['token_no'] ?? '—'}'
+                              '${o['table_label'] != null ? ' · ${o['table_label']}' : ''}',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(items),
-                          const SizedBox(height: 12),
-                          if (status == 'pending')
-                            FilledButton(
-                              onPressed: () =>
-                                  _setStatus(o['id'] as String, 'ready'),
-                              child: const Text('Ready'),
-                            ),
-                          if (status == 'ready')
-                            FilledButton(
-                              onPressed: () => _setStatus(
-                                  o['id'] as String, 'completed'),
-                              child: const Text('Complete'),
-                            ),
+                          StatusChip(
+                            label: status,
+                            kind: status == 'ready'
+                                ? StatusKind.ready
+                                : StatusKind.pending,
+                          ),
                         ],
                       ),
-                    );
-                  },
-                ),
+                      const SizedBox(height: 8),
+                      Text(items),
+                      const SizedBox(height: 12),
+                      if (status == 'pending')
+                        FilledButton(
+                          onPressed: () =>
+                              _setStatus(o['id'] as String, 'ready'),
+                          child: const Text('Ready'),
+                        ),
+                      if (status == 'ready')
+                        FilledButton(
+                          onPressed: () =>
+                              _setStatus(o['id'] as String, 'completed'),
+                          child: const Text('Complete'),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 }

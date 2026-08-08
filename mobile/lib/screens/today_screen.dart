@@ -7,6 +7,7 @@ import '../providers/bill.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
 import '../widgets/ros_ui.dart';
+import '../services/errors.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -45,9 +46,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Future<void> _cancel(String orderId) async {
     if (!ref.read(isOnlineProvider)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Offline — cannot cancel')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Offline — cannot cancel')));
       return;
     }
     final reasonCtrl = TextEditingController();
@@ -62,11 +63,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Back')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Back'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Cancel order')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Cancel order'),
+          ),
         ],
       ),
     );
@@ -74,22 +77,26 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final reason = reasonCtrl.text.trim();
     reasonCtrl.dispose();
     if (reason.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reason required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reason required')));
       return;
     }
     try {
-      await Supabase.instance.client.rpc('set_order_status', params: {
-        'p_order_id': orderId,
-        'p_status': 'cancelled',
-        'p_reason': reason,
-      });
+      await Supabase.instance.client.rpc(
+        'set_order_status',
+        params: {
+          'p_order_id': orderId,
+          'p_status': 'cancelled',
+          'p_reason': reason,
+        },
+      );
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mapError(e))));
     }
   }
 
@@ -127,13 +134,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Open bills',
-                              style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            'Open bills',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           const SizedBox(height: 8),
                           for (final b in bills) ...[
                             RosSurfaceCard(
-                              onTap: () =>
-                                  context.push('/checkout/${b['id']}'),
+                              onTap: () => context.push('/checkout/${b['id']}'),
                               child: Row(
                                 children: [
                                   const Icon(Icons.receipt_long),
@@ -147,9 +155,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                                         Text(
                                           b['table_label'] as String? ??
                                               'Counter',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
                                         ),
                                       ],
                                     ),
@@ -165,8 +173,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       );
                     },
                   ),
-                  Text('Orders',
-                      style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Orders',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
                   if (_orders.isEmpty)
                     const RosEmpty(message: 'No orders yet today')
@@ -181,15 +191,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                                 children: [
                                   Text(
                                     'Token #${o['token_no'] ?? '—'}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
                                   Text(
                                     o['table_label'] as String? ?? 'Counter',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                   ),
                                 ],
                               ),
@@ -198,11 +208,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                               label: '${o['status']}',
                               kind: _kind('${o['status']}'),
                             ),
-                            if (['pending', 'ready', 'held']
-                                .contains(o['status']))
+                            if ([
+                              'pending',
+                              'ready',
+                              'held',
+                            ].contains(o['status']))
                               TextButton(
-                                onPressed: () =>
-                                    _cancel(o['id'] as String),
+                                onPressed: () => _cancel(o['id'] as String),
                                 child: const Text('Cancel'),
                               ),
                           ],

@@ -11,6 +11,13 @@ import { Btn, Card, Field } from '@/components/ui';
  * Data: RPC redeem_stall_invite { p_code: string } — no local files.
  * User: "Implement the plan as specified, it is attached for your reference. Do NOT edit the plan file itself."
  */
+/** Mirror of mobile/lib/invite_code.dart — accepts `ABCD-1234` or `abcd1234`. */
+export function normalizeInviteCode(raw: string): string {
+  const c = raw.trim().toUpperCase().replace(/\s+/g, '').replace(/[–—−]/g, '-');
+  if (c.includes('-') || c.length < 5) return c;
+  return `${c.slice(0, 4)}-${c.slice(4)}`;
+}
+
 export function RedeemInviteForm() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +29,7 @@ export function RedeemInviteForm() {
     setOk(null);
     const supabase = createClient();
     const { error: err } = await supabase.rpc('redeem_stall_invite', {
-      p_code: code.trim(),
+      p_code: normalizeInviteCode(code),
     });
     if (err) {
       setError(err.message);

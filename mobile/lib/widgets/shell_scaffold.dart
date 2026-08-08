@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/stall.dart';
+import 'glass.dart';
 
 class ShellScaffold extends ConsumerWidget {
   const ShellScaffold({super.key, required this.child});
@@ -62,18 +63,23 @@ class ShellScaffold extends ConsumerWidget {
         ),
     ];
 
-    final index =
-        _indexFor(location, canReports).clamp(0, destinations.length - 1);
+    final index = _indexFor(
+      location,
+      canReports,
+    ).clamp(0, destinations.length - 1);
 
     return Scaffold(
+      extendBody: true,
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        destinations: destinations,
-        onDestinationSelected: (i) {
-          final path = canReports ? _paths[i] : _paths[i.clamp(0, 2)];
-          context.go(path);
-        },
+      bottomNavigationBar: GlassBar(
+        child: NavigationBar(
+          selectedIndex: index,
+          destinations: destinations,
+          onDestinationSelected: (i) {
+            final path = canReports ? _paths[i] : _paths[i.clamp(0, 2)];
+            context.go(path);
+          },
+        ),
       ),
     );
   }

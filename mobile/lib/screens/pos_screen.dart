@@ -5,10 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../services/errors.dart';
 import '../providers/cart.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
+import '../providers/tables.dart';
 import '../theme/ros_theme.dart';
+import '../widgets/glass.dart';
 import '../widgets/ros_ui.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
@@ -25,6 +28,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   var _loading = true;
   String? _error;
   String? _menuStallId;
+  List<Map<String, dynamic>> _categories = [];
+  String? _categoryId; // null = All
   late final TextEditingController _table;
 
   @override
@@ -40,9 +45,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     setState(() {
       _menuStallId = stalls.isEmpty
           ? active
-          : (stalls.any((s) => s.id == active)
-              ? active
-              : stalls.first.id);
+          : (stalls.any((s) => s.id == active) ? active : stalls.first.id);
     });
     await _loadMenu();
   }
@@ -63,17 +66,27 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     try {
       final rows = await Supabase.instance.client
           .from('menu_item')
-          .select('id, name, price, is_available, stall_id, image_url')
+          .select(
+            'id, name, price, is_available, stall_id, image_url, category_id',
+          )
           .eq('stall_id', stallId)
           .eq('is_available', true)
           .order('name');
+      final cats = await Supabase.instance.client
+          .from('category')
+          .select('id, name')
+          .eq('stall_id', stallId)
+          .order('sort_order');
       setState(() {
         _menu = List<Map<String, dynamic>>.from(rows as List);
+        _categories = List<Map<String, dynamic>>.from(cats as List);
+        // A category picked on the previous stall means nothing here.
+        _categoryId = null;
         _loading = false;
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = mapError(e);
         _loading = false;
       });
     }
@@ -88,14 +101,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Special instructions',
-          ),
+          decoration: const InputDecoration(hintText: 'Special instructions'),
           maxLines: 2,
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             child: const Text('Save'),
@@ -105,7 +118,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
     ctrl.dispose();
     if (note == null || !mounted) return;
-    ref.read(cartProvider.notifier).setNotes(line.stallId, line.menuItemId, note);
+    ref
+        .read(cartProvider.notifier)
+        .setNotes(line.stallId, line.menuItemId, note);
   }
 
   Future<void> _hold() async {
@@ -121,8 +136,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
     final stalls = cart.map((e) => e.stallId).toSet();
     if (stalls.length > 1 || stalls.single != recordedBy) {
-      setState(() =>
-          _error = 'Hold only supports items from your own stall');
+      setState(() => _error = 'Hold only supports items from your own stall');
       return;
     }
 
@@ -135,20 +149,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           'p_recorded_by_stall_id': recordedBy,
           'p_idempotency_key': const Uuid().v4(),
           'p_status': 'held',
-          'p_items':
-              ref.read(cartProvider.notifier).toRpcItemsByStall()[recordedBy],
-          'p_table_label':
-              _table.text.trim().isEmpty ? null : _table.text.trim(),
+          'p_items': ref
+              .read(cartProvider.notifier)
+              .toRpcItemsByStall()[recordedBy],
+          'p_table_label': _table.text.trim().isEmpty
+              ? null
+              : _table.text.trim(),
         },
       );
       ref.read(cartProvider.notifier).clear();
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Held')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Held')));
         context.pop();
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = mapError(e));
     }
   }
 
@@ -164,8 +181,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     if (recordedBy == null || cart.isEmpty) return;
 
     setState(() => _error = null);
-    final tableLabel =
-        _table.text.trim().isEmpty ? null : _table.text.trim();
+    final tableLabel = _table.text.trim().isEmpty ? null : _table.text.trim();
     try {
       final byStall = ref.read(cartProvider.notifier).toRpcItemsByStall();
       final orderIds = <String>[];
@@ -188,9 +204,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       if (!mounted) return;
 
       if (tableLabel != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added to table $tableLabel')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Added to table $tableLabel')));
         context.pop();
         return;
       }
@@ -207,7 +223,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       if (!mounted) return;
       context.push('/checkout/$billId');
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = mapError(e));
     }
   }
 
@@ -222,6 +238,15 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final cart = ref.watch(cartProvider);
     final total = cart.fold<double>(0, (s, e) => s + e.lineTotal);
     final stalls = ref.watch(menuStallsProvider).asData?.value ?? const [];
+    final tableLabels = ref.watch(activeTableLabelsProvider);
+    // Filtering a loaded list beats a round trip per chip tap — menus are
+    // small and the counter is often on a bad connection.
+    final visibleMenu = _categoryId == null
+        ? _menu
+        : [
+            for (final m in _menu)
+              if (m['category_id'] == _categoryId) m,
+          ];
 
     return Scaffold(
       appBar: AppBar(title: const Text('New order')),
@@ -236,7 +261,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       children: [
                         for (final s in stalls)
                           Padding(
@@ -270,12 +297,26 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: TextField(
                     controller: _table,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Table label (optional)',
-                      border: UnderlineInputBorder(),
-                      enabledBorder: UnderlineInputBorder(
+                      border: const UnderlineInputBorder(),
+                      enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(color: RosColors.outlineVariant),
                       ),
+                      // Registered tables are a convenience, not a constraint:
+                      // the field stays free text so a walk-in table nobody
+                      // registered yet doesn't block an order.
+                      suffixIcon: tableLabels.isEmpty
+                          ? null
+                          : PopupMenuButton<String>(
+                              icon: const Icon(Icons.table_restaurant),
+                              tooltip: 'Pick a table',
+                              onSelected: (l) => _table.text = l,
+                              itemBuilder: (_) => [
+                                for (final l in tableLabels)
+                                  PopupMenuItem(value: l, child: Text(l)),
+                              ],
+                            ),
                     ),
                   ),
                 ),
@@ -284,13 +325,47 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: RosErrorText(_error!),
                   ),
+                if (_categories.isNotEmpty)
+                  SizedBox(
+                    height: 52,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      children: [
+                        for (final c in [
+                          const {'id': null, 'name': 'All'},
+                          ..._categories,
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(c['name'] as String),
+                              selected: c['id'] == _categoryId,
+                              selectedColor: RosColors.primaryContainer,
+                              checkmarkColor: RosColors.onPrimaryContainer,
+                              side: BorderSide(
+                                color: c['id'] == _categoryId
+                                    ? Colors.transparent
+                                    : RosColors.outlineVariant,
+                              ),
+                              onSelected: (_) => setState(
+                                () => _categoryId = c['id'] as String?,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    itemCount: _menu.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemCount: visibleMenu.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, i) {
-                      final item = _menu[i];
+                      final item = visibleMenu[i];
                       final price = (item['price'] as num).toDouble();
                       final stallId =
                           item['stall_id'] as String? ?? _menuStallId!;
@@ -298,7 +373,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       return RosSurfaceCard(
                         padding: const EdgeInsets.all(12),
                         onTap: () {
-                          ref.read(cartProvider.notifier).add(
+                          ref
+                              .read(cartProvider.notifier)
+                              .add(
                                 CartLine(
                                   stallId: stallId,
                                   menuItemId: item['id'] as String,
@@ -344,7 +421,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                     color: RosColors.onSecondaryContainer,
                                     icon: const Icon(Icons.add),
                                     onPressed: () {
-                                      ref.read(cartProvider.notifier).add(
+                                      ref
+                                          .read(cartProvider.notifier)
+                                          .add(
                                             CartLine(
                                               stallId: stallId,
                                               menuItemId: item['id'] as String,
@@ -365,8 +444,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   ),
                 ),
                 if (cart.isNotEmpty)
-                  Material(
-                    color: RosColors.surfaceContainer,
+                  GlassBar(
                     child: SafeArea(
                       top: false,
                       child: Padding(
@@ -384,8 +462,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                       dense: true,
                                       contentPadding: EdgeInsets.zero,
                                       onLongPress: () => _editNotes(line),
-                                      title: Text(
-                                          '${line.name} × ${line.qty}'),
+                                      title: Text('${line.name} × ${line.qty}'),
                                       subtitle: Text(
                                         line.notes == null ||
                                                 line.notes!.isEmpty
@@ -397,20 +474,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                         children: [
                                           IconButton(
                                             tooltip: 'Note',
-                                            icon: const Icon(Icons.notes,
-                                                size: 20),
-                                            onPressed: () =>
-                                                _editNotes(line),
+                                            icon: const Icon(
+                                              Icons.notes,
+                                              size: 20,
+                                            ),
+                                            onPressed: () => _editNotes(line),
                                           ),
                                           IconButton(
                                             icon: const Icon(
-                                                Icons.remove_circle_outline),
+                                              Icons.remove_circle_outline,
+                                            ),
                                             onPressed: () => ref
                                                 .read(cartProvider.notifier)
                                                 .setQty(
-                                                    line.stallId,
-                                                    line.menuItemId,
-                                                    line.qty - 1),
+                                                  line.stallId,
+                                                  line.menuItemId,
+                                                  line.qty - 1,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -420,10 +500,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             ),
                             Row(
                               children: [
-                                Text('Total',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium),
+                                Text(
+                                  'Total',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
                                 const Spacer(),
                                 MoneyText(total),
                               ],
@@ -435,8 +517,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                   child: OutlinedButton(
                                     onPressed: _hold,
                                     style: OutlinedButton.styleFrom(
-                                      minimumSize:
-                                          const Size.fromHeight(56),
+                                      minimumSize: const Size.fromHeight(56),
                                     ),
                                     child: const Text('Hold'),
                                   ),

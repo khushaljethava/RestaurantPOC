@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/errors.dart';
 import '../providers/connectivity.dart';
 import '../services/receipt_pdf.dart';
 import '../theme/ros_theme.dart';
@@ -40,8 +41,7 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
           .single();
       final orders = await Supabase.instance.client
           .from('orders')
-          .select(
-              'id, token_no, status, order_item(name, qty, line_total)')
+          .select('id, token_no, status, order_item(name, qty, line_total)')
           .eq('bill_id', widget.billId);
       final payments = await Supabase.instance.client
           .from('payment')
@@ -57,7 +57,7 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = mapError(e);
         _loading = false;
       });
     }
@@ -76,8 +76,9 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
       await shareReceiptPdf(file);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mapError(e))));
     }
   }
 
@@ -96,9 +97,9 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
 
   Future<void> _refund() async {
     if (!ref.read(isOnlineProvider)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Offline — cannot refund')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Offline — cannot refund')));
       return;
     }
     final reasonCtrl = TextEditingController();
@@ -113,11 +114,13 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Refund')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Refund'),
+          ),
         ],
       ),
     );
@@ -125,21 +128,22 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     final reason = reasonCtrl.text.trim();
     reasonCtrl.dispose();
     if (reason.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reason required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reason required')));
       return;
     }
     try {
-      await Supabase.instance.client.rpc('refund_bill', params: {
-        'p_bill_id': widget.billId,
-        'p_reason': reason,
-      });
+      await Supabase.instance.client.rpc(
+        'refund_bill',
+        params: {'p_bill_id': widget.billId, 'p_reason': reason},
+      );
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mapError(e))));
     }
   }
 
@@ -179,7 +183,8 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
                       Text(
                         'ROS',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               color: RosColors.primary,
                               fontWeight: FontWeight.w700,
                             ),
@@ -192,23 +197,23 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
                             kind: status == 'paid'
                                 ? StatusKind.paid
                                 : status == 'refunded'
-                                    ? StatusKind.cancelled
-                                    : StatusKind.pending,
+                                ? StatusKind.cancelled
+                                : StatusKind.pending,
                           ),
                           const Spacer(),
                           MoneyText(
                             total,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
+                            style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
                       if (bill?['table_label'] != null) ...[
                         const SizedBox(height: 4),
-                        Text('Table ${bill!['table_label']}',
-                            style: Theme.of(context).textTheme.bodyMedium),
+                        Text(
+                          'Table ${bill!['table_label']}',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ],
                       const Divider(height: 24),
                       for (final o in _orders) ...[
@@ -224,7 +229,8 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                      '${item['name']} × ${item['qty']}'),
+                                    '${item['name']} × ${item['qty']}',
+                                  ),
                                 ),
                                 MoneyText((item['line_total'] as num?) ?? 0),
                               ],

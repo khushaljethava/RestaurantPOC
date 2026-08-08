@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../providers/cart.dart';
 import '../services/upi.dart';
 import '../theme/ros_theme.dart';
+import 'glass.dart';
 import 'ros_ui.dart';
 
 class UpiConfig {
@@ -32,11 +33,7 @@ Future<PaymentSheetResult?> showPaymentSheet(
 }
 
 class _PaymentSheetBody extends StatefulWidget {
-  const _PaymentSheetBody({
-    required this.due,
-    this.upi,
-    this.billNote,
-  });
+  const _PaymentSheetBody({required this.due, this.upi, this.billNote});
   final double due;
   final UpiConfig? upi;
   final String? billNote;
@@ -156,7 +153,12 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
         : '';
     final vpaLabel = upiReady ? upiCfg.vpa : '';
 
-    return Padding(
+    // Sheets are transparent in the glass theme — the body brings its own
+    // frosted surface.
+    return GlassPanel(
+      color: RosColors.glassStrong,
+      radius: 28,
+      blur: 28,
       padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + bottom),
       child: SingleChildScrollView(
         child: Column(
@@ -166,9 +168,9 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
             Text('Pay', style: Theme.of(context).textTheme.titleMedium),
             MoneyText(
               widget.due,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -177,7 +179,11 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
               children: [
                 _modeChip('cash', 'Cash', _payFullCash),
                 _modeChip('upi', 'UPI', upiReady ? _payFullUpi : null),
-                _modeChip('split', 'Split', () => setState(() => _mode = 'split')),
+                _modeChip(
+                  'split',
+                  'Split',
+                  () => setState(() => _mode = 'split'),
+                ),
               ],
             ),
             if (!upiReady)
@@ -213,22 +219,25 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
             if (_mode != 'upi' || !showQr) ...[
               TextField(
                 controller: _cash,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(labelText: 'Cash'),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _upi,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(labelText: 'UPI'),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _card,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(labelText: 'Card'),
               ),
             ],
@@ -247,7 +256,8 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
             FilledButton(
               onPressed: _submit,
               child: Text(
-                  _mode == 'upi' ? 'Confirm UPI received' : 'Confirm payment'),
+                _mode == 'upi' ? 'Confirm UPI received' : 'Confirm payment',
+              ),
             ),
           ],
         ),

@@ -27,12 +27,16 @@ final openTableLabelsProvider = FutureProvider<List<String>>((ref) async {
   return list;
 });
 
-final openBillsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final openBillsProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   final stallId = ref.watch(activeStallIdProvider);
   if (stallId == null) return [];
   final rows = await Supabase.instance.client
       .from('bill')
-      .select('id, total, table_label, status, created_at, collected_by_stall_id')
+      .select(
+        'id, total, table_label, status, created_at, collected_by_stall_id',
+      )
       .eq('status', 'open')
       .eq('collected_by_stall_id', stallId)
       .order('created_at', ascending: false);

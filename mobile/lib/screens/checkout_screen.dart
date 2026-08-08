@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/errors.dart';
 import '../providers/cart.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
-import '../theme/ros_theme.dart';
 import '../widgets/payment_sheet.dart';
+import '../widgets/glass.dart';
 import '../widgets/ros_ui.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -51,20 +52,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final orders = await Supabase.instance.client
           .from('orders')
           .select(
-              'id, token_no, status, stall_id, order_item(name, qty, line_total)')
+            'id, token_no, status, stall_id, order_item(name, qty, line_total)',
+          )
           .eq('bill_id', widget.billId);
       if (!mounted) return;
       setState(() {
         _bill = Map<String, dynamic>.from(bill);
         _orders = List<Map<String, dynamic>>.from(orders as List);
         _loading = false;
-        _discountCtrl.text =
-            ((bill['discount'] as num?)?.toDouble() ?? 0).toStringAsFixed(2);
+        _discountCtrl.text = ((bill['discount'] as num?)?.toDouble() ?? 0)
+            .toStringAsFixed(2);
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = mapError(e);
         _loading = false;
       });
     }
@@ -84,14 +86,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
     try {
-      await Supabase.instance.client.rpc('set_bill_discount', params: {
-        'p_bill_id': widget.billId,
-        'p_discount': d,
-        'p_reason': reason,
-      });
+      await Supabase.instance.client.rpc(
+        'set_bill_discount',
+        params: {
+          'p_bill_id': widget.billId,
+          'p_discount': d,
+          'p_reason': reason,
+        },
+      );
       await _load();
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = mapError(e));
     }
   }
 
@@ -121,7 +126,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         if (vpa != null && vpa.trim().isNotEmpty) {
           upi = UpiConfig(
             vpa: vpa,
-            payeeName: (stall?['upi_payee_name'] as String?)?.trim().isNotEmpty == true
+            payeeName:
+                (stall?['upi_payee_name'] as String?)?.trim().isNotEmpty == true
                 ? stall!['upi_payee_name'] as String
                 : (stall?['name'] as String? ?? 'Stall'),
           );
@@ -145,16 +151,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       await Supabase.instance.client.rpc(
         'pay_bill',
-        params: {
-          'p_bill_id': widget.billId,
-          'p_payments': result.payments,
-        },
+        params: {'p_bill_id': widget.billId, 'p_payments': result.payments},
       );
       if (!mounted) return;
       context.go('/receipt/${widget.billId}');
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = mapError(e);
         _paying = false;
       });
     }
@@ -194,9 +197,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       if (bill?['table_label'] != null)
                         Text(
                           'Table ${bill!['table_label']}',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       const SizedBox(height: 8),
                       StatusChip(label: status, kind: _kind(status)),
@@ -210,7 +212,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                 children: [
                                   Text(
                                     'Token #${o['token_no'] ?? '—'}',
-                                    style: Theme.of(context).textTheme.titleMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
                                   const Spacer(),
                                   StatusChip(
@@ -223,7 +227,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               for (final item
                                   in (o['order_item'] as List? ?? const []))
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -231,7 +237,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                           '${item['name']} × ${item['qty']}',
                                         ),
                                       ),
-                                      MoneyText((item['line_total'] as num?) ?? 0),
+                                      MoneyText(
+                                        (item['line_total'] as num?) ?? 0,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -245,15 +253,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         TextField(
                           controller: _discountCtrl,
                           keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration:
-                              const InputDecoration(labelText: 'Discount amount'),
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Discount amount',
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _discountReason,
-                          decoration:
-                              const InputDecoration(labelText: 'Discount reason'),
+                          decoration: const InputDecoration(
+                            labelText: 'Discount reason',
+                          ),
                         ),
                         Align(
                           alignment: Alignment.centerLeft,
@@ -266,8 +277,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     ],
                   ),
                 ),
-                Material(
-                  color: RosColors.surfaceContainer,
+                GlassBar(
                   child: SafeArea(
                     top: false,
                     child: Padding(
@@ -277,14 +287,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         children: [
                           Row(
                             children: [
-                              Text('Due',
-                                  style: Theme.of(context).textTheme.titleMedium),
+                              Text(
+                                'Due',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                               const Spacer(),
                               MoneyText(
                                 due,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
+                                style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                             ],
@@ -298,7 +308,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           if (status == 'open')
                             FilledButton(
                               onPressed: _paying ? null : _pay,
-                              child: Text(_paying ? 'Paying…' : 'Collect payment'),
+                              child: Text(
+                                _paying ? 'Paying…' : 'Collect payment',
+                              ),
                             )
                           else if (status == 'paid')
                             FilledButton(

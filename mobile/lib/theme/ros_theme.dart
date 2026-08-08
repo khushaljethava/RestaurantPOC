@@ -1,30 +1,67 @@
 import 'package:flutter/material.dart';
 
-/// Efficient Vendor Service tokens from stitch DESIGN.md.
+/// Glass design tokens.
+///
+/// Surfaces are translucent — they only read correctly on top of
+/// [GlassBackground] (installed once in `MaterialApp.builder`).
 abstract final class RosColors {
-  static const primary = Color(0xFF00513E);
-  static const primaryContainer = Color(0xFF156B54);
+  // Brand
+  static const primary = Color(0xFF00614A);
+  static const primaryContainer = Color(0x33008F6B);
   static const onPrimary = Color(0xFFFFFFFF);
-  static const onPrimaryContainer = Color(0xFF9AE9CB);
-  static const secondary = Color(0xFF1B6C3D);
-  static const secondaryContainer = Color(0xFFA4F4B8);
-  static const onSecondaryContainer = Color(0xFF237242);
-  static const background = Color(0xFFF5FBF5);
-  static const surface = Color(0xFFF5FBF5);
-  static const surfaceContainer = Color(0xFFE9EFEA);
-  static const surfaceContainerLow = Color(0xFFEFF5F0);
-  static const surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const surfaceDim = Color(0xFFD5DCD6);
-  static const onSurface = Color(0xFF171D1A);
-  static const onSurfaceVariant = Color(0xFF3F4944);
-  static const outline = Color(0xFF6F7974);
-  static const outlineVariant = Color(0xFFBEC9C3);
-  static const error = Color(0xFFBA1A1A);
-  static const errorContainer = Color(0xFFFFDAD6);
+  static const onPrimaryContainer = Color(0xFF00402F);
+  static const secondary = Color(0xFF0F6B3E);
+  static const secondaryContainer = Color(0x3320C273);
+  static const onSecondaryContainer = Color(0xFF0B5230);
+
+  // Aurora backdrop stops (used by GlassBackground)
+  static const auroraTop = Color(0xFFDFF5EC);
+  static const auroraMid = Color(0xFFEFF7F2);
+  static const auroraBottom = Color(0xFFE4EEF6);
+  static const auroraBlobA = Color(0x5500C08F);
+  static const auroraBlobB = Color(0x44FFC46B);
+  static const auroraBlobC = Color(0x4457A8FF);
+
+  // Glass surfaces
+  static const glass = Color(0x99FFFFFF); // panels
+  static const glassStrong = Color(0xCCFFFFFF); // bars, sheets
+  static const glassSoft = Color(0x55FFFFFF); // nested / secondary
+  static const glassBorder = Color(0x66FFFFFF);
+  static const glassShadow = Color(0x1A0B3B2E);
+
+  // Aliases kept so existing screens restyle without edits.
+  static const background = Color(0x00000000);
+  static const surface = glass;
+  static const surfaceContainer = glass;
+  static const surfaceContainerLow = glassSoft;
+  static const surfaceContainerLowest = glassStrong;
+  static const surfaceDim = Color(0x33FFFFFF);
+
+  static const onSurface = Color(0xFF11201B);
+  static const onSurfaceVariant = Color(0xFF41544C);
+  static const outline = Color(0xFF6C7F77);
+  static const outlineVariant = Color(0x4D4A6B5E);
+
+  static const error = Color(0xFFB3261E);
+  static const errorContainer = Color(0x33E5484D);
   static const onError = Color(0xFFFFFFFF);
-  static const paid = Color(0xFF1B6C3D);
+  static const paid = Color(0xFF0F6B3E);
   static const pending = Color(0xFF8A5300);
-  static const pendingContainer = Color(0xFFFFF0D4);
+  static const pendingContainer = Color(0x40FFB020);
+}
+
+/// Shared glass geometry.
+abstract final class RosGlass {
+  static const blur = 18.0;
+  static const radius = 20.0;
+  static const border = BorderSide(color: RosColors.glassBorder, width: 1);
+  static const shadow = [
+    BoxShadow(
+      color: RosColors.glassShadow,
+      blurRadius: 24,
+      offset: Offset(0, 8),
+    ),
+  ];
 }
 
 ThemeData buildRosTheme() {
@@ -38,36 +75,38 @@ ThemeData buildRosTheme() {
     onSecondary: RosColors.onPrimary,
     secondaryContainer: RosColors.secondaryContainer,
     onSecondaryContainer: RosColors.onSecondaryContainer,
-    tertiary: Color(0xFF673D00),
+    tertiary: Color(0xFF7A4A00),
     onTertiary: RosColors.onPrimary,
-    tertiaryContainer: Color(0xFF885200),
-    onTertiaryContainer: Color(0xFFFFD0A0),
+    tertiaryContainer: RosColors.pendingContainer,
+    onTertiaryContainer: Color(0xFF5C3600),
     error: RosColors.error,
     onError: RosColors.onError,
     errorContainer: RosColors.errorContainer,
-    onErrorContainer: Color(0xFF93000A),
-    surface: RosColors.surface,
+    onErrorContainer: Color(0xFF7A1710),
+    surface: RosColors.glass,
     onSurface: RosColors.onSurface,
     onSurfaceVariant: RosColors.onSurfaceVariant,
     outline: RosColors.outline,
     outlineVariant: RosColors.outlineVariant,
-    surfaceContainerHighest: Color(0xFFDEE4DF),
-    surfaceContainerHigh: Color(0xFFE4EAE4),
-    surfaceContainer: RosColors.surfaceContainer,
-    surfaceContainerLow: RosColors.surfaceContainerLow,
-    surfaceContainerLowest: Color(0xFFFFFFFF),
+    surfaceContainerHighest: RosColors.glassStrong,
+    surfaceContainerHigh: RosColors.glass,
+    surfaceContainer: RosColors.glass,
+    surfaceContainerLow: RosColors.glassSoft,
+    surfaceContainerLowest: RosColors.glassStrong,
   );
 
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: RosColors.background,
+    scaffoldBackgroundColor: Colors.transparent,
+    canvasColor: Colors.transparent,
     fontFamily: 'Roboto',
   );
 
   return base.copyWith(
     appBarTheme: const AppBarTheme(
-      backgroundColor: RosColors.surfaceContainer,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       foregroundColor: RosColors.onSurface,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -76,20 +115,25 @@ ThemeData buildRosTheme() {
         fontFamily: 'Roboto',
         fontSize: 22,
         fontWeight: FontWeight.w700,
+        letterSpacing: -0.4,
         color: RosColors.primary,
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: RosColors.surfaceContainerLow,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       indicatorColor: RosColors.secondaryContainer,
+      indicatorShape: const StadiumBorder(
+        side: BorderSide(color: RosColors.glassBorder),
+      ),
       elevation: 0,
-      height: 64,
+      height: 66,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return TextStyle(
           fontFamily: 'Roboto',
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           color: selected
               ? RosColors.onSecondaryContainer
               : RosColors.onSurfaceVariant,
@@ -105,79 +149,125 @@ ThemeData buildRosTheme() {
       }),
     ),
     chipTheme: base.chipTheme.copyWith(
-      shape: const StadiumBorder(),
-      side: BorderSide.none,
+      backgroundColor: RosColors.glassSoft,
+      shape: const StadiumBorder(side: RosGlass.border),
+      side: RosGlass.border,
+      showCheckmark: false,
       labelStyle: const TextStyle(
         fontFamily: 'Roboto',
         fontSize: 14,
         fontWeight: FontWeight.w500,
+        color: RosColors.onSurface,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      filled: false,
+      filled: true,
+      fillColor: RosColors.glassSoft,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: RosColors.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: RosColors.glassBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: RosColors.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: RosColors.glassBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: RosColors.primary, width: 2),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: RosColors.primary, width: 1.6),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: RosColors.primary,
+        foregroundColor: RosColors.onPrimary,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(
           fontFamily: 'Roboto',
           fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        side: const BorderSide(color: RosColors.outlineVariant),
+        backgroundColor: RosColors.glassSoft,
+        foregroundColor: RosColors.primary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        side: const BorderSide(color: RosColors.glassBorder),
       ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: RosColors.primary),
     ),
     cardTheme: CardThemeData(
-      color: RosColors.surfaceContainer,
+      color: RosColors.glass,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RosGlass.radius),
+        side: RosGlass.border,
+      ),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: RosColors.glassBorder,
+      thickness: 1,
+      space: 1,
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: RosColors.surfaceContainerLow,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      modalBackgroundColor: Colors.transparent,
+      modalElevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       showDragHandle: true,
+      dragHandleColor: RosColors.outlineVariant,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: RosColors.glassStrong,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: RosGlass.border,
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: Color(0xF211201B),
+      contentTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+      behavior: SnackBarBehavior.floating,
+    ),
+    listTileTheme: const ListTileThemeData(
+      textColor: RosColors.onSurface,
+      iconColor: RosColors.onSurfaceVariant,
     ),
     textTheme: const TextTheme(
       headlineMedium: TextStyle(
         fontFamily: 'Roboto',
-        fontSize: 24,
-        fontWeight: FontWeight.w400,
-        height: 32 / 24,
+        fontSize: 26,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.6,
+        height: 32 / 26,
         color: RosColors.onSurface,
       ),
       headlineSmall: TextStyle(
         fontFamily: 'Roboto',
         fontSize: 22,
         fontWeight: FontWeight.w700,
+        letterSpacing: -0.4,
         color: RosColors.onSurface,
       ),
       titleMedium: TextStyle(
         fontFamily: 'Roboto',
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         height: 24 / 16,
         color: RosColors.onSurface,
       ),
@@ -198,7 +288,7 @@ ThemeData buildRosTheme() {
       labelSmall: TextStyle(
         fontFamily: 'Roboto',
         fontSize: 11,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         height: 16 / 11,
         letterSpacing: 0.5,
         color: RosColors.onSurfaceVariant,

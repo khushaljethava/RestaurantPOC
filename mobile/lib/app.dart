@@ -17,10 +17,15 @@ import 'screens/settlement_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/stall_screen.dart';
 import 'screens/stock_screen.dart';
+import 'screens/group_screen.dart';
+import 'screens/reports_screen.dart';
+import 'screens/stall_settings_screen.dart';
+import 'screens/tables_screen.dart';
 import 'screens/table_bill_screen.dart';
 import 'screens/today_screen.dart';
 import 'theme/ros_theme.dart';
 import 'widgets/connection_banner.dart';
+import 'widgets/glass.dart';
 import 'widgets/shell_scaffold.dart';
 
 final _routerProvider = Provider<GoRouter>((ref) {
@@ -34,13 +39,25 @@ final _routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       final onAuth = loc == '/login' || loc == '/join' || loc == '/signup';
       if (!loggedIn && !onAuth) return '/login';
-      if (loggedIn && (loc == '/login' || loc == '/signup')) return '/';
+      if (loggedIn && (loc == '/login' || loc == '/signup')) {
+        // Auth refresh can leave /login before LoginScreen navigates.
+        // Keep the invite so Join actually runs after sign-in.
+        final invite = state.uri.queryParameters['invite'];
+        if (invite != null && invite.isNotEmpty) {
+          return '/join?code=${Uri.encodeComponent(invite)}';
+        }
+        return '/';
+      }
       return null;
     },
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (_, _) => const SignupScreen()),
-      GoRoute(path: '/join', builder: (_, _) => const JoinScreen()),
+      GoRoute(
+        path: '/join',
+        builder: (_, state) =>
+            JoinScreen(initialCode: state.uri.queryParameters['code']),
+      ),
       ShellRoute(
         builder: (context, state, child) => ShellScaffold(child: child),
         routes: [
@@ -48,8 +65,9 @@ final _routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/today', builder: (_, _) => const TodayScreen()),
           GoRoute(path: '/held', builder: (_, _) => const HeldScreen()),
           GoRoute(
-              path: '/settlement',
-              builder: (_, _) => const SettlementScreen()),
+            path: '/settlement',
+            builder: (_, _) => const SettlementScreen(),
+          ),
         ],
       ),
       GoRoute(
@@ -62,6 +80,13 @@ final _routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/stall', builder: (_, _) => const StallScreen()),
       GoRoute(path: '/stock', builder: (_, _) => const StockScreen()),
       GoRoute(path: '/tables', builder: (_, _) => const OpenTablesScreen()),
+      GoRoute(path: '/manage/tables', builder: (_, _) => const TablesScreen()),
+      GoRoute(
+        path: '/manage/stall',
+        builder: (_, _) => const StallSettingsScreen(),
+      ),
+      GoRoute(path: '/manage/group', builder: (_, _) => const GroupScreen()),
+      GoRoute(path: '/reports', builder: (_, _) => const ReportsScreen()),
       GoRoute(
         path: '/table/:label',
         builder: (context, state) => TableBillScreen(
@@ -95,11 +120,13 @@ class RosApp extends ConsumerWidget {
       theme: buildRosTheme(),
       routerConfig: router,
       builder: (context, child) {
-        return Column(
-          children: [
-            const ConnectionBanner(),
-            Expanded(child: child ?? const SizedBox.shrink()),
-          ],
+        return GlassBackground(
+          child: Column(
+            children: [
+              const ConnectionBanner(),
+              Expanded(child: child ?? const SizedBox.shrink()),
+            ],
+          ),
         );
       },
     );

@@ -9,7 +9,8 @@ final isOnlineProvider = Provider<bool>((ref) {
   final async = ref.watch(connectivityProvider);
   return async.when(
     data: (results) =>
-        results.isNotEmpty && !results.every((r) => r == ConnectivityResult.none),
+        results.isNotEmpty &&
+        !results.every((r) => r == ConnectivityResult.none),
     loading: () => true,
     error: (_, _) => true,
   );

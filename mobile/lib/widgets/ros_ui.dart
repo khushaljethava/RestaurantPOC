@@ -2,18 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../theme/ros_theme.dart';
+import 'glass.dart';
 
 final _inr = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
 String formatInr(num amount) => _inr.format(amount);
 
 class MoneyText extends StatelessWidget {
-  const MoneyText(
-    this.amount, {
-    super.key,
-    this.style,
-    this.color,
-  });
+  const MoneyText(this.amount, {super.key, this.style, this.color});
 
   final num amount;
   final TextStyle? style;
@@ -44,31 +40,26 @@ class StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (kind) {
-      StatusKind.paid || StatusKind.ready => (
-          RosColors.paid,
-          RosColors.onPrimary,
-        ),
-      StatusKind.pending || StatusKind.held => (
-          RosColors.pendingContainer,
-          RosColors.pending,
-        ),
-      StatusKind.cancelled => (
-          RosColors.errorContainer,
-          RosColors.error,
-        ),
+      StatusKind.paid ||
+      StatusKind.ready => (RosColors.paid, RosColors.onPrimary),
+      StatusKind.pending ||
+      StatusKind.held => (RosColors.pendingContainer, RosColors.pending),
+      StatusKind.cancelled => (RosColors.errorContainer, RosColors.error),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: RosColors.glassBorder),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontFamily: 'Roboto',
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
           color: fg,
         ),
       ),
@@ -82,7 +73,7 @@ class RosSurfaceCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.onTap,
-    this.borderRadius = 12,
+    this.borderRadius = RosGlass.radius,
   });
 
   final Widget child;
@@ -92,20 +83,11 @@ class RosSurfaceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(borderRadius);
-    final body = Material(
-      color: RosColors.surfaceContainer,
-      borderRadius: radius,
-      child: Padding(padding: padding, child: child),
-    );
-    if (onTap == null) return body;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: body,
-      ),
+    return GlassPanel(
+      radius: borderRadius,
+      padding: padding,
+      onTap: onTap,
+      child: child,
     );
   }
 }
@@ -126,22 +108,24 @@ class RosBottomCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: FilledButton(
-          onPressed: (!enabled || busy) ? null : onPressed,
-          child: busy
-              ? const SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: RosColors.onPrimary,
-                  ),
-                )
-              : Text(label),
+    return GlassBar(
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: FilledButton(
+            onPressed: (!enabled || busy) ? null : onPressed,
+            child: busy
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: RosColors.onPrimary,
+                    ),
+                  )
+                : Text(label),
+          ),
         ),
       ),
     );
@@ -196,7 +180,11 @@ class RosNavTile extends StatelessWidget {
                 ),
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                    accentRail != null ? 14 : 16, 16, 16, 16),
+                  accentRail != null ? 14 : 16,
+                  16,
+                  16,
+                  16,
+                ),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -213,8 +201,10 @@ class RosNavTile extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(label,
-                              style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            label,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           if (subtitle != null) ...[
                             const SizedBox(height: 2),
                             Text(
@@ -225,8 +215,10 @@ class RosNavTile extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right,
-                        color: RosColors.onSurfaceVariant),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: RosColors.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ),
@@ -268,10 +260,7 @@ class RosEmpty extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
-            if (action != null) ...[
-              const SizedBox(height: 16),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
       ),
