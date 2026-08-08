@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Btn, Card, Field } from '@/components/ui';
+import { normalizeInviteCode } from '@/lib/invite-link';
 
 /**
  * Called by: staff/page.tsx (import RedeemInviteForm).
@@ -11,13 +12,6 @@ import { Btn, Card, Field } from '@/components/ui';
  * Data: RPC redeem_stall_invite { p_code: string } — no local files.
  * User: "Implement the plan as specified, it is attached for your reference. Do NOT edit the plan file itself."
  */
-/** Mirror of mobile/lib/invite_code.dart — accepts `ABCD-1234` or `abcd1234`. */
-export function normalizeInviteCode(raw: string): string {
-  const c = raw.trim().toUpperCase().replace(/\s+/g, '').replace(/[–—−]/g, '-');
-  if (c.includes('-') || c.length < 5) return c;
-  return `${c.slice(0, 4)}-${c.slice(4)}`;
-}
-
 export function RedeemInviteForm() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);

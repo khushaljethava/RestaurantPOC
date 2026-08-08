@@ -25,7 +25,11 @@ export async function middleware(request: NextRequest) {
 
   const isPublic =
     request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/onboarding');
+    request.nextUrl.pathname.startsWith('/onboarding') ||
+    // Invite landing page. Recipients are by definition not signed in yet —
+    // redirecting them to /login here would discard the ?code= and break the
+    // entire invite flow.
+    request.nextUrl.pathname.startsWith('/join');
   const isDocument = request.headers.get('sec-fetch-dest') === 'document';
   // Only redirect real navigations — never rewrite fetch/XHR (e.g. misconfigured
   // Supabase URL posting to this origin) into POST /login → static 405.
@@ -36,5 +40,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // .well-known is excluded so Google's App Links verification fetch of
+  // assetlinks.json doesn't trigger a Supabase auth round-trip.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.well-known).*)'],
 };

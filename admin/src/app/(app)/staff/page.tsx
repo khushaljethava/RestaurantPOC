@@ -3,6 +3,7 @@ import { resolveActiveStall } from '@/lib/active-stall';
 import { createStallInvite } from '../group/actions';
 import { revokeInvite, changeRole, removeMember } from './actions';
 import { RedeemInviteForm } from './redeem-form';
+import { InviteShare } from './invite-share';
 import {
   Btn,
   Card,
@@ -87,18 +88,21 @@ export default async function StaffPage() {
                 <span className="font-mono font-medium">{i.code}</span>
                 <span className="ml-2 text-on-surface-variant">· {i.role}</span>
               </span>
-              {isOwner && (
-                <form
-                  action={async () => {
-                    'use server';
-                    await revokeInvite(i.code);
-                  }}
-                >
-                  <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
-                    Revoke
-                  </Btn>
-                </form>
-              )}
+              <div className="flex items-center gap-1">
+                <InviteShare code={i.code} />
+                {isOwner && (
+                  <form
+                    action={async () => {
+                      'use server';
+                      await revokeInvite(i.code);
+                    }}
+                  >
+                    <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
+                      Revoke
+                    </Btn>
+                  </form>
+                )}
+              </div>
             </Card>
           ))}
           {activeInvites.length === 0 && (

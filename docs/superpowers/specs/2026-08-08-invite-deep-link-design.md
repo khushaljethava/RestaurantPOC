@@ -79,7 +79,7 @@ GoRouter would resolve `/` instead of `/join`.
 The `ros` filter constrains scheme only, with no host. Any `ros://` URI opens the app
 and is routed by path; unknown paths fall through GoRouter's normal handling.
 
-Also fix `android:label="mobile"` → `"ROS"`. It is the name users see under the
+Also fix `android:label="mobile"` → `"Stall Manager"`. It is the name users see under the
 launcher icon, and this is the file being edited.
 
 **Rejected alternative:** the `app_links` package with a manual URI stream. Same
@@ -121,7 +121,7 @@ inherits no authenticated layout. A server component reading `searchParams.code`
 Renders:
 
 - The code, large and monospace, with a copy button.
-- **Open in ROS app** → `ros:///join?code=…`
+- **Open in Stall Manager** → `ros:///join?code=…`
 - **Don't have the app?** → `process.env.NEXT_PUBLIC_APK_URL`, a direct APK download.
   At publication this env var becomes a Play Store URL; no code changes.
 
@@ -155,14 +155,14 @@ landing page is unreachable and the whole feature silently fails in production.
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.rest.mobile",
+    "package_name": "com.kj.stall",
     "sha256_cert_fingerprints": ["REPLACE_AT_PUBLICATION"]
   }
 }]
 ```
 
-`com.rest.mobile` is the current `applicationId`
-(`mobile/android/app/build.gradle.kts:24`). It is permanent once published — if it
+`com.kj.stall` is the current `applicationId`
+(`mobile/android/app/build.gradle.kts:32`). It is permanent once published — if it
 should be something else, change it before the first Play upload, not after.
 
 The fingerprint comes from Play Console → Setup → App Signing after the first upload.
@@ -180,7 +180,7 @@ Owner clicks "Generate staff invite" on /staff
 Recipient opens the link on Android
   ├─ app installed + App Links verified → app opens directly at /join?code=…
   └─ otherwise → /join landing page
-       ├─ "Open in ROS app" → ros:///join?code=… → app opens at /join?code=…
+       ├─ "Open in Stall Manager" → ros:///join?code=… → app opens at /join?code=…
        └─ "Download" → APK
 
 In the app at /join?code=…
