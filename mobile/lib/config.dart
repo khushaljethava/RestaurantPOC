@@ -2,31 +2,18 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-/// Local Supabase defaults (override with --dart-define=SUPABASE_URL=...).
+/// Override with --dart-define=SUPABASE_URL=... / SUPABASE_ANON_KEY=...
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
   defaultValue: 'http://127.0.0.1:54321',
 );
 
-const supabaseAnonKey = String.fromEnvironment(
-  'SUPABASE_ANON_KEY',
-  defaultValue:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
-);
-
-const _demoAnonPrefix =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1v';
-
-bool get isDemoAnonKey => supabaseAnonKey.startsWith(_demoAnonPrefix);
-
-bool get isCloudSupabaseUrl => supabaseUrl.contains('supabase.co');
+const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 /// User-facing hint when dart-defines are wrong. Null if config looks ok.
 String? get supabaseConfigHint {
-  if (isCloudSupabaseUrl && isDemoAnonKey) {
-    return 'Config mismatch: cloud URL with local demo anon key. '
-        'Re-run with the anon key from '
-        'Dashboard → $supabaseUrl → Settings → API.';
+  if (supabaseAnonKey.isEmpty) {
+    return 'Missing SUPABASE_ANON_KEY. Pass --dart-define=SUPABASE_ANON_KEY=...';
   }
   if (!supabaseAnonKey.startsWith('eyJ')) {
     return 'Anon key looks truncated (should start with eyJ). '
@@ -44,7 +31,7 @@ void logSupabaseConfig(String where) {
 
   debugPrint(
     '[supabase/$where] url=$supabaseUrl keyLen=${key.length} '
-    'key=$prefix…$suffix jwtIss=$jwtIss demoKey=$isDemoAnonKey',
+    'key=$prefix…$suffix jwtIss=$jwtIss',
   );
   final hint = supabaseConfigHint;
   if (hint != null) {
