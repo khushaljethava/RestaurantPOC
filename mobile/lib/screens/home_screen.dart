@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../providers/shift.dart';
 import '../providers/stall.dart';
 import '../services/push_registration.dart';
 import '../theme/ros_theme.dart';
@@ -26,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ROS'),
+        title: const Text('Stall Manager'),
         actions: [
           IconButton(
             tooltip: 'Join with invite',
@@ -69,6 +70,19 @@ class HomeScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
+              Consumer(builder: (context, ref, _) {
+                final shift = ref.watch(openShiftProvider).asData?.value;
+                if (shift != null) return const SizedBox.shrink();
+                return Card(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  child: ListTile(
+                    title: const Text('Open shift to start selling'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/shift'),
+                  ),
+                );
+              }),
+
               if (list.length > 1) ...[
                 DropdownButtonFormField<String>(
                   initialValue: active.stallId,

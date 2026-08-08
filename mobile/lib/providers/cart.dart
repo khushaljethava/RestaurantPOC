@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/money.dart';
+import '../services/cart_draft.dart';
+
 class CartLine {
   CartLine({
     required this.stallId,
@@ -13,20 +16,20 @@ class CartLine {
   final String stallId;
   final String menuItemId;
   final String name;
-  final double unitPrice;
+  final Money unitPrice;
   int qty;
   String? notes;
 
-  double get lineTotal => unitPrice * qty;
+  Money get lineTotal => unitPrice * qty;
 
   CartLine copyWith({int? qty, String? notes}) => CartLine(
-    stallId: stallId,
-    menuItemId: menuItemId,
-    name: name,
-    unitPrice: unitPrice,
-    qty: qty ?? this.qty,
-    notes: notes ?? this.notes,
-  );
+        stallId: stallId,
+        menuItemId: menuItemId,
+        name: name,
+        unitPrice: unitPrice,
+        qty: qty ?? this.qty,
+        notes: notes ?? this.notes,
+      );
 }
 
 class CartNotifier extends Notifier<List<CartLine>> {
@@ -44,6 +47,7 @@ class CartNotifier extends Notifier<List<CartLine>> {
     } else {
       state = [...state, line];
     }
+    saveCartDraft(state);
   }
 
   void setQty(String stallId, String menuItemId, int qty) {
@@ -60,6 +64,7 @@ class CartNotifier extends Notifier<List<CartLine>> {
         else
           e,
     ];
+    saveCartDraft(state);
   }
 
   void setNotes(String stallId, String menuItemId, String notes) {
@@ -79,7 +84,18 @@ class CartNotifier extends Notifier<List<CartLine>> {
     ];
   }
 
-  void clear() => state = const [];
+  void clear() {
+    state = const [];
+    clearCartDraft();
+  }
+
+  Future<void> restoreDraft() async {
+    final lines = await loadCartDraft();
+    if (lines.isNotEmpty) state = lines;
+  }
+
+  Money get total =>
+      state.fold(const Money(0), (sum, e) => sum + e.lineTotal);
 
   Map<String, List<Map<String, dynamic>>> toRpcItemsByStall() {
     final map = <String, List<Map<String, dynamic>>>{};
@@ -94,9 +110,8 @@ class CartNotifier extends Notifier<List<CartLine>> {
   }
 }
 
-final cartProvider = NotifierProvider<CartNotifier, List<CartLine>>(
-  CartNotifier.new,
-);
+final cartProvider =
+    NotifierProvider<CartNotifier, List<CartLine>>(CartNotifier.new);
 
 double billDue(double total, double discount) => total - discount;
 

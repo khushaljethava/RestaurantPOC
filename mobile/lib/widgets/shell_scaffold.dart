@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/stall.dart';
 import 'glass.dart';
 
 class ShellScaffold extends ConsumerWidget {
@@ -10,63 +9,53 @@ class ShellScaffold extends ConsumerWidget {
 
   final Widget child;
 
-  static const _paths = ['/', '/today', '/held', '/settlement'];
+  static const _paths = ['/', '/pos', '/today', '/more'];
 
-  int _indexFor(String location, bool canReports) {
-    if (location.startsWith('/today')) return 1;
-    if (location.startsWith('/held')) return 2;
-    if (location.startsWith('/settlement')) return canReports ? 3 : 0;
+  int _indexFor(String location) {
+    if (location.startsWith('/pos')) return 1;
+    if (location.startsWith('/today') ||
+        location.startsWith('/held') ||
+        location.startsWith('/pickup')) {
+      return 2;
+    }
+    if (location.startsWith('/more') ||
+        location.startsWith('/settlement') ||
+        location.startsWith('/settings') ||
+        location.startsWith('/shift') ||
+        location.startsWith('/day') ||
+        location.startsWith('/mysales')) {
+      return 3;
+    }
     return 0;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.path;
-    final memberships = ref.watch(membershipsProvider).asData?.value ?? [];
-    final activeId = ref.watch(activeStallIdProvider);
-    final active = memberships.isEmpty
-        ? null
-        : memberships.firstWhere(
-            (m) => m.stallId == activeId,
-            orElse: () => memberships.first,
-          );
-    final canReports =
-        active != null && (active.role == 'owner' || active.role == 'manager');
-
-    if (location.startsWith('/settlement') && !canReports) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) context.go('/');
-      });
-    }
-
-    final destinations = <NavigationDestination>[
-      const NavigationDestination(
+    final destinations = const [
+      NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home),
+        label: 'Home',
+      ),
+      NavigationDestination(
         icon: Icon(Icons.point_of_sale_outlined),
         selectedIcon: Icon(Icons.point_of_sale),
-        label: 'Register',
+        label: 'Sell',
       ),
-      const NavigationDestination(
+      NavigationDestination(
         icon: Icon(Icons.receipt_long_outlined),
         selectedIcon: Icon(Icons.receipt_long),
         label: 'Orders',
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.history_outlined),
-        selectedIcon: Icon(Icons.history),
-        label: 'History',
+      NavigationDestination(
+        icon: Icon(Icons.more_horiz),
+        selectedIcon: Icon(Icons.more_horiz),
+        label: 'More',
       ),
-      if (canReports)
-        const NavigationDestination(
-          icon: Icon(Icons.analytics_outlined),
-          selectedIcon: Icon(Icons.analytics),
-          label: 'Reports',
-        ),
     ];
 
-    final index = _indexFor(
-      location,
-      canReports,
-    ).clamp(0, destinations.length - 1);
+    final index = _indexFor(location).clamp(0, destinations.length - 1);
 
     return Scaffold(
       extendBody: true,
@@ -76,8 +65,11 @@ class ShellScaffold extends ConsumerWidget {
           selectedIndex: index,
           destinations: destinations,
           onDestinationSelected: (i) {
-            final path = canReports ? _paths[i] : _paths[i.clamp(0, 2)];
-            context.go(path);
+            if (i == 1) {
+              context.push('/pos');
+              return;
+            }
+            context.go(_paths[i]);
           },
         ),
       ),

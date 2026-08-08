@@ -63,6 +63,36 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     }
   }
 
+  String? _shareToken;
+
+  Future<void> _customerQr() async {
+    try {
+      final token = await Supabase.instance.client.rpc(
+        'create_receipt_share_token',
+        params: {'p_bill_id': widget.billId},
+      );
+      if (!mounted) return;
+      setState(() => _shareToken = token as String);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapError(e))),
+      );
+    }
+  }
+
+  Future<void> _whatsapp() async {
+    await _customerQr();
+    final token = _shareToken;
+    if (token == null) return;
+    // Public receipt URL host configured per deploy; share text is enough for M5.
+    final link = 'https://app.example.com/r/$token';
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Share via WhatsApp: $link')),
+    );
+  }
+
   Future<void> _share() async {
     final bill = _bill;
     if (bill == null) return;
@@ -258,6 +288,29 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
                   icon: const Icon(Icons.share),
                   label: const Text('Share PDF'),
                 ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _whatsapp,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  icon: const Icon(Icons.chat),
+                  label: const Text('WhatsApp link'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _customerQr,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  icon: const Icon(Icons.qr_code),
+                  label: const Text('Customer QR'),
+                ),
+                if (_shareToken != null) ...[
+                  const SizedBox(height: 12),
+                  Text('Token: $_shareToken',
+                      textAlign: TextAlign.center),
+                ],
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: _preview,

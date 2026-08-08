@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/money.dart';
 import '../services/errors.dart';
 import '../providers/cart.dart';
 import '../providers/connectivity.dart';
+import '../providers/shift.dart';
 import '../providers/stall.dart';
 import '../providers/tables.dart';
 import '../theme/ros_theme.dart';
@@ -47,6 +49,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           ? active
           : (stalls.any((s) => s.id == active) ? active : stalls.first.id);
     });
+    await ref.read(cartProvider.notifier).restoreDraft();
     await _loadMenu();
   }
 
@@ -169,6 +172,35 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     }
   }
 
+  Future<void> _ensureShift() async {
+    final shift = await ref.read(openShiftProvider.future);
+    if (shift != null) return;
+    if (!mounted) return;
+    final open = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Open shift to start selling',
+                style: Theme.of(ctx).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Open shift'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (open == true && mounted) {
+      await context.push('/shift');
+      ref.invalidate(openShiftProvider);
+    }
+  }
+
   Future<void> _placeAndCheckout() async {
     if (!ref.read(isOnlineProvider)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -179,6 +211,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final recordedBy = ref.read(activeStallIdProvider);
     final cart = ref.read(cartProvider);
     if (recordedBy == null || cart.isEmpty) return;
+
+    await _ensureShift();
+    final shift = await ref.read(openShiftProvider.future);
+    if (shift == null) {
+      setState(() => _error = 'Open shift required');
+      return;
+    }
 
     setState(() => _error = null);
     final tableLabel = _table.text.trim().isEmpty ? null : _table.text.trim();
@@ -236,7 +275,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
-    final total = cart.fold<double>(0, (s, e) => s + e.lineTotal);
+    final total = ref.watch(cartProvider.notifier).total.rupees;
     final stalls = ref.watch(menuStallsProvider).asData?.value ?? const [];
     final tableLabels = ref.watch(activeTableLabelsProvider);
     // Filtering a loaded list beats a round trip per chip tap — menus are
@@ -249,7 +288,15 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New order')),
+      appBar: AppBar(
+        title: const Text('New order'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.push('/pos/search'),
+          ),
+        ],
+      ),
       body: _loading && _menu.isEmpty
           ? const RosLoading()
           : Column(
@@ -366,7 +413,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, i) {
                       final item = visibleMenu[i];
-                      final price = (item['price'] as num).toDouble();
+                      final price = Money.fromRupees(item['price'] as num);
                       final stallId =
                           item['stall_id'] as String? ?? _menuStallId!;
                       final imageUrl = item['image_url'] as String?;
@@ -410,7 +457,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                MoneyText(price),
+                                MoneyText(price.rupees),
                                 const SizedBox(height: 4),
                                 CircleAvatar(
                                   radius: 16,
@@ -466,8 +513,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                       subtitle: Text(
                                         line.notes == null ||
                                                 line.notes!.isEmpty
-                                            ? formatInr(line.lineTotal)
-                                            : '${formatInr(line.lineTotal)} · ${line.notes}',
+                                            ? line.lineTotal.format()
+                                            : '${line.lineTotal.format()} · ${line.notes}',
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,

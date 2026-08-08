@@ -1,4 +1,4 @@
-package com.rest.mobile
+package com.kj.stall
 
 import io.flutter.embedding.android.FlutterActivity
 
