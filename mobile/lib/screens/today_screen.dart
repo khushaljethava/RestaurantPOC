@@ -183,6 +183,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   else
                     for (final o in _orders) ...[
                       RosSurfaceCard(
+                        onTap: () => context.push('/order/${o['id']}'),
                         child: Row(
                           children: [
                             Expanded(

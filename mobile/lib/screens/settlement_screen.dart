@@ -116,7 +116,49 @@ class _SettlementScreenState extends ConsumerState<SettlementScreen> {
                                   ).textTheme.titleMedium,
                                 ),
                               ),
-                              MoneyText(amt.abs()),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  MoneyText(amt.abs()),
+                                  TextButton(
+                                    onPressed: () async {
+                                      final day = DateTime.now();
+                                      final d =
+                                          '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+                                      try {
+                                        await Supabase.instance.client.rpc(
+                                          'mark_settlement',
+                                          params: {
+                                            'p_from_stall': payer,
+                                            'p_to_stall': payee,
+                                            'p_day': d,
+                                            'p_amount': amt.abs(),
+                                            'p_method': 'cash',
+                                          },
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Marked — awaiting confirm',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(content: Text(mapError(e))),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: const Text('Mark settled'),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),

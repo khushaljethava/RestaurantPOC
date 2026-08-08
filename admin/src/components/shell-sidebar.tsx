@@ -14,6 +14,7 @@ const NAV = [
   { href: '/', label: 'Dashboard', icon: 'dashboard', stallOnly: true },
   { href: '/live', label: 'Live', icon: 'live_tv', stallOnly: true },
   { href: '/settlement', label: 'Settlement', icon: 'payments', stallOnly: true },
+  { href: '/shifts', label: 'Shifts', icon: 'schedule', stallOnly: true },
   { href: '/reports', label: 'Reports', icon: 'assessment', stallOnly: true },
   { href: '/menu', label: 'Menu', icon: 'restaurant_menu', stallOnly: true },
   { href: '/staff', label: 'Staff', icon: 'badge', stallOnly: true },

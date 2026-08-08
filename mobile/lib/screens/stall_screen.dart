@@ -6,6 +6,8 @@ import '../services/errors.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
 import '../widgets/ros_ui.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StallScreen extends ConsumerStatefulWidget {
   const StallScreen({super.key});
@@ -22,7 +24,11 @@ class _StallScreenState extends ConsumerState<StallScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final p = await SharedPreferences.getInstance();
+      if (p.getBool('settings_keep_awake') ?? false) {
+        await WakelockPlus.enable();
+      }
       _load();
       _subscribe();
     });
@@ -35,7 +41,7 @@ class _StallScreenState extends ConsumerState<StallScreen> {
       final rows = await Supabase.instance.client
           .from('orders')
           .select(
-            'id, token_no, status, table_label, created_at, order_item(name, qty, notes)',
+            'id, token_no, status, table_label, order_type, acknowledged_at, created_at, order_item(name, qty, notes)',
           )
           .eq('stall_id', stallId)
           .inFilter('status', ['pending', 'ready'])
@@ -68,6 +74,17 @@ class _StallScreenState extends ConsumerState<StallScreen> {
           callback: (_) => _load(),
         )
         .subscribe();
+  }
+
+  Future<void> _acknowledge(String id) async {
+    try {
+      await Supabase.instance.client.rpc('acknowledge_order', params: {
+        'p_order_id': id,
+      });
+      await _load();
+    } catch (e) {
+      if (mounted) setState(() => _error = mapError(e));
+    }
   }
 
   Future<void> _setStatus(String id, String status) async {
@@ -153,7 +170,12 @@ class _StallScreenState extends ConsumerState<StallScreen> {
                       const SizedBox(height: 8),
                       Text(items),
                       const SizedBox(height: 12),
-                      if (status == 'pending')
+                      if (status == 'pending' && o['acknowledged_at'] == null)
+                        FilledButton(
+                          onPressed: () => _acknowledge(o['id'] as String),
+                          child: const Text('Acknowledge'),
+                        ),
+                      if (status == 'pending' && o['acknowledged_at'] != null)
                         FilledButton(
                           onPressed: () =>
                               _setStatus(o['id'] as String, 'ready'),

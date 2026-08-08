@@ -46,6 +46,8 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
   final _cash = TextEditingController();
   final _upi = TextEditingController();
   final _card = TextEditingController();
+  final _upiRef = TextEditingController();
+  final _tender = TextEditingController();
   String? _error;
   var _mode = 'cash';
 
@@ -101,18 +103,29 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
       return;
     }
     final payments = <Map<String, dynamic>>[];
-    void add(String method, double amount) {
-      if (amount <= 0) return;
+        if (cash > 0) {
       payments.add({
-        'method': method,
-        'amount': amount,
+        'method': 'cash',
+        'amount': cash,
         'idempotency_key': const Uuid().v4(),
       });
     }
-
-    add('cash', cash);
-    add('upi', upi);
-    add('card', card);
+    if (upi > 0) {
+      payments.add({
+        'method': 'upi',
+        'amount': upi,
+        'idempotency_key': const Uuid().v4(),
+        if (_upiRef.text.trim().isNotEmpty) 'upi_ref': _upiRef.text.trim(),
+      });
+    }
+    if (card > 0) {
+      payments.add({
+        'method': 'card',
+        'amount': card,
+        'idempotency_key': const Uuid().v4(),
+      });
+    }
+    // legacy add helpers removed
     if (payments.isEmpty) {
       setState(() => _error = 'Enter at least one payment');
       return;
@@ -253,6 +266,52 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
               ),
             ],
             const SizedBox(height: 12),
+
+            if (_mode == 'cash') ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final preset in [widget.due, 100.0, 200.0, 500.0])
+                    ActionChip(
+                      label: Text(preset == widget.due ? 'Exact' : '₹${preset.toStringAsFixed(0)}'),
+                      onPressed: () {
+                        setState(() {
+                          _tender.text = preset.toStringAsFixed(2);
+                          _cash.text = widget.due.toStringAsFixed(2);
+                        });
+                      },
+                    ),
+                ],
+              ),
+              TextField(
+                controller: _tender,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Tendered'),
+                onChanged: (_) => setState(() {}),
+              ),
+              Builder(builder: (context) {
+                final tender = double.tryParse(_tender.text) ?? 0;
+                final change = tender - widget.due;
+                if (tender <= 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'CHANGE DUE ${formatInr(change < 0 ? 0 : change)}',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                );
+              }),
+            ],
+            if (_mode == 'upi') ...[
+              TextField(
+                controller: _upiRef,
+                decoration: const InputDecoration(
+                  labelText: 'UPI ref (last 6 digits)',
+                ),
+              ),
+            ],
+
             FilledButton(
               onPressed: _submit,
               child: Text(
