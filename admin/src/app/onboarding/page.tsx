@@ -5,50 +5,101 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Btn, Field } from '@/components/ui';
 
+/**
+ * Two kinds of account start here and they are not the same business:
+ * a stall owner runs a shop, a court operator runs the building and owns no
+ * stall. Without the operator path, `(app)/layout.tsx` would bounce an
+ * operator back here forever, since it redirects on empty staff_membership.
+ */
+type Mode = 'stall' | 'court';
+
 export default function OnboardingPage() {
+  const [mode, setMode] = useState<Mode | null>(null);
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
-  async function register() {
+  async function submit() {
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.rpc('register_stall', {
-      p_name: name,
-    });
+    const { error } =
+      mode === 'court'
+        ? await supabase.rpc('create_court', { p_name: name })
+        : await supabase.rpc('register_stall', { p_name: name });
     setBusy(false);
     if (error) return setError(error.message);
-    router.push('/');
+    // An operator has no stall, so the stall dashboard would be empty.
+    router.push(mode === 'court' ? '/courts' : '/');
     router.refresh();
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <div className="w-full max-w-md rounded-md border border-border bg-surface p-8 shadow-card-hover">
-        <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Name your stall</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">
-          This creates your account&apos;s first stall. You can join a food court later, or run
-          standalone.
-        </p>
-        <div className="mt-6 space-y-3">
-          <Field
-            placeholder="Stall name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-          />
-          {error && <p className="text-sm text-error">{error}</p>}
-          <Btn
-            type="button"
-            onClick={register}
-            disabled={!name.trim() || busy}
-            className="w-full"
-          >
-            Create stall
-          </Btn>
-        </div>
+        {mode === null ? (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
+              What are you setting up?
+            </h1>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              You can add the other one later.
+            </p>
+            <div className="mt-6 space-y-3">
+              <Btn type="button" onClick={() => setMode('stall')} className="w-full">
+                I run a stall
+              </Btn>
+              <Btn
+                type="button"
+                variant="outlined"
+                onClick={() => setMode('court')}
+                className="w-full"
+              >
+                I run a food court
+              </Btn>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
+              {mode === 'court' ? 'Name your food court' : 'Name your stall'}
+            </h1>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              {mode === 'court'
+                ? 'You can invite stalls to join it once it exists.'
+                : "This creates your account's first stall. You can join a food court later, or run standalone."}
+            </p>
+            <div className="mt-6 space-y-3">
+              <Field
+                placeholder={mode === 'court' ? 'Food court name' : 'Stall name'}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+              {error && <p className="text-sm text-error">{error}</p>}
+              <Btn
+                type="button"
+                onClick={submit}
+                disabled={!name.trim() || busy}
+                className="w-full"
+              >
+                {mode === 'court' ? 'Create food court' : 'Create stall'}
+              </Btn>
+              <Btn
+                type="button"
+                variant="text"
+                onClick={() => {
+                  setMode(null);
+                  setError(null);
+                }}
+                className="w-full"
+              >
+                Back
+              </Btn>
+            </div>
+          </>
+        )}
       </div>
     </main>
   );

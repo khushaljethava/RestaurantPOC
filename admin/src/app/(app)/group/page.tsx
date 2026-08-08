@@ -1,13 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveStall } from '@/lib/active-stall';
-import {
-  requestJoinGroup,
-  approveJoinRequest,
-  rejectJoinRequest,
-  createFoodCourt,
-  createGroupInvite,
-  leaveGroup,
-} from './actions';
+import { requestJoinGroup, createFoodCourt, leaveGroup } from './actions';
 import {
   Btn,
   Card,
@@ -44,27 +37,23 @@ export default async function GroupPage() {
     ? await supabase.from('food_court').select('id, name').eq('id', stall.group_id).maybeSingle()
     : { data: null };
 
-  const { data: invites } = stall?.group_id
+  // Only this stall's own requests. Approving and rejecting are court-operator
+  // powers and live at /courts/[id]; a tenant sees the outcome, not the controls.
+  const { data: requests } = stallId
     ? await supabase
-        .from('group_invite')
-        .select('code, revoked_at, created_at')
-        .eq('group_id', stall.group_id)
-        .order('created_at', { ascending: false })
+        .from('group_join_request')
+        .select('id, stall_id, group_id, status')
+        .eq('stall_id', stallId)
     : { data: [] };
-
-  const { data: requests } = await supabase
-    .from('group_join_request')
-    .select('id, stall_id, group_id, status');
 
   const { data: memberStalls } = stall?.group_id
     ? await supabase.from('stall').select('id, name').eq('group_id', stall.group_id)
     : { data: [] };
 
-  const activeInvites = (invites ?? []).filter((i) => !i.revoked_at);
 
   return (
     <div className="space-y-6">
-      <PageTitle subtitle="Share a group with neighbouring stalls">Food court</PageTitle>
+      <PageTitle subtitle="The food court this stall belongs to">Food court</PageTitle>
 
       {stall?.group_id && court ? (
         <div className="space-y-6">
@@ -83,36 +72,6 @@ export default async function GroupPage() {
                   {s.name}
                 </Card>
               ))}
-            </div>
-          </section>
-
-          <section>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <SectionTitle className="mb-0">Invite codes</SectionTitle>
-              {isOwner && (
-                <form
-                  action={async () => {
-                    'use server';
-                    await createGroupInvite(stall.group_id!);
-                  }}
-                >
-                  <Btn type="submit" variant="outlined">
-                    Generate new code
-                  </Btn>
-                </form>
-              )}
-            </div>
-            <div className="space-y-2">
-              {activeInvites.map((i) => (
-                <Card key={i.code} className="py-3 font-mono text-sm">
-                  {i.code}
-                </Card>
-              ))}
-              {activeInvites.length === 0 && (
-                <Card className="p-0">
-                  <EmptyState icon="key" title="No active codes" />
-                </Card>
-              )}
             </div>
           </section>
 
@@ -167,22 +126,19 @@ export default async function GroupPage() {
       )}
 
       <section>
-        <SectionTitle>Pending join requests</SectionTitle>
+        <SectionTitle>Your join requests</SectionTitle>
         <TableWrap>
           <table className="w-full">
             <thead>
               <tr>
-                <Th>Stall</Th>
+                <Th>Requested</Th>
                 <Th>Status</Th>
-                <Th />
               </tr>
             </thead>
             <tbody>
               {requests?.map((r) => (
                 <Tr key={r.id}>
-                  <Td>
-                    <span className="font-mono text-xs">{r.stall_id}</span>
-                  </Td>
+                  <Td>Join food court</Td>
                   <Td>
                     <StatusPill
                       tone={
@@ -196,37 +152,11 @@ export default async function GroupPage() {
                       {r.status}
                     </StatusPill>
                   </Td>
-                  <Td className="text-right">
-                    {r.status === 'pending' && (
-                      <span className="inline-flex gap-2">
-                        <form
-                          action={async () => {
-                            'use server';
-                            await approveJoinRequest(r.id);
-                          }}
-                        >
-                          <Btn type="submit" variant="tonal" className="h-9 px-3 text-xs">
-                            Approve
-                          </Btn>
-                        </form>
-                        <form
-                          action={async () => {
-                            'use server';
-                            await rejectJoinRequest(r.id);
-                          }}
-                        >
-                          <Btn type="submit" variant="danger" className="h-9 px-3 text-xs">
-                            Reject
-                          </Btn>
-                        </form>
-                      </span>
-                    )}
-                  </Td>
                 </Tr>
               ))}
               {(!requests || requests.length === 0) && (
                 <tr>
-                  <td colSpan={3} className="border-t border-border">
+                  <td colSpan={2} className="border-t border-border">
                     <EmptyState icon="how_to_reg" title="No join requests" />
                   </td>
                 </tr>

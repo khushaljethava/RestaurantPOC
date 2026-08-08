@@ -1,6 +1,6 @@
 -- Gate: pgTAP; Glob no 160_*; User: remaining v1 gaps.
 begin;
-select plan(2);
+select plan(3);
 
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'alice@test.local'),
@@ -25,6 +25,13 @@ insert into public.staff_membership (stall_id, user_id, role) values
   ('aaaaaaaa-2222-0000-0000-000000000001',
    '22222222-2222-2222-2222-222222222222', 'owner');
 
+-- Since 0024, rejecting is a COURT OPERATOR power, not something every stall
+-- owner in the court holds. This row is what create_court/create_food_court
+-- would have inserted; the court is seeded directly above.
+insert into public.food_court_membership (food_court_id, user_id, role) values
+  ('ffffffff-0000-0000-0000-000000000001',
+   '11111111-1111-1111-1111-111111111111', 'owner');
+
 insert into public.group_join_request (id, stall_id, group_id, status) values
   ('dddddddd-0000-0000-0000-000000000001',
    'aaaaaaaa-2222-0000-0000-000000000001',
@@ -36,8 +43,22 @@ set local request.jwt.claims =
 
 select lives_ok(
   $$ select public.reject_join_request('dddddddd-0000-0000-0000-000000000001') $$,
-  'owner can reject pending join request'
+  'court owner can reject pending join request'
 );
+
+-- Bob owns a stall but does not operate the court. Before 0024 that was enough.
+set local request.jwt.claims =
+  '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
+
+select throws_ok(
+  $$ select public.reject_join_request('dddddddd-0000-0000-0000-000000000001') $$,
+  '42501',
+  'only a court owner may reject',
+  'a stall owner who does not operate the court cannot reject'
+);
+
+set local request.jwt.claims =
+  '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 
 select results_eq(
   $$ select status from public.group_join_request

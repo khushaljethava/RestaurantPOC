@@ -5,15 +5,21 @@ import { usePathname } from 'next/navigation';
 import { Icon } from './icon';
 import { StallSwitcher } from '@/app/(app)/stall-switcher';
 
+/**
+ * `stallOnly` entries need an active stall and are hidden from an operator who
+ * owns none. `/courts` is the operator's own surface — distinct from `/group`,
+ * which is the tenant view of the one court the active stall belongs to.
+ */
 const NAV = [
-  { href: '/', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/live', label: 'Live', icon: 'live_tv' },
-  { href: '/settlement', label: 'Settlement', icon: 'payments' },
-  { href: '/reports', label: 'Reports', icon: 'assessment' },
-  { href: '/menu', label: 'Menu', icon: 'restaurant_menu' },
-  { href: '/staff', label: 'Staff', icon: 'badge' },
-  { href: '/group', label: 'Food Court', icon: 'storefront' },
-  { href: '/settings', label: 'Settings', icon: 'settings', ownerOnly: true },
+  { href: '/', label: 'Dashboard', icon: 'dashboard', stallOnly: true },
+  { href: '/live', label: 'Live', icon: 'live_tv', stallOnly: true },
+  { href: '/settlement', label: 'Settlement', icon: 'payments', stallOnly: true },
+  { href: '/reports', label: 'Reports', icon: 'assessment', stallOnly: true },
+  { href: '/menu', label: 'Menu', icon: 'restaurant_menu', stallOnly: true },
+  { href: '/staff', label: 'Staff', icon: 'badge', stallOnly: true },
+  { href: '/group', label: 'Food Court', icon: 'storefront', stallOnly: true },
+  { href: '/courts', label: 'Food Courts', icon: 'apartment', operatorOnly: true },
+  { href: '/settings', label: 'Settings', icon: 'settings', ownerOnly: true, stallOnly: true },
 ] as const;
 
 function initials(name: string) {
@@ -28,16 +34,26 @@ export function ShellSidebar({
   activeName,
   role,
   isOwner,
+  hasStalls,
+  isOperator,
 }: {
   stalls: { id: string; name: string }[];
   activeId: string;
   activeName: string;
   role: string;
   isOwner: boolean;
+  hasStalls: boolean;
+  isOperator: boolean;
 }) {
   const pathname = usePathname();
   const roleLabel =
-    role === 'owner' ? 'Admin Access' : role === 'manager' ? 'Manager' : 'Staff';
+    role === 'operator'
+      ? 'Court Operator'
+      : role === 'owner'
+        ? 'Admin Access'
+        : role === 'manager'
+          ? 'Manager'
+          : 'Staff';
 
   return (
     <aside className="fixed inset-y-0 left-0 z-20 flex w-sidebar-width flex-col border-r border-border bg-surface">
@@ -51,13 +67,20 @@ export function ShellSidebar({
         </p>
       </div>
 
-      <div className="px-3 pb-3">
-        <StallSwitcher stalls={stalls} activeId={activeId} />
-      </div>
+      {hasStalls && (
+        <div className="px-3 pb-3">
+          <StallSwitcher stalls={stalls} activeId={activeId} />
+        </div>
+      )}
 
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         <ul className="space-y-1">
-          {NAV.filter((item) => !('ownerOnly' in item && item.ownerOnly) || isOwner).map(
+          {NAV.filter((item) => {
+            if ('ownerOnly' in item && item.ownerOnly && !isOwner) return false;
+            if ('stallOnly' in item && item.stallOnly && !hasStalls) return false;
+            if ('operatorOnly' in item && item.operatorOnly && !isOperator) return false;
+            return true;
+          }).map(
             (item) => {
               const active =
                 item.href === '/'
