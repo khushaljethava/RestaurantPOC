@@ -37,12 +37,15 @@ export async function generateInvite(formData: FormData) {
   if (role !== 'staff' && role !== 'manager') staffErrorRedirect('Invalid role');
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc('create_stall_invite', {
+  const { data: code, error } = await supabase.rpc('create_stall_invite', {
     p_stall_id: stallId,
     p_role: role,
   });
   if (error) staffErrorRedirect(error.message);
   revalidatePath('/staff');
+  redirect(
+    `/staff?created=${encodeURIComponent(String(code ?? ''))}&role=${encodeURIComponent(role)}`
+  );
 }
 
 export async function revokeInvite(code: string) {

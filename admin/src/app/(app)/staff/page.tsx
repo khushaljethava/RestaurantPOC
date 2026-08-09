@@ -29,9 +29,9 @@ import {
 export default async function StaffPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; created?: string; role?: string }>;
 }) {
-  const { error: actionError } = await searchParams;
+  const { error: actionError, created, role: createdRole } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -60,13 +60,23 @@ export default async function StaffPage({
 
   return (
     <div className="space-y-6">
-      <PageTitle subtitle="Invite codes and stall members">Staff</PageTitle>
+      <PageTitle subtitle="Invite helpers to take orders on this stall">Staff</PageTitle>
 
       {actionError ? (
         <Card className="border-error text-sm text-error">{actionError}</Card>
       ) : null}
+      {created ? (
+        <Card className="text-sm text-on-surface">
+          New {createdRole ?? 'staff'} invite:{' '}
+          <span className="font-mono font-semibold">{created}</span>
+          . Share it or use Copy link below.
+        </Card>
+      ) : null}
 
-      <RedeemInviteForm />
+      <Card className="text-sm text-on-surface-variant">
+        Staff = waiters/helpers on <strong className="text-on-surface">this stall</strong> only.
+        Food court membership is under Court / mobile join — not here.
+      </Card>
 
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -119,6 +129,8 @@ export default async function StaffPage({
         </div>
       </section>
 
+      <RedeemInviteForm />
+
       <section>
         <SectionTitle>Members</SectionTitle>
         <TableWrap>
@@ -136,9 +148,9 @@ export default async function StaffPage({
                   <Td>
                     <Link
                       href={`/staff/${m.id}`}
-                      className="font-mono text-xs text-surface-tint hover:underline"
+                      className="text-sm text-surface-tint hover:underline"
                     >
-                      {m.user_id}
+                      {m.user_id === user?.id ? 'You' : m.user_id.slice(0, 8) + '…'}
                     </Link>
                   </Td>
                   <Td>
