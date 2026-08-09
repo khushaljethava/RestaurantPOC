@@ -4,13 +4,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import 'ros_ui.dart';
 import '../services/errors.dart';
 
-/// Create or edit a menu item, with optional image.
-/// Storage path mirrors the web admin (`<stall_id>/<item_id>.<ext>` in the
-/// `menu-images` bucket) so both clients overwrite the same object.
+/// Create or edit a menu item with an optional multi-image gallery.
+/// Storage path: `{stall_id}/{item_id}/{image_id}.ext` in the `menu-images`
+/// bucket. Cover `menu_item.image_url` is synced by a DB trigger.
 class MenuItemSheet extends StatefulWidget {
   const MenuItemSheet({
     super.key,
@@ -31,13 +32,19 @@ class MenuItemSheet extends StatefulWidget {
 }
 
 class _MenuItemSheetState extends State<MenuItemSheet> {
+  static const _maxImages = 8;
+
   late final TextEditingController _name;
   late final TextEditingController _price;
   late bool _available;
   String? _categoryId;
-  XFile? _picked;
+  List<Map<String, dynamic>> _images = [];
+  final _pending = <XFile>[];
   var _busy = false;
   String? _error;
+
+  int get _imageCount => _images.length + _pending.length;
+  bool get _atMax => _imageCount >= _maxImages;
 
   @override
   void initState() {
@@ -49,6 +56,7 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
     );
     _available = e == null || e['is_available'] == true;
     _categoryId = e?['category_id'] as String?;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadImages());
   }
 
   @override
@@ -58,34 +66,109 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
     super.dispose();
   }
 
-  Future<void> _pick() async {
-    // Downscale on device: originals off a phone camera blow past the
-    // bucket's file_size_limit and cost users mobile data on every menu load.
+  Future<void> _loadImages() async {
+    if (widget.existing == null) return;
+    final rows = await Supabase.instance.client
+        .from('menu_item_image')
+        .select('id, url, sort_order')
+        .eq('menu_item_id', widget.existing!['id'] as String)
+        .order('sort_order');
+    if (!mounted) return;
+    setState(() => _images = List<Map<String, dynamic>>.from(rows));
+  }
+
+  Future<void> _pick(ImageSource source) async {
+    if (_atMax) return;
     final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+      source: source,
       maxWidth: 1280,
       maxHeight: 1280,
       imageQuality: 80,
     );
-    if (file != null) setState(() => _picked = file);
+    if (file != null) setState(() => _pending.add(file));
   }
 
-  /// Uploads [_picked] for [itemId] and returns its public URL.
-  Future<String> _uploadImage(String itemId) async {
-    final file = _picked!;
-    final ext = file.path.split('.').last.toLowerCase();
-    final safeExt = RegExp(r'^[a-z0-9]+$').hasMatch(ext) ? ext : 'jpg';
-    final path = '${widget.stallId}/$itemId.$safeExt';
+  String _safeExt(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    return RegExp(r'^[a-z0-9]+$').hasMatch(ext) ? ext : 'jpg';
+  }
+
+  Future<int> _nextSortOrder(String itemId) async {
+    final rows = await Supabase.instance.client
+        .from('menu_item_image')
+        .select('sort_order')
+        .eq('menu_item_id', itemId)
+        .order('sort_order', ascending: false)
+        .limit(1);
+    if (rows.isEmpty) return 0;
+    return (rows.first['sort_order'] as int) + 1;
+  }
+
+  Future<void> _uploadPending(String itemId, XFile file) async {
+    final imageId = const Uuid().v4();
+    final safeExt = _safeExt(file.path);
+    final path = '${widget.stallId}/$itemId/$imageId.$safeExt';
     final storage = Supabase.instance.client.storage.from('menu-images');
     await storage.upload(
       path,
       File(file.path),
-      fileOptions: const FileOptions(upsert: true),
+      fileOptions: const FileOptions(upsert: false),
     );
-    // Bucket is public but CDN-cached; bust it so a replaced photo shows up.
-    final url = storage.getPublicUrl(path);
-    return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
+    final url =
+        '${storage.getPublicUrl(path)}?v=${DateTime.now().millisecondsSinceEpoch}';
+    final sortOrder = await _nextSortOrder(itemId);
+    try {
+      await Supabase.instance.client.from('menu_item_image').insert({
+        'id': imageId,
+        'menu_item_id': itemId,
+        'url': url,
+        'sort_order': sortOrder,
+      });
+    } catch (e) {
+      await storage.remove([path]);
+      rethrow;
+    }
   }
+
+  Future<void> _deleteImage(String imageId) async {
+    final itemId = widget.existing!['id'] as String;
+    final row = _images.firstWhere((r) => r['id'] == imageId);
+    final url = row['url'] as String;
+    const marker = '/menu-images/';
+    final idx = url.indexOf(marker);
+    if (idx >= 0) {
+      final storagePath = url.substring(idx + marker.length).split('?').first;
+      try {
+        await Supabase.instance.client.storage
+            .from('menu-images')
+            .remove([storagePath]);
+      } catch (_) {}
+    }
+    await Supabase.instance.client
+        .from('menu_item_image')
+        .delete()
+        .eq('id', imageId);
+    final rest = await Supabase.instance.client
+        .from('menu_item_image')
+        .select('id')
+        .eq('menu_item_id', itemId)
+        .order('sort_order');
+    for (var i = 0; i < rest.length; i++) {
+      await Supabase.instance.client
+          .from('menu_item_image')
+          .update({'sort_order': i + 1000})
+          .eq('id', rest[i]['id']);
+    }
+    for (var i = 0; i < rest.length; i++) {
+      await Supabase.instance.client
+          .from('menu_item_image')
+          .update({'sort_order': i})
+          .eq('id', rest[i]['id']);
+    }
+    await _loadImages();
+  }
+
+  void _removePending(int index) => setState(() => _pending.removeAt(index));
 
   Future<void> _save() async {
     final name = _name.text.trim();
@@ -121,11 +204,8 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
         itemId = widget.existing!['id'] as String;
         await db.update(values).eq('id', itemId);
       }
-      if (_picked != null) {
-        // Separate step: the item id is part of the storage path, so a new
-        // item must exist before its image can be uploaded.
-        final url = await _uploadImage(itemId);
-        await db.update({'image_url': url}).eq('id', itemId);
+      for (final file in _pending) {
+        await _uploadPending(itemId, file);
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -138,15 +218,15 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
     }
   }
 
-  Future<void> _clearImage() async {
-    setState(() => _busy = true);
+  Future<void> _onDeleteExisting(String imageId) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
-      await Supabase.instance.client
-          .from('menu_item')
-          .update({'image_url': null})
-          .eq('id', widget.existing!['id'] as String);
+      await _deleteImage(imageId);
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      setState(() => _busy = false);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -156,9 +236,39 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
     }
   }
 
+  Widget _thumb({required Widget child, VoidCallback? onDelete}) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(width: 64, height: 64, child: child),
+        ),
+        if (onDelete != null)
+          Positioned(
+            top: -6,
+            right: -6,
+            child: IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                minimumSize: const Size(24, 24),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(
+                Icons.close,
+                size: 16,
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+              onPressed: _busy ? null : onDelete,
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final existingUrl = widget.existing?['image_url'] as String?;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -213,47 +323,63 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
               title: const Text('Available'),
             ),
             const SizedBox(height: 8),
+            Text(
+              'Photos ($_imageCount/$_maxImages)',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 72,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _images.length + _pending.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, i) {
+                  if (i < _images.length) {
+                    final row = _images[i];
+                    return _thumb(
+                      child: CachedNetworkImage(
+                        imageUrl: row['url'] as String,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, _, _) =>
+                            const Icon(Icons.broken_image),
+                      ),
+                      onDelete: () => _onDeleteExisting(row['id'] as String),
+                    );
+                  }
+                  final file = _pending[i - _images.length];
+                  return _thumb(
+                    child: Image.file(
+                      File(file.path),
+                      fit: BoxFit.cover,
+                    ),
+                    onDelete: () => _removePending(i - _images.length),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
-                if (_picked != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(_picked!.path),
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                else if (existingUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: existingUrl,
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => const Icon(Icons.broken_image),
-                    ),
-                  ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : _pick,
-                    icon: const Icon(Icons.image),
-                    label: Text(
-                      _picked != null || existingUrl != null
-                          ? 'Change photo'
-                          : 'Add photo',
-                    ),
+                    onPressed: _busy || _atMax
+                        ? null
+                        : () => _pick(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Gallery'),
                   ),
                 ),
-                if (existingUrl != null && _picked == null)
-                  IconButton(
-                    tooltip: 'Remove photo',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: _busy ? null : _clearImage,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _busy || _atMax
+                        ? null
+                        : () => _pick(ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Camera'),
                   ),
+                ),
               ],
             ),
             if (_error != null) ...[

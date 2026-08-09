@@ -9,8 +9,8 @@ import {
   duplicateItem,
   renameCategory,
   moveCategory,
-  uploadItemImage,
-  clearItemImage,
+  addItemImage,
+  removeItemImage,
   addTable,
   setTableActive,
   deleteTable,
@@ -27,23 +27,35 @@ export default async function MenuPage() {
   const active = await resolveActiveStall(memberships);
   const myStallId = active.stall_id;
 
-  const [{ data: categories }, { data: items }, { data: tables }] = await Promise.all([
-    supabase
-      .from('category')
-      .select('id, stall_id, name, sort_order')
-      .eq('stall_id', myStallId!)
-      .order('sort_order'),
-    supabase
-      .from('menu_item')
-      .select('id, stall_id, category_id, name, description, price, is_available, image_url, quick_code, parent_id')
-      .order('name'),
-    supabase
-      .from('restaurant_table')
-      .select('id, label, seats, is_active')
-      .eq('stall_id', myStallId!)
-      .order('sort_order')
-      .order('label'),
-  ]);
+  const [{ data: categories }, { data: items }, { data: tables }, { data: images }] =
+    await Promise.all([
+      supabase
+        .from('category')
+        .select('id, stall_id, name, sort_order')
+        .eq('stall_id', myStallId!)
+        .order('sort_order'),
+      supabase
+        .from('menu_item')
+        .select('id, stall_id, category_id, name, description, price, is_available, image_url, quick_code, parent_id')
+        .order('name'),
+      supabase
+        .from('restaurant_table')
+        .select('id, label, seats, is_active')
+        .eq('stall_id', myStallId!)
+        .order('sort_order')
+        .order('label'),
+      supabase
+        .from('menu_item_image')
+        .select('id, menu_item_id, url, sort_order')
+        .order('sort_order'),
+    ]);
+
+  const imagesByItem = new Map<string, NonNullable<typeof images>>();
+  for (const img of images ?? []) {
+    const list = imagesByItem.get(img.menu_item_id) ?? [];
+    list.push(img);
+    imagesByItem.set(img.menu_item_id, list);
+  }
 
   const mine = (items ?? []).filter((i) => i.stall_id === myStallId);
   const peers = (items ?? []).filter((i) => i.stall_id !== myStallId);
@@ -144,23 +156,47 @@ export default async function MenuPage() {
           <section>
             <SectionTitle>Items</SectionTitle>
             <MenuSearch>
-              {mine.map((i) => (
-                <div key={i.id} data-search={`${i.name} ${i.quick_code ?? ''}`}>
-                <Card className="space-y-3">
-                  <div className="flex items-start gap-3">
+              {mine.length > 0 && (
+                <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {mine.map((i) => (
+                    <a
+                      key={i.id}
+                      href={`#item-${i.id}`}
+                      data-search={`${i.name} ${i.quick_code ?? ''}`}
+                      className="block overflow-hidden rounded-lg border border-border bg-surface-container-low shadow-card transition hover:border-surface-tint"
+                    >
                     {i.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={i.image_url}
                         alt={i.name}
-                        className="h-10 w-10 rounded-lg object-cover"
+                        className="aspect-square w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-highest text-[10px] text-on-surface-variant">
+                      <div className="flex aspect-square w-full items-center justify-center bg-surface-container-highest text-xs text-on-surface-variant">
                         No img
                       </div>
                     )}
-                    <div className="min-w-0 flex-1 space-y-2">
+                    <div className="p-2">
+                      <p className="truncate text-sm font-medium">{i.name}</p>
+                      <p className="text-sm tabular-nums text-on-surface-variant">
+                        ₹{Number(i.price).toFixed(2)}
+                      </p>
+                    </div>
+                  </a>
+                  ))}
+                </div>
+              )}
+              {mine.map((i) => {
+                const gallery = imagesByItem.get(i.id) ?? [];
+                return (
+                  <div
+                    key={i.id}
+                    id={`item-${i.id}`}
+                    data-search={`${i.name} ${i.quick_code ?? ''}`}
+                    className="scroll-mt-20"
+                  >
+                    <Card className="space-y-3">
                       <form action={updateItem} className="flex flex-wrap items-center gap-2">
                         <input type="hidden" name="id" value={i.id} />
                         <Field
@@ -183,11 +219,7 @@ export default async function MenuPage() {
                           placeholder="Code"
                           className="h-9 w-20"
                         />
-                        <Select
-                          name="parent_id"
-                          defaultValue={i.parent_id ?? ''}
-                          className="h-9"
-                        >
+                        <Select name="parent_id" defaultValue={i.parent_id ?? ''} className="h-9">
                           <option value="">No parent (root)</option>
                           {mine
                             .filter((p) => p.id !== i.id && !p.parent_id)
@@ -203,11 +235,7 @@ export default async function MenuPage() {
                           placeholder="Description"
                           className="h-9 min-w-[8rem] flex-1"
                         />
-                        <Select
-                          name="category_id"
-                          defaultValue={i.category_id ?? ''}
-                          className="h-9"
-                        >
+                        <Select name="category_id" defaultValue={i.category_id ?? ''} className="h-9">
                           <option value="">No category</option>
                           {(categories ?? []).map((c) => (
                             <option key={c.id} value={c.id}>
@@ -219,30 +247,50 @@ export default async function MenuPage() {
                           Save
                         </Btn>
                       </form>
+                      {gallery.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {gallery.map((img) => (
+                            <div key={img.id} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={img.url}
+                                alt=""
+                                className="h-16 w-16 rounded-lg object-cover"
+                              />
+                              <form
+                                action={async () => {
+                                  'use server';
+                                  await removeItemImage(img.id, i.id);
+                                }}
+                                className="absolute -right-1 -top-1"
+                              >
+                                <Btn
+                                  type="submit"
+                                  variant="danger"
+                                  className="h-6 w-6 rounded-full px-0 text-xs"
+                                  aria-label="Remove image"
+                                >
+                                  ×
+                                </Btn>
+                              </form>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <form action={uploadItemImage} className="flex items-center gap-2">
-                          <input type="hidden" name="stall_id" value={myStallId} />
-                          <input type="hidden" name="item_id" value={i.id} />
-                          <input
-                            type="file"
-                            name="image"
-                            accept="image/*"
-                            required
-                            className="text-xs"
-                          />
-                          <Btn type="submit" variant="text" className="h-8 px-2 text-xs">
-                            Upload
-                          </Btn>
-                        </form>
-                        {i.image_url && (
-                          <form
-                            action={async () => {
-                              'use server';
-                              await clearItemImage(i.id);
-                            }}
-                          >
-                            <Btn type="submit" variant="danger" className="h-8 px-2 text-xs">
-                              Remove image
+                        {gallery.length < 8 && (
+                          <form action={addItemImage} className="flex items-center gap-2">
+                            <input type="hidden" name="stall_id" value={myStallId} />
+                            <input type="hidden" name="item_id" value={i.id} />
+                            <input
+                              type="file"
+                              name="image"
+                              accept="image/*"
+                              required
+                              className="text-xs"
+                            />
+                            <Btn type="submit" variant="text" className="h-8 px-2 text-xs">
+                              Add image
                             </Btn>
                           </form>
                         )}
@@ -277,14 +325,10 @@ export default async function MenuPage() {
                           </Btn>
                         </form>
                       </div>
-                    </div>
-                    <p className="shrink-0 text-base font-medium tabular-nums text-on-surface">
-                      ₹{Number(i.price).toFixed(2)}
-                    </p>
+                    </Card>
                   </div>
-                </Card>
-                </div>
-              ))}
+                );
+              })}
               {mine.length === 0 && (
                 <Card className="p-0">
                   <EmptyState icon="restaurant_menu" title="No items yet">

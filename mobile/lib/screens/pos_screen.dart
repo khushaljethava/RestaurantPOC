@@ -674,88 +674,164 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   )
                 else
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    itemCount: (_segment == 0 ? _recents : visibleMenu).length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, i) {
-                      final item = (_segment == 0 ? _recents : visibleMenu)[i];
-                      final price = Money.fromRupees(
-                        (item['price'] as num?) ?? 0,
-                      );
-                      final itemId = (item['id'] ?? item['menu_item_id']) as String;
-                      final stallId =
-                          item['stall_id'] as String? ?? _menuStallId!;
-                      final imageUrl = item['image_url'] as String?;
-                      return RosSurfaceCard(
-                        padding: const EdgeInsets.all(12),
-                        onTap: () {
-                          ref
-                              .read(cartProvider.notifier)
-                              .add(
-                                CartLine(
-                                  stallId: stallId,
-                                  menuItemId: itemId,
-                                  name: item['name'] as String,
-                                  unitPrice: price,
-                                  qty: 1,
-                                ),
-                              );
-                        },
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: imageUrl != null && imageUrl.isNotEmpty
-                                  ? CachedNetworkImage(
-                                      imageUrl: imageUrl,
-                                      width: 56,
-                                      height: 56,
-                                      fit: BoxFit.cover,
-                                      errorWidget: (context, url, error) =>
-                                          _thumbFallback(),
-                                    )
-                                  : _thumbFallback(),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                item['name'] as String,
-                                style: Theme.of(context).textTheme.titleMedium,
+                  child: Builder(
+                    builder: (context) {
+                      final menuItems =
+                          _segment == 0 ? _recents : visibleMenu;
+                      void addItem(Map<String, dynamic> item) {
+                        final price = Money.fromRupees(
+                          (item['price'] as num?) ?? 0,
+                        );
+                        ref.read(cartProvider.notifier).add(
+                              CartLine(
+                                stallId: item['stall_id'] as String? ??
+                                    _menuStallId!,
+                                menuItemId:
+                                    (item['id'] ?? item['menu_item_id'])
+                                        as String,
+                                name: item['name'] as String,
+                                unitPrice: price,
+                                qty: 1,
                               ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                MoneyText(price.rupees),
-                                const SizedBox(height: 4),
-                                CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: RosColors.secondaryContainer,
-                                  child: IconButton(
-                                    padding: EdgeInsets.zero,
-                                    iconSize: 20,
-                                    color: RosColors.onSecondaryContainer,
-                                    icon: const Icon(Icons.add),
-                                    onPressed: () {
-                                      ref
-                                          .read(cartProvider.notifier)
-                                          .add(
-                                            CartLine(
-                                              stallId: stallId,
-                                              menuItemId: itemId,
-                                              name: item['name'] as String,
-                                              unitPrice: price,
-                                              qty: 1,
-                                            ),
-                                          );
-                                    },
+                            );
+                      }
+
+                      if (_grid) {
+                        return GridView.builder(
+                          padding:
+                              const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            childAspectRatio: 0.72,
+                          ),
+                          itemCount: menuItems.length,
+                          itemBuilder: (context, i) {
+                            final item = menuItems[i];
+                            final price = Money.fromRupees(
+                              (item['price'] as num?) ?? 0,
+                            );
+                            final imageUrl = item['image_url'] as String?;
+                            return RosSurfaceCard(
+                              padding: EdgeInsets.zero,
+                              onTap: () => addItem(item),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          const BorderRadius.vertical(
+                                        top: Radius.circular(RosGlass.radius),
+                                      ),
+                                      child: imageUrl != null &&
+                                              imageUrl.isNotEmpty
+                                          ? CachedNetworkImage(
+                                              imageUrl: imageUrl,
+                                              fit: BoxFit.cover,
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      _thumbFallback(
+                                                          fill: true),
+                                            )
+                                          : _thumbFallback(fill: true),
+                                    ),
                                   ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item['name'] as String,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        MoneyText(price.rupees),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding:
+                            const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        itemCount: menuItems.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: 8),
+                        itemBuilder: (context, i) {
+                          final item = menuItems[i];
+                          final price = Money.fromRupees(
+                            (item['price'] as num?) ?? 0,
+                          );
+                          final imageUrl = item['image_url'] as String?;
+                          return RosSurfaceCard(
+                            padding: const EdgeInsets.all(12),
+                            onTap: () => addItem(item),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: imageUrl != null &&
+                                          imageUrl.isNotEmpty
+                                      ? CachedNetworkImage(
+                                          imageUrl: imageUrl,
+                                          width: 56,
+                                          height: 56,
+                                          fit: BoxFit.cover,
+                                          errorWidget:
+                                              (context, url, error) =>
+                                                  _thumbFallback(),
+                                        )
+                                      : _thumbFallback(),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    item['name'] as String,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.end,
+                                  children: [
+                                    MoneyText(price.rupees),
+                                    const SizedBox(height: 4),
+                                    CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor:
+                                          RosColors.secondaryContainer,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        iconSize: 20,
+                                        color:
+                                            RosColors.onSecondaryContainer,
+                                        icon: const Icon(Icons.add),
+                                        onPressed: () => addItem(item),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -859,12 +935,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
   }
 
-  Widget _thumbFallback() {
-    return Container(
-      width: 56,
-      height: 56,
+  Widget _thumbFallback({bool fill = false}) {
+    final box = Container(
       color: RosColors.surfaceDim,
+      alignment: Alignment.center,
       child: const Icon(Icons.fastfood, color: RosColors.outline),
     );
+    return fill ? box : SizedBox(width: 56, height: 56, child: box);
   }
 }
