@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * Called by: courts/page.tsx, courts/[id]/page.tsx.
- * Court-operator side. The stall-owner side (join/leave a court as a tenant)
- * stays in group/actions.ts — different role, different RPCs.
+ * Court-operator side. Stall owners join via mobile (join_court_as_owner);
+ * leave stays in group/actions.ts.
  *
  * Authorization lives in the RPCs (is_court_owner), not here. These wrappers
  * surface errors and revalidate; they are not a security boundary.
@@ -57,24 +57,6 @@ export async function revokeCourtInvite(groupId: string, code: string) {
     .from('group_invite')
     .update({ revoked_at: new Date().toISOString() })
     .eq('code', code);
-  if (error) throw new Error(error.message);
-  revalidatePath(`/courts/${groupId}`);
-}
-
-export async function approveRequest(groupId: string, requestId: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc('approve_join_request', {
-    p_request_id: requestId,
-  });
-  if (error) throw new Error(error.message);
-  revalidatePath(`/courts/${groupId}`);
-}
-
-export async function rejectRequest(groupId: string, requestId: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc('reject_join_request', {
-    p_request_id: requestId,
-  });
   if (error) throw new Error(error.message);
   revalidatePath(`/courts/${groupId}`);
 }

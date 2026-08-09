@@ -2,9 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import {
-  approveRequest,
   createCourtInvite,
-  rejectRequest,
   removeStallFromCourt,
   renameCourt,
   revokeCourtInvite,
@@ -16,16 +14,11 @@ import {
   Field,
   PageTitle,
   SectionTitle,
-  StatusPill,
 } from '@/components/ui';
 
 /**
- * Called by: App Router /courts/[id], linked from courts/page.tsx.
- * One court's operator view: roster, pending requests, invite codes, rename.
- *
- * A single overview page on purpose — tabs are premature until the live board
- * and revenue views exist. Access control is RLS: a non-operator sees no court
- * row and gets notFound(), so there is no separate permission check here.
+ * Court operator view: roster, invite codes, rename.
+ * Stall owners join via mobile (court code + stall name) — no approve step.
  */
 export default async function CourtPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,21 +42,6 @@ export default async function CourtPage({ params }: { params: Promise<{ id: stri
     .select('code, revoked_at, created_at')
     .eq('group_id', id)
     .order('created_at', { ascending: false });
-
-  const { data: requests } = await supabase
-    .from('group_join_request')
-    .select('id, stall_id, status')
-    .eq('group_id', id)
-    .eq('status', 'pending');
-
-  // Join request rows carry a stall_id but no name; resolve them so the
-  // operator sees who is asking rather than a raw UUID.
-  const requestStallIds = (requests ?? []).map((r) => r.stall_id);
-  const { data: requestStalls } = requestStallIds.length
-    ? await supabase.from('stall').select('id, name').in('id', requestStallIds)
-    : { data: [] };
-  const nameFor = (stallId: string) =>
-    (requestStalls ?? []).find((s) => s.id === stallId)?.name ?? stallId;
 
   const activeInvites = (invites ?? []).filter((i) => !i.revoked_at);
 
@@ -97,49 +75,9 @@ export default async function CourtPage({ params }: { params: Promise<{ id: stri
           {(stalls ?? []).length === 0 && (
             <Card className="p-0">
               <EmptyState icon="storefront" title="No stalls yet">
-                Share an invite code to bring stalls into this court.
+                Generate a code below. Owners join in the mobile app with the code
+                and their stall name.
               </EmptyState>
-            </Card>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <SectionTitle>Pending join requests</SectionTitle>
-        <div className="space-y-2">
-          {(requests ?? []).map((r) => (
-            <Card key={r.id} className="flex items-center justify-between gap-3 py-3">
-              <span className="flex items-center gap-2 text-sm">
-                {nameFor(r.stall_id)}
-                <StatusPill tone="warning">{r.status}</StatusPill>
-              </span>
-              <span className="inline-flex gap-2">
-                <form
-                  action={async () => {
-                    'use server';
-                    await approveRequest(id, r.id);
-                  }}
-                >
-                  <Btn type="submit" variant="tonal" className="h-9 px-3 text-xs">
-                    Approve
-                  </Btn>
-                </form>
-                <form
-                  action={async () => {
-                    'use server';
-                    await rejectRequest(id, r.id);
-                  }}
-                >
-                  <Btn type="submit" variant="danger" className="h-9 px-3 text-xs">
-                    Reject
-                  </Btn>
-                </form>
-              </span>
-            </Card>
-          ))}
-          {(requests ?? []).length === 0 && (
-            <Card className="p-0">
-              <EmptyState icon="how_to_reg" title="No pending requests" />
             </Card>
           )}
         </div>
@@ -159,6 +97,11 @@ export default async function CourtPage({ params }: { params: Promise<{ id: stri
             </Btn>
           </form>
         </div>
+        <p className="mb-3 text-sm text-on-surface-variant">
+          Stall owners enter this code in the mobile app with their stall name and
+          join immediately. Staff use separate invites from each stall&apos;s Staff
+          page.
+        </p>
         <div className="space-y-2">
           {activeInvites.map((i) => (
             <Card key={i.code} className="flex items-center justify-between gap-3 py-3">

@@ -86,8 +86,8 @@ export default function OnboardingPage() {
             </h1>
             <p className="mt-2 text-sm text-on-surface-variant">
               {mode === 'court'
-                ? 'You can invite stalls to join it once it exists.'
-                : "This creates your account's first stall. You can join a food court later, or run standalone."}
+                ? 'After create, generate an invite code. Stall owners join in the mobile app with the code and their stall name.'
+                : "This creates your account's first stall. Join a food court from the mobile app with a court invite, or run standalone."}
             </p>
             <div className="mt-6 space-y-3">
               <Field

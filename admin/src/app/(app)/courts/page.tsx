@@ -49,7 +49,7 @@ export default async function CourtsPage() {
         {(courts ?? []).length === 0 && (
           <Card className="p-0">
             <EmptyState icon="storefront" title="No food courts yet">
-              Create one to start inviting stalls.
+              Create one, then generate an invite code for stall owners.
             </EmptyState>
           </Card>
         )}

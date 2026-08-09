@@ -22,7 +22,7 @@ const NAV = [
   { href: '/reports', label: 'Reports', icon: 'assessment', stallOnly: true },
   { href: '/menu', label: 'Menu', icon: 'restaurant_menu', stallOnly: true },
   { href: '/staff', label: 'Staff', icon: 'badge', stallOnly: true },
-  { href: '/group', label: 'Food Court', icon: 'storefront', stallOnly: true },
+  { href: '/group', label: 'Court', icon: 'storefront', stallOnly: true },
   { href: '/audit', label: 'Audit', icon: 'history', manageOnly: true, stallOnly: true },
   { href: '/courts', label: 'Food Courts', icon: 'apartment', operatorOnly: true },
   { href: '/settings', label: 'Settings', icon: 'settings', manageOnly: true, stallOnly: true },
