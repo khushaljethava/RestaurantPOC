@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -66,7 +67,11 @@ export async function deleteCourt(groupId: string) {
   const { error } = await supabase.rpc('delete_court', {
     p_group_id: groupId,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    redirect(
+      `/courts/${groupId}?error=${encodeURIComponent(error.message)}`
+    );
+  }
   revalidatePath('/courts');
   revalidatePath(`/courts/${groupId}`);
   revalidatePath('/group');

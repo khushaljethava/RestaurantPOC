@@ -18,11 +18,18 @@ import {
 } from '@/components/ui';
 
 /**
- * Court operator view: roster, invite codes, rename.
+ * Court operator view: roster, invite codes, rename, delete.
  * Stall owners join via mobile (court code + stall name) — no approve step.
  */
-export default async function CourtPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CourtPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error: actionError } = await searchParams;
   const supabase = await createClient();
 
   const { data: court } = await supabase
@@ -54,6 +61,10 @@ export default async function CourtPage({ params }: { params: Promise<{ id: stri
         </Link>
         <PageTitle subtitle={`${(stalls ?? []).length} stalls`}>{court.name}</PageTitle>
       </div>
+
+      {actionError ? (
+        <Card className="border-error text-sm text-error">{actionError}</Card>
+      ) : null}
 
       <section>
         <SectionTitle>Stalls</SectionTitle>
