@@ -144,7 +144,23 @@ export async function toggleAvailability(id: string, next: boolean) {
   revalidatePath('/menu');
 }
 
-export async function uploadItemImage(formData: FormData) {
+const MAX_IMAGES = 8;
+
+async function nextSortOrder(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  itemId: string,
+): Promise<number> {
+  const { data } = await supabase
+    .from('menu_item_image')
+    .select('sort_order')
+    .eq('menu_item_id', itemId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.sort_order ?? -1) + 1;
+}
+
+export async function addItemImage(formData: FormData) {
   const supabase = await createClient();
   const stallId = String(formData.get('stall_id'));
   const itemId = String(formData.get('item_id'));
@@ -152,30 +168,86 @@ export async function uploadItemImage(formData: FormData) {
   if (!(file instanceof File) || file.size === 0) {
     throw new Error('image required');
   }
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const path = `${stallId}/${itemId}.${ext}`;
+
+  const { count } = await supabase
+    .from('menu_item_image')
+    .select('id', { count: 'exact', head: true })
+    .eq('menu_item_id', itemId);
+  if ((count ?? 0) >= MAX_IMAGES) {
+    throw new Error('max 8 images per item');
+  }
+
+  const imageId = crypto.randomUUID();
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const path = `${stallId}/${itemId}/${imageId}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
   const { error: upErr } = await supabase.storage
     .from('menu-images')
-    .upload(path, buf, { contentType: file.type || 'image/jpeg', upsert: true });
+    .upload(path, buf, { contentType: file.type || 'image/jpeg', upsert: false });
   if (upErr) throw new Error(upErr.message);
-  const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
-  const { error } = await supabase
-    .from('menu_item')
-    .update({ image_url: data.publicUrl })
-    .eq('id', itemId);
-  if (error) throw new Error(error.message);
+
+  const { data: pub } = supabase.storage.from('menu-images').getPublicUrl(path);
+  const sortOrder = await nextSortOrder(supabase, itemId);
+  const { error } = await supabase.from('menu_item_image').insert({
+    id: imageId,
+    menu_item_id: itemId,
+    url: `${pub.publicUrl}?v=${Date.now()}`,
+    sort_order: sortOrder,
+  });
+  if (error) {
+    await supabase.storage.from('menu-images').remove([path]);
+    throw new Error(error.message);
+  }
   revalidatePath('/menu');
 }
 
-export async function clearItemImage(itemId: string) {
+export async function removeItemImage(imageId: string, itemId: string) {
   const supabase = await createClient();
-  const { error } = await supabase
-    .from('menu_item')
-    .update({ image_url: null })
-    .eq('id', itemId);
-  if (error) throw new Error(error.message);
+  const { data: row } = await supabase
+    .from('menu_item_image')
+    .select('id, url, sort_order')
+    .eq('id', imageId)
+    .eq('menu_item_id', itemId)
+    .maybeSingle();
+  if (!row) throw new Error('image not found');
+
+  const marker = '/menu-images/';
+  const idx = row.url.indexOf(marker);
+  if (idx >= 0) {
+    const path = row.url.slice(idx + marker.length).split('?')[0];
+    await supabase.storage.from('menu-images').remove([path]);
+  }
+
+  const { error: delErr } = await supabase
+    .from('menu_item_image')
+    .delete()
+    .eq('id', imageId);
+  if (delErr) throw new Error(delErr.message);
+
+  const { data: rest } = await supabase
+    .from('menu_item_image')
+    .select('id')
+    .eq('menu_item_id', itemId)
+    .order('sort_order');
+  for (let i = 0; i < (rest ?? []).length; i++) {
+    await supabase
+      .from('menu_item_image')
+      .update({ sort_order: i + 1000 })
+      .eq('id', rest![i].id);
+  }
+  for (let i = 0; i < (rest ?? []).length; i++) {
+    await supabase
+      .from('menu_item_image')
+      .update({ sort_order: i })
+      .eq('id', rest![i].id);
+  }
   revalidatePath('/menu');
+}
+
+// Task 3 will wire page to removeItemImage(imageId, itemId)
+export const uploadItemImage = addItemImage;
+export async function clearItemImage(_itemId: string) {
+  throw new Error('use removeItemImage(imageId, itemId) — gallery UI pending Task 3');
 }
 
 // --- Tables ---------------------------------------------------------------
