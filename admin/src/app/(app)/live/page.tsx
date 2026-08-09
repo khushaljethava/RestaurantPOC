@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { LivePoll } from './live-poll';
 import { Card, EmptyState, PageTitle, SectionTitle, StatusPill } from '@/components/ui';
@@ -38,8 +39,8 @@ export default async function LivePage() {
           </SectionTitle>
           <div className="space-y-2">
             {(openBills ?? []).map((b) => (
+              <Link key={b.id} href={`/bills/${b.id}`} className="block">
               <Card
-                key={b.id}
                 className="flex items-center justify-between gap-3 py-3.5 transition-shadow hover:shadow-card-hover"
               >
                 <div>
@@ -54,6 +55,7 @@ export default async function LivePage() {
                   ₹{(Number(b.total) - Number(b.discount)).toFixed(2)}
                 </p>
               </Card>
+              </Link>
             ))}
             {(!openBills || openBills.length === 0) && (
               <Card className="p-0">
@@ -74,8 +76,8 @@ export default async function LivePage() {
           </SectionTitle>
           <div className="space-y-2">
             {(activeOrders ?? []).map((o) => (
+              <Link key={o.id} href={`/orders/${o.id}`} className="block">
               <Card
-                key={o.id}
                 className="flex items-center justify-between gap-3 py-3.5 transition-shadow hover:shadow-card-hover"
               >
                 <div>
@@ -89,6 +91,7 @@ export default async function LivePage() {
                   {o.status === 'ready' ? 'Ready' : 'Pending'}
                 </StatusPill>
               </Card>
+              </Link>
             ))}
             {(!activeOrders || activeOrders.length === 0) && (
               <Card className="p-0">

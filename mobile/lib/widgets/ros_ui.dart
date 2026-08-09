@@ -73,22 +73,26 @@ class RosSurfaceCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.onTap,
+    this.onLongPress,
     this.borderRadius = RosGlass.radius,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
+    final panel = GlassPanel(
       radius: borderRadius,
       padding: padding,
       onTap: onTap,
       child: child,
     );
+    if (onLongPress == null) return panel;
+    return GestureDetector(onLongPress: onLongPress, child: panel);
   }
 }
 

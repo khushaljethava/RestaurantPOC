@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -48,8 +49,12 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
   final _card = TextEditingController();
   final _upiRef = TextEditingController();
   final _tender = TextEditingController();
+  final _cardLast4 = TextEditingController();
+  final _cardTerminal = TextEditingController();
   String? _error;
   var _mode = 'cash';
+  var _holdProgress = 0.0;
+  var _holding = false;
 
   @override
   void initState() {
@@ -62,6 +67,10 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
     _cash.dispose();
     _upi.dispose();
     _card.dispose();
+    _upiRef.dispose();
+    _tender.dispose();
+    _cardLast4.dispose();
+    _cardTerminal.dispose();
     super.dispose();
   }
 
@@ -91,6 +100,16 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
     });
   }
 
+  void _payFullCard() {
+    setState(() {
+      _mode = 'card';
+      _card.text = widget.due.toStringAsFixed(2);
+      _cash.clear();
+      _upi.clear();
+      _error = null;
+    });
+  }
+
   void _submit() {
     final cash = _parse(_cash);
     final upi = _parse(_upi);
@@ -102,8 +121,12 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
       });
       return;
     }
+    if (card > 0 && _cardLast4.text.trim().length < 4) {
+      setState(() => _error = 'Enter card last 4 digits');
+      return;
+    }
     final payments = <Map<String, dynamic>>[];
-        if (cash > 0) {
+    if (cash > 0) {
       payments.add({
         'method': 'cash',
         'amount': cash,
@@ -123,9 +146,11 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
         'method': 'card',
         'amount': card,
         'idempotency_key': const Uuid().v4(),
+        'card_last4': _cardLast4.text.trim().substring(0, 4),
+        if (_cardTerminal.text.trim().isNotEmpty)
+          'card_terminal': _cardTerminal.text.trim(),
       });
     }
-    // legacy add helpers removed
     if (payments.isEmpty) {
       setState(() => _error = 'Enter at least one payment');
       return;
@@ -161,13 +186,7 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
             note: widget.billNote,
           )
         : null;
-    final payeeLabel = upiReady
-        ? (upiCfg.payeeName.isEmpty ? upiCfg.vpa : upiCfg.payeeName)
-        : '';
-    final vpaLabel = upiReady ? upiCfg.vpa : '';
 
-    // Sheets are transparent in the glass theme — the body brings its own
-    // frosted surface.
     return GlassPanel(
       color: RosColors.glassStrong,
       radius: 28,
@@ -181,9 +200,9 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
             Text('Pay', style: Theme.of(context).textTheme.titleMedium),
             MoneyText(
               widget.due,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -192,21 +211,10 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
               children: [
                 _modeChip('cash', 'Cash', _payFullCash),
                 _modeChip('upi', 'UPI', upiReady ? _payFullUpi : null),
-                _modeChip(
-                  'split',
-                  'Split',
-                  () => setState(() => _mode = 'split'),
-                ),
+                _modeChip('card', 'Card', _payFullCard),
+                _modeChip('split', 'Split', () => setState(() => _mode = 'split')),
               ],
             ),
-            if (!upiReady)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'Set UPI VPA in stall settings (Paytm Business) to show QR.',
-                  style: TextStyle(fontSize: 12, color: RosColors.pending),
-                ),
-              ),
             if (qrData != null) ...[
               const SizedBox(height: 12),
               Center(
@@ -216,57 +224,34 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
                   backgroundColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 8),
               Text(
-                '$payeeLabel\n$vpaLabel',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              Text(
-                'Ask customer to scan, then confirm UPI received.',
+                'Hold Confirm until filled — prevents accidental taps',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
             const SizedBox(height: 12),
-            if (_mode != 'upi' || !showQr) ...[
+            if (_mode == 'split' || _mode == 'cash') ...[
               TextField(
                 controller: _cash,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'Cash'),
               ),
+            ],
+            if (_mode == 'split') ...[
               const SizedBox(height: 8),
               TextField(
                 controller: _upi,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'UPI'),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _card,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'Card'),
               ),
             ],
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: RosColors.errorContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: RosErrorText(_error!),
-              ),
-            ],
-            const SizedBox(height: 12),
-
             if (_mode == 'cash') ...[
               const SizedBox(height: 8),
               Wrap(
@@ -274,7 +259,11 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
                 children: [
                   for (final preset in [widget.due, 100.0, 200.0, 500.0])
                     ActionChip(
-                      label: Text(preset == widget.due ? 'Exact' : '₹${preset.toStringAsFixed(0)}'),
+                      label: Text(
+                        preset == widget.due
+                            ? 'Exact'
+                            : '₹${preset.toStringAsFixed(0)}',
+                      ),
                       onPressed: () {
                         setState(() {
                           _tender.text = preset.toStringAsFixed(2);
@@ -290,18 +279,20 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
                 decoration: const InputDecoration(labelText: 'Tendered'),
                 onChanged: (_) => setState(() {}),
               ),
-              Builder(builder: (context) {
-                final tender = double.tryParse(_tender.text) ?? 0;
-                final change = tender - widget.due;
-                if (tender <= 0) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'CHANGE DUE ${formatInr(change < 0 ? 0 : change)}',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                );
-              }),
+              Builder(
+                builder: (context) {
+                  final tender = double.tryParse(_tender.text) ?? 0;
+                  final change = tender - widget.due;
+                  if (tender <= 0) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'CHANGE DUE ${formatInr(change < 0 ? 0 : change)}',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                  );
+                },
+              ),
             ],
             if (_mode == 'upi') ...[
               TextField(
@@ -311,16 +302,80 @@ class _PaymentSheetBodyState extends State<_PaymentSheetBody> {
                 ),
               ),
             ],
-
-            FilledButton(
-              onPressed: _submit,
-              child: Text(
-                _mode == 'upi' ? 'Confirm UPI received' : 'Confirm payment',
+            if (_mode == 'card' || (_mode == 'split' && _parse(_card) > 0)) ...[
+              TextField(
+                controller: _cardLast4,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                decoration: const InputDecoration(labelText: 'Card last 4'),
               ),
-            ),
+              TextField(
+                controller: _cardTerminal,
+                decoration: const InputDecoration(labelText: 'Terminal label'),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 8),
+              RosErrorText(_error!),
+            ],
+            const SizedBox(height: 12),
+            if (_mode == 'upi')
+              Listener(
+                onPointerDown: (_) {
+                  _holding = true;
+                  _holdProgress = 0;
+                  _tickHold();
+                },
+                onPointerUp: (_) {
+                  _holding = false;
+                  setState(() => _holdProgress = 0);
+                },
+                onPointerCancel: (_) {
+                  _holding = false;
+                  setState(() => _holdProgress = 0);
+                },
+                child: SizedBox(
+                  height: 52,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      LinearProgressIndicator(
+                        value: _holdProgress,
+                        backgroundColor: RosColors.secondaryContainer,
+                      ),
+                      const Center(
+                        child: Text(
+                          'Hold to confirm UPI received',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                onPressed: _submit,
+                child: const Text('Confirm payment'),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _tickHold() async {
+    while (_holding && mounted) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      if (!_holding || !mounted) return;
+      setState(() => _holdProgress = (_holdProgress + 0.05).clamp(0.0, 1.0));
+      if (_holdProgress >= 1.0) {
+        _holding = false;
+        HapticFeedback.mediumImpact();
+        _submit();
+        return;
+      }
+    }
   }
 }

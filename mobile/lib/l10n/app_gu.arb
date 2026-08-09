@@ -1,0 +1,15 @@
+{
+  "@@locale": "gu",
+  "appTitle": "સ્ટોલ મેનેજર",
+  "newOrder": "નવો ઓર્ડર",
+  "placeOrder": "ઓર્ડર મૂકો",
+  "hold": "હોલ્ડ",
+  "checkout": "ચેકઆઉટ",
+  "openShift": "શિફ્ટ ખોલો",
+  "stallOrders": "સ્ટોલ ઓર્ડર",
+  "acknowledge": "સ્વીકારો",
+  "ready": "તૈયાર",
+  "pickupBoard": "પિકઅપ બોર્ડ",
+  "offlineWritesPaused": "ઓફલાઇન — લેખન અટક્યું; કાર્ટ ડ્રાફ્ટ ઠીક",
+  "retry": "ફરી પ્રયાસ"
+}

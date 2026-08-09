@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'data/supabase/realtime_channels.dart';
 import 'providers/acting_user.dart';
 import 'providers/auth.dart';
 import 'providers/connectivity.dart';
+import 'providers/locale.dart';
+import 'services/push_registration.dart';
+import 'services/telemetry.dart';
 import 'screens/audit_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/day_screen.dart';
@@ -41,6 +47,7 @@ import 'screens/stock_screen.dart';
 import 'screens/table_bill_screen.dart';
 import 'screens/tables_screen.dart';
 import 'screens/today_screen.dart';
+import 'screens/upi_verify_screen.dart';
 import 'theme/ros_theme.dart';
 import 'widgets/connection_banner.dart';
 import 'widgets/glass.dart';
@@ -111,6 +118,7 @@ final _routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/shift', builder: (_, _) => const ShiftScreen()),
       GoRoute(path: '/shift/close', builder: (_, _) => const ShiftCloseScreen()),
       GoRoute(path: '/day', builder: (_, _) => const DayScreen()),
+      GoRoute(path: '/upi-verify', builder: (_, _) => const UpiVerifyScreen()),
       GoRoute(path: '/mysales', builder: (_, _) => const MySalesScreen()),
       GoRoute(
         path: '/notifications',
@@ -178,6 +186,8 @@ class _RosAppState extends ConsumerState<RosApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      realtimeManager.resubscribeAll();
+      Telemetry.event('app_resumed');
       final acting = ref.read(actingUserProvider.notifier);
       if (acting.isLocked &&
           Supabase.instance.client.auth.currentSession != null) {
@@ -193,9 +203,20 @@ class _RosAppState extends ConsumerState<RosApp> with WidgetsBindingObserver {
   Future<void> _checkOnboardingAndVersion() async {
     final prefs = await SharedPreferences.getInstance();
     final router = ref.read(_routerProvider);
+    await PushRegistration.bindRouter(router);
     if (!(prefs.getBool('onboarding_done') ?? false) &&
         Supabase.instance.client.auth.currentSession != null) {
       router.go('/onboarding');
+      return;
+    }
+    if (Supabase.instance.client.auth.currentSession != null &&
+        router.state.uri.path == '/') {
+      final mode = prefs.getString('device_mode') ?? 'counter';
+      if (mode == 'stall') {
+        router.go('/stall');
+      } else {
+        router.go('/pos');
+      }
     }
     try {
       final info = await PackageInfo.fromPlatform();
@@ -245,6 +266,14 @@ class _RosAppState extends ConsumerState<RosApp> with WidgetsBindingObserver {
     return MaterialApp.router(
       title: 'Stall Manager',
       theme: buildRosTheme(),
+      locale: ref.watch(localeProvider),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
       builder: (context, child) {
         return Column(

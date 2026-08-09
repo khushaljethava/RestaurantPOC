@@ -1,0 +1,15 @@
+{
+  "@@locale": "hi",
+  "appTitle": "स्टॉल मैनेजर",
+  "newOrder": "नया ऑर्डर",
+  "placeOrder": "ऑर्डर करें",
+  "hold": "होल्ड",
+  "checkout": "चेकआउट",
+  "openShift": "शिफ्ट खोलें",
+  "stallOrders": "स्टॉल ऑर्डर",
+  "acknowledge": "स्वीकारें",
+  "ready": "तैयार",
+  "pickupBoard": "पिकअप बोर्ड",
+  "offlineWritesPaused": "ऑफ़लाइन — लिखना रुका; कार्ट ड्राफ्ट ठीक",
+  "retry": "फिर कोशिश"
+}

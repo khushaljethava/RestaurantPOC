@@ -13,14 +13,19 @@ import { StallSwitcher } from '@/app/(app)/stall-switcher';
 const NAV = [
   { href: '/', label: 'Dashboard', icon: 'dashboard', stallOnly: true },
   { href: '/live', label: 'Live', icon: 'live_tv', stallOnly: true },
+  { href: '/orders', label: 'Orders', icon: 'receipt_long', stallOnly: true },
+  { href: '/bills', label: 'Bills', icon: 'receipt', stallOnly: true },
   { href: '/settlement', label: 'Settlement', icon: 'payments', stallOnly: true },
   { href: '/shifts', label: 'Shifts', icon: 'schedule', stallOnly: true },
+  { href: '/payments/verify', label: 'UPI verify', icon: 'verified', stallOnly: true },
+  { href: '/exceptions', label: 'Exceptions', icon: 'warning', stallOnly: true },
   { href: '/reports', label: 'Reports', icon: 'assessment', stallOnly: true },
   { href: '/menu', label: 'Menu', icon: 'restaurant_menu', stallOnly: true },
   { href: '/staff', label: 'Staff', icon: 'badge', stallOnly: true },
   { href: '/group', label: 'Food Court', icon: 'storefront', stallOnly: true },
+  { href: '/audit', label: 'Audit', icon: 'history', manageOnly: true, stallOnly: true },
   { href: '/courts', label: 'Food Courts', icon: 'apartment', operatorOnly: true },
-  { href: '/settings', label: 'Settings', icon: 'settings', ownerOnly: true, stallOnly: true },
+  { href: '/settings', label: 'Settings', icon: 'settings', manageOnly: true, stallOnly: true },
 ] as const;
 
 function initials(name: string) {
@@ -78,6 +83,7 @@ export function ShellSidebar({
         <ul className="space-y-1">
           {NAV.filter((item) => {
             if ('ownerOnly' in item && item.ownerOnly && !isOwner) return false;
+            if ('manageOnly' in item && item.manageOnly && !(isOwner || role === 'manager')) return false;
             if ('stallOnly' in item && item.stallOnly && !hasStalls) return false;
             if ('operatorOnly' in item && item.operatorOnly && !isOperator) return false;
             return true;

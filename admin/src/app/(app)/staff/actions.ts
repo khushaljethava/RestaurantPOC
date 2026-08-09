@@ -3,6 +3,27 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
+async function writeAuditBestEffort(
+  stallId: string,
+  action: string,
+  entityId: string,
+  payload: Record<string, unknown> = {}
+) {
+  const supabase = await createClient();
+  try {
+    await supabase.rpc('write_audit', {
+      p_stall_id: stallId,
+      p_action: action,
+      p_entity_type: 'staff_membership',
+      p_entity_id: entityId,
+      p_reason: null,
+      p_payload: payload,
+    });
+  } catch {
+    // best-effort
+  }
+}
+
 export async function revokeInvite(code: string) {
   const supabase = await createClient();
   const { error } = await supabase
@@ -39,7 +60,12 @@ export async function changeRole(membershipId: string, role: string) {
     .update({ role })
     .eq('id', membershipId);
   if (error) throw new Error(error.message);
+  await writeAuditBestEffort(row.stall_id, 'staff.role_change', membershipId, {
+    from: row.role,
+    to: role,
+  });
   revalidatePath('/staff');
+  revalidatePath(`/staff/${membershipId}`);
 }
 
 export async function removeMember(membershipId: string) {
@@ -79,5 +105,27 @@ export async function removeMember(membershipId: string) {
     .delete()
     .eq('id', membershipId);
   if (error) throw new Error(error.message);
+  await writeAuditBestEffort(row.stall_id, 'staff.remove', membershipId, {
+    user_id: row.user_id,
+    role: row.role,
+  });
   revalidatePath('/staff');
+}
+
+/** Owner/manager resets another member's PIN. Returns the PIN for one-time display. */
+export async function resetStaffPin(
+  stallId: string,
+  userId: string,
+  pin: string
+): Promise<string> {
+  if (!/^\d{4}$/.test(pin)) throw new Error('PIN must be 4 digits');
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('admin_set_staff_pin', {
+    p_stall_id: stallId,
+    p_user_id: userId,
+    p_pin: pin,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath('/staff');
+  return pin;
 }

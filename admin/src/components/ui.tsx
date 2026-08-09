@@ -51,6 +51,7 @@ export function Stat({
   tone = 'neutral',
   href,
   hrefLabel,
+  delta,
 }: {
   label: ReactNode;
   value: ReactNode;
@@ -58,6 +59,7 @@ export function Stat({
   tone?: 'success' | 'warning' | 'error' | 'neutral';
   href?: string;
   hrefLabel?: string;
+  delta?: ReactNode;
 }) {
   const tones = {
     success: 'bg-primary-container text-primary',
@@ -82,6 +84,9 @@ export function Stat({
       <div className="mt-3 text-[34px] font-semibold leading-none tabular-nums text-on-surface">
         {value}
       </div>
+      {delta ? (
+        <p className="mt-2 text-xs font-medium text-on-surface-variant">{delta}</p>
+      ) : null}
       {href ? (
         <Link
           href={href}

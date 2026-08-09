@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android 13+: required for FCM / local new_order channel alerts.
+         Callers: PushRegistration.primePermission + OS permission sheet. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Stall Manager"
         android:name="${applicationName}"

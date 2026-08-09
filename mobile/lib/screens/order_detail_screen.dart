@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/money.dart';
+import '../providers/acting_user.dart';
 import '../services/errors.dart';
+import '../widgets/pin_sheet.dart';
+import '../widgets/reason_picker.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
@@ -53,13 +56,36 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     }
   }
 
+  Future<bool> _managerOkIfReady() async {
+    final status = _order?['status'] as String? ?? '';
+    if (status != 'ready') return true;
+    final stallId = _order?['stall_id'] as String?;
+    if (stallId == null) return false;
+    final uid = await showManagerPinSheet(
+      context,
+      stallId: stallId,
+      title: 'Food already cooking — manager PIN',
+    );
+    return uid != null;
+  }
+
   Future<void> _voidLine(String itemId) async {
-    final reason = await _askReason('Void reason');
+    final reason = await showReasonPicker(
+          context,
+          title: 'Void reason',
+          presets: kVoidReasons,
+        ) ??
+        await _askReason('Void reason');
     if (reason == null) return;
+    final mgr = await _managerOkIfReady();
+    if (!mgr) return;
+    final acting = ref.read(actingUserProvider.notifier).actingStaffId;
     try {
       await Supabase.instance.client.rpc('void_order_item', params: {
         'p_order_item_id': itemId,
         'p_reason': reason,
+        'p_acting_staff_id': acting,
+        'p_manager_pin_ok': (_order?['status'] == 'ready'),
       });
       await _load();
     } catch (e) {
@@ -88,10 +114,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       ),
     );
     if (qty == null || qty <= 0) return;
+    final mgr = await _managerOkIfReady();
+    if (!mgr) return;
+    final acting = ref.read(actingUserProvider.notifier).actingStaffId;
     try {
       await Supabase.instance.client.rpc('amend_order_item_qty', params: {
         'p_order_item_id': itemId,
         'p_qty': qty,
+        'p_acting_staff_id': acting,
+        'p_manager_pin_ok': (_order?['status'] == 'ready'),
       });
       await _load();
     } catch (e) {

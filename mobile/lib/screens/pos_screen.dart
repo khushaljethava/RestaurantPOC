@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/money.dart';
+import '../l10n/app_localizations.dart';
 import '../services/errors.dart';
 import '../providers/cart.dart';
 import '../providers/connectivity.dart';
@@ -32,13 +34,24 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   String? _menuStallId;
   List<Map<String, dynamic>> _categories = [];
   String? _categoryId; // null = All
+  var _segment = 0; // 0 recents, 1 menu, 2 code
+  var _grid = false;
+  String _orderType = 'dine_in';
+  List<Map<String, dynamic>> _recents = [];
+  final _codeCtrl = TextEditingController();
+  Map<String, dynamic>? _codePreview;
   late final TextEditingController _table;
 
   @override
   void initState() {
     super.initState();
     _table = TextEditingController(text: widget.initialTableLabel ?? '');
-    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final p = await SharedPreferences.getInstance();
+      _orderType = p.getString('settings_order_type') ?? 'dine_in';
+      _grid = p.getBool('pos_grid') ?? false;
+      await _bootstrap();
+    });
   }
 
   Future<void> _bootstrap() async {
@@ -51,6 +64,74 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     });
     await ref.read(cartProvider.notifier).restoreDraft();
     await _loadMenu();
+    await _loadRecents();
+  }
+
+  Future<void> _loadRecents() async {
+    final stallId = _menuStallId;
+    if (stallId == null) return;
+    try {
+      final rows = await Supabase.instance.client.rpc(
+        'menu_recents',
+        params: {'p_stall_id': stallId, 'p_limit': 12},
+      );
+      if (mounted) {
+        setState(() => _recents = List<Map<String, dynamic>>.from(rows as List));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _lookupCode(String code) async {
+    if (code.isEmpty || _menuStallId == null) {
+      setState(() => _codePreview = null);
+      return;
+    }
+    try {
+      final row = await Supabase.instance.client
+          .from('menu_item')
+          .select('id, name, price, stall_id, is_available, quick_code')
+          .eq('stall_id', _menuStallId!)
+          .eq('quick_code', code)
+          .maybeSingle();
+      if (mounted) setState(() => _codePreview = row == null ? null : Map<String, dynamic>.from(row));
+    } catch (_) {
+      if (mounted) setState(() => _codePreview = null);
+    }
+  }
+
+  Future<void> _repeatLast() async {
+    final stallId = ref.read(activeStallIdProvider);
+    if (stallId == null) return;
+    try {
+      final bill = await Supabase.instance.client
+          .from('bill')
+          .select('id')
+          .eq('collected_by_stall_id', stallId)
+          .eq('status', 'paid')
+          .order('paid_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      if (bill == null) return;
+      final orders = await Supabase.instance.client
+          .from('orders')
+          .select('stall_id, order_item(menu_item_id, name, unit_price, qty)')
+          .eq('bill_id', bill['id']);
+      for (final o in orders as List) {
+        for (final it in (o['order_item'] as List? ?? [])) {
+          final mid = it['menu_item_id'] as String?;
+          if (mid == null) continue;
+          ref.read(cartProvider.notifier).add(CartLine(
+            stallId: o['stall_id'] as String,
+            menuItemId: mid,
+            name: it['name'] as String,
+            unitPrice: Money.fromRupees(it['unit_price'] as num),
+            qty: (it['qty'] as num).round(),
+          ));
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = mapError(e));
+    }
   }
 
   Future<void> _loadMenu() async {
@@ -143,9 +224,29 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       return;
     }
 
+    final tagCtrl = TextEditingController();
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hold tag (optional)'),
+        content: TextField(
+          controller: tagCtrl,
+          decoration: const InputDecoration(hintText: 'e.g. VIP / wait'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, tagCtrl.text.trim()),
+            child: const Text('Hold'),
+          ),
+        ],
+      ),
+    );
+    if (tag == null) return;
+
     setState(() => _error = null);
     try {
-      await Supabase.instance.client.rpc(
+      final orderId = await Supabase.instance.client.rpc(
         'create_order',
         params: {
           'p_stall_id': recordedBy,
@@ -160,6 +261,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               : _table.text.trim(),
         },
       );
+      if (tag.isNotEmpty) {
+        await Supabase.instance.client
+            .from('orders')
+            .update({'hold_tag': tag})
+            .eq('id', orderId);
+      }
       ref.read(cartProvider.notifier).clear();
       if (mounted) {
         ScaffoldMessenger.of(
@@ -219,6 +326,67 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       return;
     }
 
+    // Place-time: closed stalls + unavailable items.
+    final stallIds = {for (final l in cart) l.stallId};
+    final closed = <String>[];
+    for (final sid in stallIds) {
+      final row = await Supabase.instance.client
+          .from('stall')
+          .select('name, is_open')
+          .eq('id', sid)
+          .maybeSingle();
+      if (row != null && row['is_open'] != true) {
+        closed.add(row['name'] as String? ?? 'Stall');
+      }
+    }
+    if (closed.isNotEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Closed: ${closed.join(', ')}')),
+      );
+      return;
+    }
+    final unavailable = <CartLine>[];
+    for (final line in cart) {
+      final row = await Supabase.instance.client
+          .from('menu_item')
+          .select('is_available, name')
+          .eq('id', line.menuItemId)
+          .maybeSingle();
+      if (row != null && row['is_available'] == false) {
+        unavailable.add(line);
+      }
+    }
+    if (unavailable.isNotEmpty) {
+      if (!mounted) return;
+      final keep = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Unavailable items'),
+          content: Text(unavailable.map((l) => l.name).join(', ')),
+          actions: [
+            TextButton(
+              onPressed: () {
+                for (final l in unavailable) {
+                  ref.read(cartProvider.notifier).setQty(l.stallId, l.menuItemId, 0);
+                }
+                Navigator.pop(ctx, false);
+              },
+              child: const Text('Remove'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Keep (manager)'),
+            ),
+          ],
+        ),
+      );
+      if (keep != true) {
+        setState(() {});
+        return;
+      }
+    }
+
     setState(() => _error = null);
     final tableLabel = _table.text.trim().isEmpty ? null : _table.text.trim();
     try {
@@ -250,6 +418,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         return;
       }
 
+      final shift = ref.read(openShiftProvider).asData?.value;
       final billId = await Supabase.instance.client.rpc(
         'open_bill',
         params: {
@@ -257,8 +426,18 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           'p_order_ids': orderIds,
           'p_idempotency_key': const Uuid().v4(),
           'p_table_label': null,
+          'p_order_type': _orderType,
+          'p_shift_id': shift?.id,
         },
       );
+      if (_orderType == 'takeaway' || _orderType == 'parcel') {
+        try {
+          await Supabase.instance.client.rpc(
+            'add_packaging_charge',
+            params: {'p_bill_id': billId},
+          );
+        } catch (_) {}
+      }
       if (!mounted) return;
       context.push('/checkout/$billId');
     } catch (e) {
@@ -269,11 +448,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   @override
   void dispose() {
     _table.dispose();
+    _codeCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cart = ref.watch(cartProvider);
     final total = ref.watch(cartProvider.notifier).total.rupees;
     final stalls = ref.watch(menuStallsProvider).asData?.value ?? const [];
@@ -289,8 +470,21 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New order'),
+        title: Text(l10n.newOrder),
         actions: [
+          IconButton(
+            tooltip: 'Repeat last',
+            icon: const Icon(Icons.replay),
+            onPressed: _repeatLast,
+          ),
+          IconButton(
+            icon: Icon(_grid ? Icons.view_list : Icons.grid_view),
+            onPressed: () async {
+              setState(() => _grid = !_grid);
+              final p = await SharedPreferences.getInstance();
+              await p.setBool('pos_grid', _grid);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/pos/search'),
@@ -301,6 +495,32 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           ? const RosLoading()
           : Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final t in ['dine_in', 'takeaway', 'parcel'])
+                        ChoiceChip(
+                          label: Text(t.replaceAll('_', '-')),
+                          selected: _orderType == t,
+                          onSelected: (_) => setState(() => _orderType = t),
+                        ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: SegmentedButton<int>(
+                    segments: const [
+                      ButtonSegment(value: 0, label: Text('Recents')),
+                      ButtonSegment(value: 1, label: Text('Menu')),
+                      ButtonSegment(value: 2, label: Text('Code')),
+                    ],
+                    selected: {_segment},
+                    onSelectionChanged: (s) => setState(() => _segment = s.first),
+                  ),
+                ),
                 if (stalls.length > 1)
                   Container(
                     color: RosColors.surfaceContainerLow,
@@ -406,14 +626,64 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       ],
                     ),
                   ),
+                if (_segment == 2)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _codeCtrl,
+                          keyboardType: TextInputType.number,
+                          autofocus: true,
+                          decoration: const InputDecoration(labelText: 'Quick code'),
+                          onChanged: _lookupCode,
+                          onSubmitted: (_) {
+                            final m = _codePreview;
+                            if (m == null || m['is_available'] != true) return;
+                            ref.read(cartProvider.notifier).add(CartLine(
+                              stallId: m['stall_id'] as String,
+                              menuItemId: m['id'] as String,
+                              name: m['name'] as String,
+                              unitPrice: Money.fromRupees(m['price'] as num),
+                              qty: 1,
+                            ));
+                            _codeCtrl.clear();
+                            setState(() => _codePreview = null);
+                          },
+                        ),
+                        if (_codePreview != null)
+                          ListTile(
+                            title: Text(_codePreview!['name'] as String? ?? ''),
+                            subtitle: Text(Money.fromRupees(_codePreview!['price'] as num).format()),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: () {
+                                final m = _codePreview!;
+                                ref.read(cartProvider.notifier).add(CartLine(
+                                  stallId: m['stall_id'] as String,
+                                  menuItemId: m['id'] as String,
+                                  name: m['name'] as String,
+                                  unitPrice: Money.fromRupees(m['price'] as num),
+                                  qty: 1,
+                                ));
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                else
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    itemCount: visibleMenu.length,
+                    itemCount: (_segment == 0 ? _recents : visibleMenu).length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, i) {
-                      final item = visibleMenu[i];
-                      final price = Money.fromRupees(item['price'] as num);
+                      final item = (_segment == 0 ? _recents : visibleMenu)[i];
+                      final price = Money.fromRupees(
+                        (item['price'] as num?) ?? 0,
+                      );
+                      final itemId = (item['id'] ?? item['menu_item_id']) as String;
                       final stallId =
                           item['stall_id'] as String? ?? _menuStallId!;
                       final imageUrl = item['image_url'] as String?;
@@ -425,7 +695,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                               .add(
                                 CartLine(
                                   stallId: stallId,
-                                  menuItemId: item['id'] as String,
+                                  menuItemId: itemId,
                                   name: item['name'] as String,
                                   unitPrice: price,
                                   qty: 1,
@@ -473,7 +743,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                           .add(
                                             CartLine(
                                               stallId: stallId,
-                                              menuItemId: item['id'] as String,
+                                              menuItemId: itemId,
                                               name: item['name'] as String,
                                               unitPrice: price,
                                               qty: 1,
@@ -566,14 +836,15 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(56),
                                     ),
-                                    child: const Text('Hold'),
+                                    child: Text(l10n.hold),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: FilledButton(
                                     onPressed: _placeAndCheckout,
-                                    child: const Text('Place order'),
+                                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                                    child: Text(l10n.placeOrder),
                                   ),
                                 ),
                               ],

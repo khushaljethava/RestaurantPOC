@@ -12,3 +12,6 @@ mobile/.dart_tool/
 mobile/.flutter-plugins-dependencies
 mobile/build/
 mobile/.packages
+
+# Google OAuth client secrets — never commit
+client_secret_*.json

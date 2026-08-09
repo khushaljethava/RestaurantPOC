@@ -6,7 +6,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/errors.dart';
 import '../providers/cart.dart';
 import '../providers/connectivity.dart';
+import '../providers/acting_user.dart';
+import '../providers/shift.dart';
 import '../providers/stall.dart';
+import '../widgets/pin_sheet.dart';
+import '../widgets/reason_picker.dart';
 import '../widgets/payment_sheet.dart';
 import '../widgets/glass.dart';
 import '../widgets/ros_ui.dart';
@@ -46,7 +50,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       final bill = await Supabase.instance.client
           .from('bill')
-          .select('id, total, discount, status, table_label')
+          .select('id, total, discount, status, table_label, rounding_amount, packaging_amount, token_no')
           .eq('id', widget.billId)
           .single();
       final orders = await Supabase.instance.client
@@ -79,24 +83,65 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       );
       return;
     }
-    final d = double.tryParse(_discountCtrl.text.trim()) ?? 0;
-    final reason = _discountReason.text.trim();
+    var reason = _discountReason.text.trim();
     if (reason.isEmpty) {
-      setState(() => _error = 'Discount reason required');
-      return;
+      reason = await showReasonPicker(
+            context,
+            title: 'Discount reason',
+            presets: kDiscountReasons,
+          ) ??
+          '';
+      if (reason.isEmpty) {
+        setState(() => _error = 'Discount reason required');
+        return;
+      }
+      _discountReason.text = reason;
     }
-    try {
+    final d = double.tryParse(_discountCtrl.text.trim()) ?? 0;
+    final acting = ref.read(actingUserProvider.notifier).actingStaffId;
+    Future<void> call({String? approver}) async {
       await Supabase.instance.client.rpc(
         'set_bill_discount',
         params: {
           'p_bill_id': widget.billId,
           'p_discount': d,
           'p_reason': reason,
+          'p_approver_id': approver,
+          'p_acting_staff_id': acting,
         },
       );
+    }
+
+    try {
+      await call();
       await _load();
     } catch (e) {
-      setState(() => _error = mapError(e));
+      final msg = mapError(e);
+      if (msg.toLowerCase().contains('approval') ||
+          msg.toLowerCase().contains('cap')) {
+        final stallId = ref.read(activeStallIdProvider);
+        if (stallId == null || !mounted) {
+          setState(() => _error = msg);
+          return;
+        }
+        final approver = await showManagerPinSheet(
+          context,
+          stallId: stallId,
+          title: 'Discount needs approval',
+        );
+        if (approver == null) {
+          setState(() => _error = msg);
+          return;
+        }
+        try {
+          await call(approver: approver);
+          await _load();
+        } catch (e2) {
+          setState(() => _error = mapError(e2));
+        }
+      } else {
+        setState(() => _error = msg);
+      }
     }
   }
 
@@ -111,7 +156,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     if (bill == null || bill['status'] == 'paid') return;
     final total = (bill['total'] as num).toDouble();
     final discount = (bill['discount'] as num?)?.toDouble() ?? 0;
-    final due = billDue(total, discount);
+    final rounding = (bill['rounding_amount'] as num?)?.toDouble() ?? 0;
+    final due = billDue(total, discount) + rounding;
 
     UpiConfig? upi;
     final stallId = ref.read(activeStallIdProvider);
@@ -149,9 +195,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _error = null;
     });
     try {
+      final shift = ref.read(openShiftProvider).asData?.value;
+      final acting = ref.read(actingUserProvider.notifier).actingStaffId;
+      // Apply rounding before pay when stall rule exists.
+      try {
+        await Supabase.instance.client.rpc(
+          'apply_bill_rounding',
+          params: {'p_bill_id': widget.billId},
+        );
+      } catch (_) {}
       await Supabase.instance.client.rpc(
         'pay_bill',
-        params: {'p_bill_id': widget.billId, 'p_payments': result.payments},
+        params: {
+          'p_bill_id': widget.billId,
+          'p_payments': result.payments,
+          'p_shift_id': shift?.id,
+          'p_acting_staff_id': acting,
+        },
       );
       if (!mounted) return;
       context.go('/receipt/${widget.billId}');
@@ -177,7 +237,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final bill = _bill;
     final total = (bill?['total'] as num?)?.toDouble() ?? 0;
     final discount = (bill?['discount'] as num?)?.toDouble() ?? 0;
-    final due = billDue(total, discount);
+    final rounding = (bill?['rounding_amount'] as num?)?.toDouble() ?? 0;
+    final due = billDue(total, discount) + rounding;
     final status = bill?['status'] as String? ?? '—';
 
     return Scaffold(

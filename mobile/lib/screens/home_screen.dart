@@ -22,7 +22,10 @@ class HomeScreen extends ConsumerWidget {
       final list = next.asData?.value;
       if (list == null || list.isEmpty) return;
       final id = activeId ?? list.first.stallId;
-      PushRegistration.registerForStall(id);
+      Future(() async {
+        await PushRegistration.primePermission(context);
+        await PushRegistration.registerForStall(id);
+      });
     });
 
     return Scaffold(
@@ -37,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Sign out',
             onPressed: () async {
+              await PushRegistration.deleteForLogout();
               await Supabase.instance.client.auth.signOut();
               if (context.mounted) context.go('/login');
             },
@@ -50,7 +54,8 @@ class HomeScreen extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) {
             return RosEmpty(
-              message: 'No stall membership yet.',
+              message:
+                  'Removed from stall — you have no active membership. Ask an owner for a new invite.',
               action: FilledButton(
                 onPressed: () => context.go('/join'),
                 child: const Text('Enter invite code'),
@@ -82,6 +87,45 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 );
               }),
+              FutureBuilder<int>(
+                future: () async {
+                  final sid = active.stallId;
+                  final rows = await Supabase.instance.client
+                      .from('bill')
+                      .select('id')
+                      .eq('collected_by_stall_id', sid)
+                      .eq('pickup_status', 'ready')
+                      .eq('status', 'paid');
+                  return (rows as List).length;
+                }(),
+                builder: (context, snap) {
+                  final n = snap.data ?? 0;
+                  return ListTile(
+                    leading: const Icon(Icons.shopping_bag_outlined),
+                    title: const Text('Pickup board'),
+                    subtitle: const Text('Ready for handover'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (n > 0)
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: RosColors.primary,
+                            child: Text(
+                              '$n',
+                              style: const TextStyle(
+                                color: RosColors.onPrimary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        const Icon(Icons.chevron_right),
+                      ],
+                    ),
+                    onTap: () => context.push('/pickup'),
+                  );
+                },
+              ),
 
               if (list.length > 1) ...[
                 DropdownButtonFormField<String>(
