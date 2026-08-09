@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../theme/ros_theme.dart';
 import 'ros_ui.dart';
 import '../services/errors.dart';
 
@@ -68,24 +70,93 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
 
   Future<void> _loadImages() async {
     if (widget.existing == null) return;
-    final rows = await Supabase.instance.client
-        .from('menu_item_image')
-        .select('id, url, sort_order')
-        .eq('menu_item_id', widget.existing!['id'] as String)
-        .order('sort_order');
-    if (!mounted) return;
-    setState(() => _images = List<Map<String, dynamic>>.from(rows));
+    try {
+      final rows = await Supabase.instance.client
+          .from('menu_item_image')
+          .select('id, url, sort_order')
+          .eq('menu_item_id', widget.existing!['id'] as String)
+          .order('sort_order');
+      if (!mounted) return;
+      setState(() => _images = List<Map<String, dynamic>>.from(rows));
+    } catch (_) {
+      // Gallery table may not be migrated yet — edit still works without photos.
+      if (!mounted) return;
+      setState(() => _images = []);
+    }
+  }
+
+  Future<void> _deleteItem() async {
+    final id = widget.existing?['id'] as String?;
+    if (id == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove menu item?'),
+        content: Text(
+          '“${_name.text.trim().isEmpty ? 'This item' : _name.text.trim()}” '
+          'will be removed from the menu.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await Supabase.instance.client.from('menu_item').delete().eq('id', id);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = mapError(e);
+        _busy = false;
+      });
+    }
   }
 
   Future<void> _pick(ImageSource source) async {
     if (_atMax) return;
-    final file = await ImagePicker().pickImage(
-      source: source,
+    final picked = await ImagePicker().pickImage(source: source);
+    if (picked == null) return;
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: picked.path,
       maxWidth: 1280,
       maxHeight: 1280,
-      imageQuality: 80,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      compressFormat: ImageCompressFormat.jpg,
+      compressQuality: 80,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop photo',
+          toolbarColor: RosColors.primary,
+          toolbarWidgetColor: RosColors.onPrimary,
+          initAspectRatio: CropAspectRatioPreset.square,
+          lockAspectRatio: true,
+          hideBottomControls: true,
+          aspectRatioPresets: [CropAspectRatioPreset.square],
+        ),
+        IOSUiSettings(
+          title: 'Crop photo',
+          aspectRatioLockEnabled: true,
+          resetAspectRatioEnabled: false,
+          aspectRatioPresets: [CropAspectRatioPreset.square],
+        ),
+      ],
     );
-    if (file != null) setState(() => _pending.add(file));
+    if (cropped == null || !mounted) return;
+    setState(() => _pending.add(XFile(cropped.path)));
   }
 
   String _safeExt(String path) {
@@ -237,161 +308,268 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
   }
 
   Widget _thumb({required Widget child, VoidCallback? onDelete}) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: SizedBox(width: 64, height: 64, child: child),
-        ),
-        if (onDelete != null)
-          Positioned(
-            top: -6,
-            right: -6,
-            child: IconButton(
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                minimumSize: const Size(24, 24),
-                padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              icon: Icon(
-                Icons.close,
-                size: 16,
-                color: Theme.of(context).colorScheme.onErrorContainer,
-              ),
-              onPressed: _busy ? null : onDelete,
-            ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, right: 6),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(width: 64, height: 64, child: child),
           ),
-      ],
+          if (onDelete != null)
+            Positioned(
+              top: -6,
+              right: -6,
+              child: IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                  minimumSize: const Size(24, 24),
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                icon: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+                onPressed: _busy ? null : onDelete,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
-        MediaQuery.of(context).viewInsets.bottom + 16,
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final base = Theme.of(context);
+    final sheetTheme = base.copyWith(
+      colorScheme: base.colorScheme.copyWith(
+        surface: RosColors.auroraMid,
+        onSurface: RosColors.onSurface,
+        onSurfaceVariant: RosColors.onSurfaceVariant,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              widget.existing == null ? 'Add item' : 'Edit item',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _name,
-              textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _price,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+      textTheme: base.textTheme.apply(
+        bodyColor: RosColors.onSurface,
+        displayColor: RosColors.onSurface,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        labelStyle: const TextStyle(color: RosColors.onSurfaceVariant),
+        floatingLabelStyle: const TextStyle(color: RosColors.primary),
+        hintStyle: const TextStyle(color: RosColors.onSurfaceVariant),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: RosColors.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: RosColors.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: RosColors.primary, width: 1.6),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      listTileTheme: const ListTileThemeData(
+        textColor: RosColors.onSurface,
+        iconColor: RosColors.onSurfaceVariant,
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: RosColors.primary,
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: RosColors.outlineVariant),
+        ),
+      ),
+    );
+
+    return Theme(
+      data: sheetTheme,
+      child: Material(
+        color: RosColors.auroraMid,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset + 16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight:
+                    MediaQuery.sizeOf(context).height * 0.85 - bottomInset,
               ),
-              decoration: const InputDecoration(labelText: 'Price'),
-            ),
-            if (widget.categories.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: DropdownButtonFormField<String?>(
-                  initialValue: _categoryId,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: [
-                    const DropdownMenuItem(child: Text('No category')),
-                    for (final c in widget.categories)
-                      DropdownMenuItem(
-                        value: c['id'] as String,
-                        child: Text(c['name'] as String),
+              child: SingleChildScrollView(
+                child: DefaultTextStyle(
+                  style: sheetTheme.textTheme.bodyLarge!.copyWith(
+                    color: RosColors.onSurface,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        widget.existing == null ? 'Add item' : 'Edit item',
+                        style: sheetTheme.textTheme.titleLarge?.copyWith(
+                              color: RosColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ) ??
+                            const TextStyle(
+                              color: RosColors.primary,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
-                  ],
-                  onChanged: (v) => setState(() => _categoryId = v),
-                ),
-              ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _available,
-              onChanged: (v) => setState(() => _available = v),
-              title: const Text('Available'),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Photos ($_imageCount/$_maxImages)',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 72,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _images.length + _pending.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  if (i < _images.length) {
-                    final row = _images[i];
-                    return _thumb(
-                      child: CachedNetworkImage(
-                        imageUrl: row['url'] as String,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, _, _) =>
-                            const Icon(Icons.broken_image),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _name,
+                        style: const TextStyle(color: RosColors.onSurface),
+                        textCapitalization: TextCapitalization.words,
+                        decoration:
+                            const InputDecoration(labelText: 'Name'),
                       ),
-                      onDelete: () => _onDeleteExisting(row['id'] as String),
-                    );
-                  }
-                  final file = _pending[i - _images.length];
-                  return _thumb(
-                    child: Image.file(
-                      File(file.path),
-                      fit: BoxFit.cover,
-                    ),
-                    onDelete: () => _removePending(i - _images.length),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy || _atMax
-                        ? null
-                        : () => _pick(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Gallery'),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _price,
+                        style: const TextStyle(color: RosColors.onSurface),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration:
+                            const InputDecoration(labelText: 'Price'),
+                      ),
+                      if (widget.categories.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: DropdownButtonFormField<String?>(
+                            initialValue: _categoryId,
+                            style: const TextStyle(color: RosColors.onSurface),
+                            dropdownColor: Colors.white,
+                            decoration: const InputDecoration(
+                              labelText: 'Category',
+                            ),
+                            items: [
+                              const DropdownMenuItem(
+                                child: Text('No category'),
+                              ),
+                              for (final c in widget.categories)
+                                DropdownMenuItem(
+                                  value: c['id'] as String,
+                                  child: Text(c['name'] as String),
+                                ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _categoryId = v),
+                          ),
+                        ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _available,
+                        onChanged: (v) => setState(() => _available = v),
+                        title: const Text(
+                          'Available',
+                          style: TextStyle(color: RosColors.onSurface),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Photos ($_imageCount/$_maxImages)',
+                        style: sheetTheme.textTheme.titleSmall?.copyWith(
+                              color: RosColors.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ) ??
+                            const TextStyle(
+                              color: RosColors.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _images.length + _pending.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(width: 8),
+                          itemBuilder: (context, i) {
+                            if (i < _images.length) {
+                              final row = _images[i];
+                              return _thumb(
+                                child: CachedNetworkImage(
+                                  imageUrl: row['url'] as String,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, _, _) =>
+                                      const Icon(Icons.broken_image),
+                                ),
+                                onDelete: () => _onDeleteExisting(
+                                  row['id'] as String,
+                                ),
+                              );
+                            }
+                            final file = _pending[i - _images.length];
+                            return _thumb(
+                              child: Image.file(
+                                File(file.path),
+                                fit: BoxFit.cover,
+                              ),
+                              onDelete: () =>
+                                  _removePending(i - _images.length),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _busy || _atMax
+                                  ? null
+                                  : () => _pick(ImageSource.gallery),
+                              icon: const Icon(Icons.photo_library),
+                              label: const Text('Gallery'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _busy || _atMax
+                                  ? null
+                                  : () => _pick(ImageSource.camera),
+                              icon: const Icon(Icons.camera_alt),
+                              label: const Text('Camera'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 8),
+                        RosErrorText(_error!),
+                      ],
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: _busy ? null : _save,
+                        child: Text(_busy ? 'Saving…' : 'Save'),
+                      ),
+                      if (widget.existing != null) ...[
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _busy ? null : _deleteItem,
+                          style: TextButton.styleFrom(
+                            foregroundColor: RosColors.error,
+                          ),
+                          child: const Text('Remove item'),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy || _atMax
-                        ? null
-                        : () => _pick(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
-                  ),
-                ),
-              ],
+              ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              RosErrorText(_error!),
-            ],
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _busy ? null : _save,
-              child: Text(_busy ? 'Saving…' : 'Save'),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -6,6 +6,7 @@ import '../core/money.dart';
 import '../providers/shift.dart';
 import '../providers/stall.dart';
 import '../services/errors.dart';
+import '../theme/ros_theme.dart';
 
 class MySalesScreen extends ConsumerStatefulWidget {
   const MySalesScreen({super.key});
@@ -50,23 +51,54 @@ class _MySalesScreenState extends ConsumerState<MySalesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(title: const Text('My sales')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!))
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: text.bodyLarge?.copyWith(color: RosColors.error),
+                    ),
+                  ),
+                )
               : ListView(
                   padding: const EdgeInsets.all(24),
                   children: [
-                    Text('Orders', style: Theme.of(context).textTheme.titleMedium),
-                    Text('${_data?['orders'] ?? 0}',
-                        style: Theme.of(context).textTheme.displaySmall),
-                    const SizedBox(height: 24),
-                    Text('Collected', style: Theme.of(context).textTheme.titleMedium),
                     Text(
-                      Money.fromRupees(_data?['collected'] as num? ?? 0).format(),
-                      style: Theme.of(context).textTheme.displaySmall,
+                      'Orders',
+                      style: text.titleMedium?.copyWith(
+                        color: RosColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_data?['orders'] ?? 0}',
+                      style: text.headlineMedium?.copyWith(
+                        color: RosColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      'Collected',
+                      style: text.titleMedium?.copyWith(
+                        color: RosColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      Money.fromRupees(_data?['collected'] as num? ?? 0)
+                          .format(),
+                      style: text.headlineMedium?.copyWith(
+                        color: RosColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),

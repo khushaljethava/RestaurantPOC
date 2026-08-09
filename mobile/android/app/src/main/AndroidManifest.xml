@@ -53,6 +53,12 @@
             </intent-filter>
         </activity>
 
+        <!-- image_cropper (uCrop) — menu photo 1:1 crop after gallery/camera pick. -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
         <!-- Routes incoming deep-link URIs into GoRouter by path. Replaces the
              need for an app_links-style package: /join already exists in
              lib/app.dart and is exempt from the auth redirect. -->

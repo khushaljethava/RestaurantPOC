@@ -16,7 +16,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   var _sound = true;
   var _vibrate = true;
   var _keepAwake = false;
-  var _orderType = 'dine_in';
   var _textScale = 1.0;
   var _lang = 'en';
   var _loading = true;
@@ -33,7 +32,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _sound = p.getBool('settings_sound') ?? true;
       _vibrate = p.getBool('settings_vibrate') ?? true;
       _keepAwake = p.getBool('settings_keep_awake') ?? false;
-      _orderType = p.getString('settings_order_type') ?? 'dine_in';
       _textScale = p.getDouble('settings_text_scale') ?? 1.0;
       _lang = p.getString('settings_lang') ?? 'en';
       _loading = false;
@@ -45,7 +43,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await p.setBool('settings_sound', _sound);
     await p.setBool('settings_vibrate', _vibrate);
     await p.setBool('settings_keep_awake', _keepAwake);
-    await p.setString('settings_order_type', _orderType);
     await p.setDouble('settings_text_scale', _textScale);
   }
 
@@ -61,48 +58,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SwitchListTile(
             title: const Text('Sound'),
             value: _sound,
-            onChanged: (v) { setState(() => _sound = v); _save(); },
+            onChanged: (v) {
+              setState(() => _sound = v);
+              _save();
+            },
           ),
           SwitchListTile(
             title: const Text('Vibration'),
             value: _vibrate,
-            onChanged: (v) { setState(() => _vibrate = v); _save(); },
+            onChanged: (v) {
+              setState(() => _vibrate = v);
+              _save();
+            },
           ),
           SwitchListTile(
             title: const Text('Keep awake (stall mode)'),
             value: _keepAwake,
-            onChanged: (v) { setState(() => _keepAwake = v); _save(); },
-          ),
-          ListTile(
-            title: const Text('Default order type'),
-            subtitle: Text(_orderType),
-            onTap: () async {
-              final v = await showDialog<String>(
-                context: context,
-                builder: (ctx) => SimpleDialog(
-                  title: const Text('Order type'),
-                  children: [
-                    for (final t in ['dine_in', 'takeaway', 'parcel'])
-                      SimpleDialogOption(
-                        onPressed: () => Navigator.pop(ctx, t),
-                        child: Text(t),
-                      ),
-                  ],
-                ),
-              );
-              if (v != null) {
-                setState(() => _orderType = v);
-                _save();
-              }
+            onChanged: (v) {
+              setState(() => _keepAwake = v);
+              _save();
             },
           ),
           ListTile(
             title: const Text('Text size'),
-            subtitle: Text(_textScale == 1.0
-                ? 'Normal'
-                : _textScale < 1.5
-                    ? 'Large'
-                    : 'Extra'),
+            subtitle: Text(
+              _textScale == 1.0
+                  ? 'Normal'
+                  : _textScale < 1.5
+                      ? 'Large'
+                      : 'Extra',
+            ),
             onTap: () {
               setState(() {
                 if (_textScale < 1.2) {
@@ -128,7 +113,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     for (final t in ['en', 'hi', 'gu'])
                       SimpleDialogOption(
                         onPressed: () => Navigator.pop(ctx, t),
-                        child: Text(t == 'en' ? 'English' : t == 'hi' ? 'हिन्दी' : 'ગુજરાતી'),
+                        child: Text(
+                          t == 'en'
+                              ? 'English'
+                              : t == 'hi'
+                                  ? 'हिन्दी'
+                                  : 'ગુજરાતી',
+                        ),
                       ),
                   ],
                 ),

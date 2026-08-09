@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/errors.dart';
-import '../config.dart';
 import '../invite_code.dart';
 import '../providers/stall.dart';
 import '../theme/ros_theme.dart';
@@ -21,6 +20,8 @@ class JoinScreen extends ConsumerStatefulWidget {
 
 class _JoinScreenState extends ConsumerState<JoinScreen> {
   late final TextEditingController _code;
+  late final TextEditingController _stallName;
+  final _stallNameFocus = FocusNode();
   var _busy = false;
   String? _error;
   var _didAutoRedeem = false;
@@ -29,6 +30,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   void initState() {
     super.initState();
     _code = TextEditingController(text: widget.initialCode ?? '');
+    _stallName = TextEditingController();
     if (widget.initialCode != null &&
         widget.initialCode!.trim().isNotEmpty &&
         Supabase.instance.client.auth.currentSession != null) {
@@ -39,18 +41,41 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   Future<void> _autoRedeemOnce() async {
     if (_didAutoRedeem || !mounted) return;
     _didAutoRedeem = true;
-    await _redeem();
+    await _redeem(allowCourtFallback: false);
   }
 
-  Future<void> _redeem() async {
+  bool _isInvalidInvite(PostgrestException e) {
+    final msg = e.message.toLowerCase();
+    return msg.contains('invalid') ||
+        msg.contains('revoked') ||
+        e.code == 'P0002';
+  }
+
+  Future<void> _goHome(dynamic stallId) async {
+    ref.invalidate(membershipsProvider);
+    if (stallId is String && stallId.isNotEmpty) {
+      ref.read(activeStallOverrideProvider.notifier).set(stallId);
+    }
+    if (mounted) context.go('/');
+  }
+
+  Future<void> _needStallName() async {
+    if (!mounted) return;
+    setState(() {
+      _error = 'Enter stall name to join a food court, or check the code';
+    });
+    _stallNameFocus.requestFocus();
+  }
+
+  Future<void> _redeem({bool allowCourtFallback = true}) async {
     final loggedIn = Supabase.instance.client.auth.currentSession != null;
     final code = normalizeInviteCode(_code.text);
+    final name = _stallName.text.trim();
     if (code.isEmpty) {
       setState(() => _error = 'Enter an invite code');
       return;
     }
     if (!loggedIn) {
-      // Query param is required: auth redirect races LoginScreen dispose.
       context.go('/login?invite=${Uri.encodeComponent(code)}');
       return;
     }
@@ -59,28 +84,31 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       _busy = true;
       _error = null;
     });
-    logSupabaseConfig('join');
-    debugPrint('[auth/join] redeem code=$code');
     try {
       final stallId = await Supabase.instance.client.rpc(
         'redeem_stall_invite',
         params: {'p_code': code},
       );
-      debugPrint('[auth/join] ok stallId=$stallId');
-      ref.invalidate(membershipsProvider);
-      if (stallId is String && stallId.isNotEmpty) {
-        ref.read(activeStallOverrideProvider.notifier).set(stallId);
-      }
-      if (mounted) context.go('/');
+      await _goHome(stallId);
     } on PostgrestException catch (e) {
-      debugPrint(
-        '[auth/join] PostgrestException code=${e.code} msg=${e.message}',
-      );
-      logSupabaseConfig('join-fail');
-      if (mounted) setState(() => _error = e.message);
-    } catch (e, st) {
-      debugPrint('[auth/join] error=$e\n$st');
-      logSupabaseConfig('join-fail');
+      if (!_isInvalidInvite(e)) {
+        if (mounted) setState(() => _error = e.message);
+        return;
+      }
+      if (!allowCourtFallback || name.isEmpty) {
+        await _needStallName();
+        return;
+      }
+      try {
+        final stallId = await Supabase.instance.client.rpc(
+          'join_court_as_owner',
+          params: {'p_code': code, 'p_name': name},
+        );
+        await _goHome(stallId);
+      } on PostgrestException catch (e2) {
+        if (mounted) setState(() => _error = e2.message);
+      }
+    } catch (e) {
       if (mounted) setState(() => _error = mapError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -90,6 +118,8 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   @override
   void dispose() {
     _code.dispose();
+    _stallName.dispose();
+    _stallNameFocus.dispose();
     super.dispose();
   }
 
@@ -99,7 +129,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Join stall'),
+        title: const Text('Join'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => loggedIn ? context.pop() : context.go('/login'),
@@ -115,14 +145,14 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                 child: ListView(
                   children: [
                     Text(
-                      'Enter invite code',
+                      'Invite code',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       loggedIn
-                          ? 'Redeem a stall invite to get access.'
+                          ? 'Stall invite for staff, or food court code + stall name for owners.'
                           : 'Sign in next, then we join with this code.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
@@ -130,7 +160,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                     TextField(
                       controller: _code,
                       textCapitalization: TextCapitalization.characters,
-                      textInputAction: TextInputAction.done,
+                      textInputAction: TextInputAction.next,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 24,
@@ -140,6 +170,17 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Invite code',
                         hintText: 'ABCD-1234',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _stallName,
+                      focusNode: _stallNameFocus,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'Stall name',
+                        hintText: 'Raju Chaat',
                       ),
                       onSubmitted: (_) {
                         if (!_busy) _redeem();
@@ -152,11 +193,10 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                   ],
                 ),
               ),
-              // Avoid nested SafeArea from RosBottomCta eating the tap target.
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
                 child: FilledButton(
-                  onPressed: _busy ? null : _redeem,
+                  onPressed: _busy ? null : () => _redeem(),
                   child: _busy
                       ? const SizedBox(
                           height: 22,

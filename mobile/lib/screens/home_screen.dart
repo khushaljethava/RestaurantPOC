@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../providers/shift.dart';
 import '../providers/stall.dart';
 import '../services/push_registration.dart';
 import '../theme/ros_theme.dart';
@@ -75,58 +74,6 @@ class HomeScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              Consumer(builder: (context, ref, _) {
-                final shift = ref.watch(openShiftProvider).asData?.value;
-                if (shift != null) return const SizedBox.shrink();
-                return Card(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  child: ListTile(
-                    title: const Text('Open shift to start selling'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/shift'),
-                  ),
-                );
-              }),
-              FutureBuilder<int>(
-                future: () async {
-                  final sid = active.stallId;
-                  final rows = await Supabase.instance.client
-                      .from('bill')
-                      .select('id')
-                      .eq('collected_by_stall_id', sid)
-                      .eq('pickup_status', 'ready')
-                      .eq('status', 'paid');
-                  return (rows as List).length;
-                }(),
-                builder: (context, snap) {
-                  final n = snap.data ?? 0;
-                  return ListTile(
-                    leading: const Icon(Icons.shopping_bag_outlined),
-                    title: const Text('Pickup board'),
-                    subtitle: const Text('Ready for handover'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (n > 0)
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: RosColors.primary,
-                            child: Text(
-                              '$n',
-                              style: const TextStyle(
-                                color: RosColors.onPrimary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        const Icon(Icons.chevron_right),
-                      ],
-                    ),
-                    onTap: () => context.push('/pickup'),
-                  );
-                },
-              ),
-
               if (list.length > 1) ...[
                 DropdownButtonFormField<String>(
                   initialValue: active.stallId,
@@ -186,7 +133,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               RosSurfaceCard(
                 padding: const EdgeInsets.all(16),
-                onTap: () => context.push('/pos'),
+                onTap: () => context.go('/pos'),
                 child: Row(
                   children: [
                     const CircleAvatar(
@@ -217,19 +164,6 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              RosSurfaceCard(
-                padding: EdgeInsets.zero,
-                child: RosNavTile(
-                  icon: Icons.pause_circle,
-                  label: 'Held orders',
-                  subtitle: 'Resume paused carts',
-                  leadingBg: RosColors.pendingContainer,
-                  leadingFg: RosColors.pending,
-                  accentRail: RosColors.pending,
-                  onTap: () => context.go('/held'),
-                ),
-              ),
               const SizedBox(height: 16),
               RosSurfaceCard(
                 padding: EdgeInsets.zero,
@@ -244,14 +178,8 @@ class HomeScreen extends ConsumerWidget {
                     RosNavTile(
                       icon: Icons.inventory_2,
                       label: 'Menu',
-                      showDivider: true,
-                      onTap: () => context.push('/stock'),
-                    ),
-                    RosNavTile(
-                      icon: Icons.table_restaurant,
-                      label: 'Open tables',
                       showDivider: canManage,
-                      onTap: () => context.push('/tables'),
+                      onTap: () => context.push('/stock'),
                     ),
                     if (canManage)
                       RosNavTile(

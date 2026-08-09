@@ -13,15 +13,12 @@ class ShellScaffold extends ConsumerWidget {
 
   int _indexFor(String location) {
     if (location.startsWith('/pos')) return 1;
-    if (location.startsWith('/today') ||
-        location.startsWith('/held') ||
-        location.startsWith('/pickup')) {
+    if (location.startsWith('/today')) {
       return 2;
     }
     if (location.startsWith('/more') ||
         location.startsWith('/settlement') ||
         location.startsWith('/settings') ||
-        location.startsWith('/shift') ||
         location.startsWith('/day') ||
         location.startsWith('/mysales')) {
       return 3;
@@ -58,19 +55,13 @@ class ShellScaffold extends ConsumerWidget {
     final index = _indexFor(location).clamp(0, destinations.length - 1);
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
       body: child,
       bottomNavigationBar: GlassBar(
         child: NavigationBar(
           selectedIndex: index,
           destinations: destinations,
-          onDestinationSelected: (i) {
-            if (i == 1) {
-              context.push('/pos');
-              return;
-            }
-            context.go(_paths[i]);
-          },
+          onDestinationSelected: (i) => context.go(_paths[i]),
         ),
       ),
     );

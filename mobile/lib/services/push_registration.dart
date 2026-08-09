@@ -46,14 +46,10 @@ class PushRegistration {
     await _local.initialize(
       settings: init,
       onDidReceiveNotificationResponse: (resp) {
-        final route = resp.payload;
         final router = _router;
         if (router == null) return;
-        if (route == '/pickup' || route == 'pickup') {
-          router.go('/pickup');
-        } else {
-          router.go('/stall');
-        }
+        // Dine-in only — open stall board for any local notification tap.
+        router.go('/stall');
       },
     );
     if (Platform.isAndroid) {
@@ -96,8 +92,7 @@ class PushRegistration {
         msg.data['body'] ??
         'Tap to open the stall board';
     final type = msg.data['type'] ?? msg.data['route'] ?? 'new_order';
-    final route =
-        (type == 'pickup' || type == '/pickup') ? '/pickup' : '/stall';
+    const route = '/stall';
 
     Telemetry.event('push_foreground', {
       'type': type,
@@ -133,11 +128,7 @@ class PushRegistration {
     final type = msg.data['type'] ?? msg.data['route'];
     final router = _router;
     if (router == null) return;
-    if (type == 'pickup' || type == '/pickup') {
-      router.go('/pickup');
-    } else {
-      router.go('/stall');
-    }
+    router.go('/stall');
     Telemetry.event('push_open', {'type': type});
   }
 
@@ -203,7 +194,7 @@ class PushRegistration {
       await upsertToken(stallId: stallId, token: token, platform: platform);
       debugPrint('PushRegistration: token upserted for $stallId');
     } catch (e) {
-      debugPrint('PushRegistration: Firebase unavailable — Realtime only ($e)');
+      debugPrint('PushRegistration: token register failed — Realtime only ($e)');
     }
   }
 
@@ -230,12 +221,15 @@ class PushRegistration {
   }) async {
     final uid = Supabase.instance.client.auth.currentUser?.id;
     if (uid == null) return;
-    await Supabase.instance.client.from('device_push_token').upsert({
-      'user_id': uid,
-      'stall_id': stallId,
-      'token': token,
-      'platform': platform,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    });
+    await Supabase.instance.client.from('device_push_token').upsert(
+      {
+        'user_id': uid,
+        'stall_id': stallId,
+        'token': token,
+        'platform': platform,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      },
+      onConflict: 'user_id,stall_id,token',
+    );
   }
 }

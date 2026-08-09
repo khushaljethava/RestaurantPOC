@@ -3,17 +3,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../core/order_payment.dart';
 import '../data/supabase/realtime_channels.dart';
 import '../l10n/app_localizations.dart';
-import '../services/errors.dart';
-import '../services/telemetry.dart';
+import '../providers/acting_user.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
+import '../services/errors.dart';
+import '../services/telemetry.dart';
+import '../widgets/payment_sheet.dart';
 import '../widgets/ros_ui.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class StallScreen extends ConsumerStatefulWidget {
   const StallScreen({super.key});
@@ -29,6 +33,7 @@ class _StallScreenState extends ConsumerState<StallScreen> {
   Timer? _tick;
   String _conn = 'Connecting…';
   DateTime _lastEvent = DateTime.now();
+  final _busyOrderIds = <String>{};
 
   @override
   void initState() {
@@ -57,7 +62,10 @@ class _StallScreenState extends ConsumerState<StallScreen> {
       final rows = await Supabase.instance.client
           .from('orders')
           .select(
-            'id, token_no, status, table_label, order_type, acknowledged_at, created_at, order_item(name, qty, notes)',
+            'id, token_no, status, table_label, order_type, acknowledged_at, '
+            'created_at, bill_id, '
+            'bill:bill_id(id, status, total, discount, rounding_amount), '
+            'order_item(name, qty, notes)',
           )
           .eq('stall_id', stallId)
           .inFilter('status', ['pending', 'ready'])
@@ -131,6 +139,132 @@ class _StallScreenState extends ConsumerState<StallScreen> {
     }
   }
 
+  Future<UpiConfig?> _stallUpi() async {
+    final stallId = ref.read(activeStallIdProvider);
+    if (stallId == null) return null;
+    try {
+      final stall = await Supabase.instance.client
+          .from('stall')
+          .select('upi_vpa, upi_payee_name, name')
+          .eq('id', stallId)
+          .maybeSingle();
+      final vpa = stall?['upi_vpa'] as String?;
+      if (vpa == null || vpa.trim().isEmpty) return null;
+      return UpiConfig(
+        vpa: vpa,
+        payeeName:
+            (stall?['upi_payee_name'] as String?)?.trim().isNotEmpty == true
+                ? stall!['upi_payee_name'] as String
+                : (stall?['name'] as String? ?? 'Stall'),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> _fetchBill(String billId) async {
+    final row = await Supabase.instance.client
+        .from('bill')
+        .select('id, status, total, discount, rounding_amount')
+        .eq('id', billId)
+        .maybeSingle();
+    if (row == null) return null;
+    return Map<String, dynamic>.from(row);
+  }
+
+  Future<void> _giveToCustomer(Map<String, dynamic> order) async {
+    final orderId = order['id'] as String;
+    if (_busyOrderIds.contains(orderId)) return;
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Offline — cannot update')),
+      );
+      return;
+    }
+
+    setState(() => _busyOrderIds.add(orderId));
+    try {
+      if (orderNeedsPayment(order)) {
+        var billId = order['bill_id'] as String?;
+        var due = orderBillDue(order);
+
+        if (billId == null) {
+          final collector = ref.read(activeStallIdProvider);
+          if (collector == null) {
+            throw StateError('No active stall');
+          }
+          billId = await Supabase.instance.client.rpc(
+            'open_bill',
+            params: {
+              'p_collected_by_stall_id': collector,
+              'p_order_ids': [orderId],
+              'p_idempotency_key': const Uuid().v4(),
+              'p_table_label': order['table_label'],
+            },
+          ) as String;
+          final bill = await _fetchBill(billId);
+          if (bill == null) throw StateError('Bill not found');
+          due = orderBillDue({'bill': bill});
+        } else if (due <= 0) {
+          final bill = await _fetchBill(billId);
+          if (bill == null) throw StateError('Bill not found');
+          if (bill['status'] == 'paid') {
+            await Supabase.instance.client.rpc(
+              'set_order_status',
+              params: {'p_order_id': orderId, 'p_status': 'completed'},
+            );
+            await _load();
+            return;
+          }
+          due = orderBillDue({'bill': bill});
+        }
+
+        if (!mounted) return;
+        final upi = await _stallUpi();
+        if (!mounted) return;
+        final result = await showPaymentSheet(
+          context,
+          due: due,
+          upi: upi,
+          billNote: 'Bill ${billId.substring(0, 8)}',
+        );
+        if (result == null || !mounted) return;
+
+        final acting = ref.read(actingUserProvider.notifier).actingStaffId;
+        try {
+          await Supabase.instance.client.rpc(
+            'apply_bill_rounding',
+            params: {'p_bill_id': billId},
+          );
+        } catch (_) {}
+        await Supabase.instance.client.rpc(
+          'pay_bill',
+          params: {
+            'p_bill_id': billId,
+            'p_payments': result.payments,
+            'p_acting_staff_id': acting,
+          },
+        );
+      }
+
+      await Supabase.instance.client.rpc(
+        'set_order_status',
+        params: {'p_order_id': orderId, 'p_status': 'completed'},
+      );
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(mapError(e))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busyOrderIds.remove(orderId));
+      }
+    }
+  }
+
   Future<void> _heartbeat() async {
     final stallId = ref.read(activeStallIdProvider);
     if (stallId == null) return;
@@ -198,6 +332,8 @@ class _StallScreenState extends ConsumerState<StallScreen> {
               itemBuilder: (context, i) {
                 final o = _orders[i];
                 final status = o['status'] as String;
+                final orderId = o['id'] as String;
+                final busy = _busyOrderIds.contains(orderId);
                 final items =
                     (o['order_item'] as List?)
                         ?.map((e) {
@@ -235,25 +371,34 @@ class _StallScreenState extends ConsumerState<StallScreen> {
                       const SizedBox(height: 12),
                       if (status == 'pending' && o['acknowledged_at'] == null)
                         FilledButton(
-                          onPressed: () => _acknowledge(o['id'] as String),
+                          onPressed: () => _acknowledge(orderId),
                           child: Text(l10n.acknowledge),
                         ),
                       if (status == 'pending' && o['acknowledged_at'] != null)
                         FilledButton(
-                          onPressed: () =>
-                              _setStatus(o['id'] as String, 'ready'),
+                          onPressed: () => _setStatus(orderId, 'ready'),
                           child: Text(l10n.ready),
                         ),
                       if (status == 'ready')
                         FilledButton(
-                          onPressed: () =>
-                              _setStatus(o['id'] as String, 'completed'),
-                          child: const Text('Complete'),
+                          onPressed: busy ? null : () => _giveToCustomer(o),
+                          child: busy
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  orderNeedsPayment(o)
+                                      ? 'Given to customer · Pay'
+                                      : 'Given to customer',
+                                ),
                         ),
                     ],
                   ),
-                );
-              },
+                );              },
             ),
     );
   }

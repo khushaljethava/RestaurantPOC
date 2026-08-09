@@ -31,14 +31,11 @@ class MoreScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('More')),
       body: ListView(
         children: [
-          tile('Shift', Icons.schedule, '/shift'),
-          tile('Pickup board', Icons.shopping_bag_outlined, '/pickup'),
-          tile('Stock', Icons.inventory_2_outlined, '/stock'),
+          tile('Add Menu Items', Icons.inventory_2_outlined, '/stock'),
           tile('My sales', Icons.person_outline, '/mysales'),
           if (canReports) tile('Day summary', Icons.today, '/day'),
           if (canReports) tile('Verify UPI', Icons.verified_outlined, '/upi-verify'),
           if (canReports) tile('Settlement', Icons.handshake_outlined, '/settlement'),
-          tile('Held orders', Icons.pause_circle_outline, '/held'),
           tile('Notifications', Icons.notifications_outlined, '/notifications'),
           tile('Settings', Icons.settings_outlined, '/settings'),
           tile('Help', Icons.help_outline, '/help'),

@@ -19,7 +19,6 @@ import 'screens/checkout_screen.dart';
 import 'screens/day_screen.dart';
 import 'screens/device_mode_screen.dart';
 import 'screens/group_screen.dart';
-import 'screens/held_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/more_screen.dart';
@@ -31,15 +30,12 @@ import 'screens/notifications_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/open_tables_screen.dart';
 import 'screens/order_detail_screen.dart';
-import 'screens/pickup_screen.dart';
 import 'screens/pos_screen.dart';
 import 'screens/pos_search_screen.dart';
 import 'screens/receipt_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/settlement_screen.dart';
-import 'screens/shift_close_screen.dart';
-import 'screens/shift_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/stall_screen.dart';
 import 'screens/stall_settings_screen.dart';
@@ -87,8 +83,14 @@ final _routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => ShellScaffold(child: child),
         routes: [
           GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
+          GoRoute(
+            path: '/pos',
+            builder: (context, state) {
+              final table = state.uri.queryParameters['table'];
+              return PosScreen(initialTableLabel: table);
+            },
+          ),
           GoRoute(path: '/today', builder: (_, _) => const TodayScreen()),
-          GoRoute(path: '/held', builder: (_, _) => const HeldScreen()),
           GoRoute(
             path: '/settlement',
             builder: (_, _) => const SettlementScreen(),
@@ -96,16 +98,8 @@ final _routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/more', builder: (_, _) => const MoreScreen()),
         ],
       ),
-      GoRoute(
-        path: '/pos',
-        builder: (context, state) {
-          final table = state.uri.queryParameters['table'];
-          return PosScreen(initialTableLabel: table);
-        },
-      ),
       GoRoute(path: '/pos/search', builder: (_, _) => const PosSearchScreen()),
       GoRoute(path: '/stall', builder: (_, _) => const StallScreen()),
-      GoRoute(path: '/pickup', builder: (_, _) => const PickupScreen()),
       GoRoute(path: '/stock', builder: (_, _) => const StockScreen()),
       GoRoute(path: '/tables', builder: (_, _) => const OpenTablesScreen()),
       GoRoute(path: '/manage/tables', builder: (_, _) => const TablesScreen()),
@@ -115,8 +109,6 @@ final _routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/manage/group', builder: (_, _) => const GroupScreen()),
       GoRoute(path: '/reports', builder: (_, _) => const ReportsScreen()),
-      GoRoute(path: '/shift', builder: (_, _) => const ShiftScreen()),
-      GoRoute(path: '/shift/close', builder: (_, _) => const ShiftCloseScreen()),
       GoRoute(path: '/day', builder: (_, _) => const DayScreen()),
       GoRoute(path: '/upi-verify', builder: (_, _) => const UpiVerifyScreen()),
       GoRoute(path: '/mysales', builder: (_, _) => const MySalesScreen()),

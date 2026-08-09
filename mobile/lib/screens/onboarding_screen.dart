@@ -15,8 +15,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _cards = [
     ('Punch fast', 'Use search and quick codes on POS. Cart stays at the bottom.'),
-    ('Open a shift', 'Cash reconciliation needs an open shift before you sell.'),
-    ('Watch pickup', 'When stalls mark Ready, hand over from the Pickup board.'),
+    ('Watch the stall board', 'New dine-in orders show up live on the stall screen.'),
     ('Lock the phone', 'Shared counters: lock when you step away.'),
   ];
 

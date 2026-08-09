@@ -7,9 +7,9 @@ Flutter staff app (Android + iOS) for Stall Manager / ROS.
 ```bash
 flutter pub get
 flutter run \
-  --dart-define=SUPABASE_URL=https://uhmaizdntpztcozoreel.supabase.com \
+  --dart-define=SUPABASE_URL=https://uhmaizdntpztcozoreel.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVobWFpemRudHB6dGNvem9yZWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODAwNzcsImV4cCI6MjA5MDA1NjA3N30.DDfTkyx9GynsIBp3XmtpcCzuZEeCMxTO_6JC5QCC4Rk \
-  --dart-define=GOOGLE_WEB_CLIENT_ID=623493181876-un15cbg8l4i3k4nv4tpts3d8pjtcjilr.apps.googleusercontent.com
+  --dart-define=GOOGLE_WEB_CLIENT_ID=623493181876-rur8usmhh2up73m3eic7is92da6b2oh7.apps.googleusercontent.com
 ```
 
 Optional iOS client (needed for iOS Google Sign-In):
@@ -32,3 +32,11 @@ Optional iOS client (needed for iOS Google Sign-In):
 3. **App**
    - Pass `GOOGLE_WEB_CLIENT_ID` via `--dart-define` (see above).
    - Login primary CTA is **Continue with Google**; email/password is under **Use email instead**.
+
+
+
+
+flutter build appbundle --release \
+  --dart-define=SUPABASE_URL=https://uhmaizdntpztcozoreel.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVobWFpemRudHB6dGNvem9yZWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODAwNzcsImV4cCI6MjA5MDA1NjA3N30.DDfTkyx9GynsIBp3XmtpcCzuZEeCMxTO_6JC5QCC4Rk \
+  --dart-define=GOOGLE_WEB_CLIENT_ID=623493181876-rur8usmhh2up73m3eic7is92da6b2oh7.apps.googleusercontent.com

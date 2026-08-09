@@ -52,18 +52,19 @@ class CartNotifier extends Notifier<List<CartLine>> {
 
   void setQty(String stallId, String menuItemId, int qty) {
     if (qty <= 0) {
-      state = state
-          .where((e) => !(e.menuItemId == menuItemId && e.stallId == stallId))
-          .toList();
-      return;
+      state = [
+        for (final e in state)
+          if (!(e.menuItemId == menuItemId && e.stallId == stallId)) e,
+      ];
+    } else {
+      state = [
+        for (final e in state)
+          if (e.menuItemId == menuItemId && e.stallId == stallId)
+            e.copyWith(qty: qty)
+          else
+            e,
+      ];
     }
-    state = [
-      for (final e in state)
-        if (e.menuItemId == menuItemId && e.stallId == stallId)
-          e.copyWith(qty: qty)
-        else
-          e,
-    ];
     saveCartDraft(state);
   }
 
@@ -82,6 +83,7 @@ class CartNotifier extends Notifier<List<CartLine>> {
         else
           e,
     ];
+    saveCartDraft(state);
   }
 
   void clear() {

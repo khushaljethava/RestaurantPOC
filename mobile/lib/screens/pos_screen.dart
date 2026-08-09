@@ -34,21 +34,18 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   String? _menuStallId;
   List<Map<String, dynamic>> _categories = [];
   String? _categoryId; // null = All
-  var _segment = 0; // 0 recents, 1 menu, 2 code
   var _grid = false;
-  String _orderType = 'dine_in';
-  List<Map<String, dynamic>> _recents = [];
-  final _codeCtrl = TextEditingController();
-  Map<String, dynamic>? _codePreview;
-  late final TextEditingController _table;
+  /// Selected registered table label; null = no table (pay now / no table bill).
+  String? _tableLabel;
 
   @override
   void initState() {
     super.initState();
-    _table = TextEditingController(text: widget.initialTableLabel ?? '');
+    _tableLabel = widget.initialTableLabel;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final p = await SharedPreferences.getInstance();
-      _orderType = p.getString('settings_order_type') ?? 'dine_in';
+      if (!mounted) return;
       _grid = p.getBool('pos_grid') ?? false;
       await _bootstrap();
     });
@@ -56,6 +53,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   Future<void> _bootstrap() async {
     final stalls = await ref.read(menuStallsProvider.future);
+    if (!mounted) return;
     final active = ref.read(activeStallIdProvider);
     setState(() {
       _menuStallId = stalls.isEmpty
@@ -63,40 +61,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           : (stalls.any((s) => s.id == active) ? active : stalls.first.id);
     });
     await ref.read(cartProvider.notifier).restoreDraft();
+    if (!mounted) return;
     await _loadMenu();
-    await _loadRecents();
-  }
-
-  Future<void> _loadRecents() async {
-    final stallId = _menuStallId;
-    if (stallId == null) return;
-    try {
-      final rows = await Supabase.instance.client.rpc(
-        'menu_recents',
-        params: {'p_stall_id': stallId, 'p_limit': 12},
-      );
-      if (mounted) {
-        setState(() => _recents = List<Map<String, dynamic>>.from(rows as List));
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _lookupCode(String code) async {
-    if (code.isEmpty || _menuStallId == null) {
-      setState(() => _codePreview = null);
-      return;
-    }
-    try {
-      final row = await Supabase.instance.client
-          .from('menu_item')
-          .select('id, name, price, stall_id, is_available, quick_code')
-          .eq('stall_id', _menuStallId!)
-          .eq('quick_code', code)
-          .maybeSingle();
-      if (mounted) setState(() => _codePreview = row == null ? null : Map<String, dynamic>.from(row));
-    } catch (_) {
-      if (mounted) setState(() => _codePreview = null);
-    }
   }
 
   Future<void> _repeatLast() async {
@@ -137,12 +103,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   Future<void> _loadMenu() async {
     final stallId = _menuStallId;
     if (stallId == null) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
         _error = 'No active stall';
       });
       return;
     }
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -161,6 +129,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           .select('id, name')
           .eq('stall_id', stallId)
           .order('sort_order');
+      if (!mounted) return;
       setState(() {
         _menu = List<Map<String, dynamic>>.from(rows as List);
         _categories = List<Map<String, dynamic>>.from(cats as List);
@@ -169,6 +138,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = mapError(e);
         _loading = false;
@@ -200,112 +170,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         ],
       ),
     );
-    ctrl.dispose();
+    // Dialog route still detaches TextField after pop — dispose next frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) => ctrl.dispose());
     if (note == null || !mounted) return;
     ref
         .read(cartProvider.notifier)
         .setNotes(line.stallId, line.menuItemId, note);
-  }
-
-  Future<void> _hold() async {
-    if (!ref.read(isOnlineProvider)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Offline — cannot place orders')),
-      );
-      return;
-    }
-    final recordedBy = ref.read(activeStallIdProvider);
-    final cart = ref.read(cartProvider);
-    if (recordedBy == null || cart.isEmpty) return;
-
-    final stalls = cart.map((e) => e.stallId).toSet();
-    if (stalls.length > 1 || stalls.single != recordedBy) {
-      setState(() => _error = 'Hold only supports items from your own stall');
-      return;
-    }
-
-    final tagCtrl = TextEditingController();
-    final tag = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hold tag (optional)'),
-        content: TextField(
-          controller: tagCtrl,
-          decoration: const InputDecoration(hintText: 'e.g. VIP / wait'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, tagCtrl.text.trim()),
-            child: const Text('Hold'),
-          ),
-        ],
-      ),
-    );
-    if (tag == null) return;
-
-    setState(() => _error = null);
-    try {
-      final orderId = await Supabase.instance.client.rpc(
-        'create_order',
-        params: {
-          'p_stall_id': recordedBy,
-          'p_recorded_by_stall_id': recordedBy,
-          'p_idempotency_key': const Uuid().v4(),
-          'p_status': 'held',
-          'p_items': ref
-              .read(cartProvider.notifier)
-              .toRpcItemsByStall()[recordedBy],
-          'p_table_label': _table.text.trim().isEmpty
-              ? null
-              : _table.text.trim(),
-        },
-      );
-      if (tag.isNotEmpty) {
-        await Supabase.instance.client
-            .from('orders')
-            .update({'hold_tag': tag})
-            .eq('id', orderId);
-      }
-      ref.read(cartProvider.notifier).clear();
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Held')));
-        context.pop();
-      }
-    } catch (e) {
-      setState(() => _error = mapError(e));
-    }
-  }
-
-  Future<void> _ensureShift() async {
-    final shift = await ref.read(openShiftProvider.future);
-    if (shift != null) return;
-    if (!mounted) return;
-    final open = await showModalBottomSheet<bool>(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Open shift to start selling',
-                style: Theme.of(ctx).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Open shift'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (open == true && mounted) {
-      await context.push('/shift');
-      ref.invalidate(openShiftProvider);
-    }
   }
 
   Future<void> _placeAndCheckout() async {
@@ -318,13 +188,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final recordedBy = ref.read(activeStallIdProvider);
     final cart = ref.read(cartProvider);
     if (recordedBy == null || cart.isEmpty) return;
-
-    await _ensureShift();
-    final shift = await ref.read(openShiftProvider.future);
-    if (shift == null) {
-      setState(() => _error = 'Open shift required');
-      return;
-    }
 
     // Place-time: closed stalls + unavailable items.
     final stallIds = {for (final l in cart) l.stallId};
@@ -388,7 +251,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     }
 
     setState(() => _error = null);
-    final tableLabel = _table.text.trim().isEmpty ? null : _table.text.trim();
+    final tableLabel = _tableLabel;
     try {
       final byStall = ref.read(cartProvider.notifier).toRpcItemsByStall();
       final orderIds = <String>[];
@@ -426,30 +289,16 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           'p_order_ids': orderIds,
           'p_idempotency_key': const Uuid().v4(),
           'p_table_label': null,
-          'p_order_type': _orderType,
+          'p_order_type': 'dine_in',
           'p_shift_id': shift?.id,
         },
       );
-      if (_orderType == 'takeaway' || _orderType == 'parcel') {
-        try {
-          await Supabase.instance.client.rpc(
-            'add_packaging_charge',
-            params: {'p_bill_id': billId},
-          );
-        } catch (_) {}
-      }
       if (!mounted) return;
       context.push('/checkout/$billId');
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = mapError(e));
     }
-  }
-
-  @override
-  void dispose() {
-    _table.dispose();
-    _codeCtrl.dispose();
-    super.dispose();
   }
 
   @override
@@ -495,32 +344,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           ? const RosLoading()
           : Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      for (final t in ['dine_in', 'takeaway', 'parcel'])
-                        ChoiceChip(
-                          label: Text(t.replaceAll('_', '-')),
-                          selected: _orderType == t,
-                          onSelected: (_) => setState(() => _orderType = t),
-                        ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: SegmentedButton<int>(
-                    segments: const [
-                      ButtonSegment(value: 0, label: Text('Recents')),
-                      ButtonSegment(value: 1, label: Text('Menu')),
-                      ButtonSegment(value: 2, label: Text('Code')),
-                    ],
-                    selected: {_segment},
-                    onSelectionChanged: (s) => setState(() => _segment = s.first),
-                  ),
-                ),
                 if (stalls.length > 1)
                   Container(
                     color: RosColors.surfaceContainerLow,
@@ -561,29 +384,76 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     ),
                   ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: TextField(
-                    controller: _table,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: InputDecorator(
+                    isEmpty: _tableLabel == null,
                     decoration: InputDecoration(
-                      labelText: 'Table label (optional)',
-                      border: const UnderlineInputBorder(),
-                      enabledBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: RosColors.outlineVariant),
+                      labelText: 'Table',
+                      filled: true,
+                      fillColor: Colors.white,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      labelStyle: const TextStyle(
+                        color: RosColors.onSurfaceVariant,
                       ),
-                      // Registered tables are a convenience, not a constraint:
-                      // the field stays free text so a walk-in table nobody
-                      // registered yet doesn't block an order.
-                      suffixIcon: tableLabels.isEmpty
-                          ? null
-                          : PopupMenuButton<String>(
-                              icon: const Icon(Icons.table_restaurant),
-                              tooltip: 'Pick a table',
-                              onSelected: (l) => _table.text = l,
-                              itemBuilder: (_) => [
-                                for (final l in tableLabels)
-                                  PopupMenuItem(value: l, child: Text(l)),
-                              ],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: RosColors.outlineVariant,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: RosColors.outlineVariant,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: RosColors.primary,
+                          width: 1.6,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        isExpanded: true,
+                        isDense: true,
+                        value: (_tableLabel != null &&
+                                (tableLabels.contains(_tableLabel) ||
+                                    _tableLabel ==
+                                        widget.initialTableLabel))
+                            ? _tableLabel
+                            : null,
+                        dropdownColor: Colors.white,
+                        style: const TextStyle(
+                          color: RosColors.onSurface,
+                          fontSize: 16,
+                        ),
+                        hint: const Text(
+                          'No table',
+                          style: TextStyle(color: RosColors.onSurfaceVariant),
+                        ),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('No table'),
+                          ),
+                          for (final l in tableLabels)
+                            DropdownMenuItem<String?>(
+                              value: l,
+                              child: Text(l),
                             ),
+                          if (_tableLabel != null &&
+                              !tableLabels.contains(_tableLabel))
+                            DropdownMenuItem<String?>(
+                              value: _tableLabel,
+                              child: Text(_tableLabel!),
+                            ),
+                        ],
+                        onChanged: (v) => setState(() => _tableLabel = v),
+                      ),
                     ),
                   ),
                 ),
@@ -626,58 +496,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       ],
                     ),
                   ),
-                if (_segment == 2)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _codeCtrl,
-                          keyboardType: TextInputType.number,
-                          autofocus: true,
-                          decoration: const InputDecoration(labelText: 'Quick code'),
-                          onChanged: _lookupCode,
-                          onSubmitted: (_) {
-                            final m = _codePreview;
-                            if (m == null || m['is_available'] != true) return;
-                            ref.read(cartProvider.notifier).add(CartLine(
-                              stallId: m['stall_id'] as String,
-                              menuItemId: m['id'] as String,
-                              name: m['name'] as String,
-                              unitPrice: Money.fromRupees(m['price'] as num),
-                              qty: 1,
-                            ));
-                            _codeCtrl.clear();
-                            setState(() => _codePreview = null);
-                          },
-                        ),
-                        if (_codePreview != null)
-                          ListTile(
-                            title: Text(_codePreview!['name'] as String? ?? ''),
-                            subtitle: Text(Money.fromRupees(_codePreview!['price'] as num).format()),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () {
-                                final m = _codePreview!;
-                                ref.read(cartProvider.notifier).add(CartLine(
-                                  stallId: m['stall_id'] as String,
-                                  menuItemId: m['id'] as String,
-                                  name: m['name'] as String,
-                                  unitPrice: Money.fromRupees(m['price'] as num),
-                                  qty: 1,
-                                ));
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
-                  )
-                else
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final menuItems =
-                          _segment == 0 ? _recents : visibleMenu;
+                      final menuItems = visibleMenu;
                       void addItem(Map<String, dynamic> item) {
                         final price = Money.fromRupees(
                           (item['price'] as num?) ?? 0,
@@ -694,6 +516,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                 qty: 1,
                               ),
                             );
+                      }
+
+                      if (menuItems.isEmpty) {
+                        return const RosEmpty(
+                          message:
+                              'No menu items — add some under Menu / Stock',
+                        );
                       }
 
                       if (_grid) {
@@ -904,26 +733,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _hold,
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(56),
-                                    ),
-                                    child: Text(l10n.hold),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: FilledButton(
-                                    onPressed: _placeAndCheckout,
-                                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
-                                    child: Text(l10n.placeOrder),
-                                  ),
-                                ),
-                              ],
+                            FilledButton(
+                              onPressed: _placeAndCheckout,
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(56),
+                              ),
+                              child: Text(l10n.placeOrder),
                             ),
                           ],
                         ),
