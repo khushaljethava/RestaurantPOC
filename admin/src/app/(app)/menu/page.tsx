@@ -155,14 +155,16 @@ export default async function MenuPage() {
 
           <section>
             <SectionTitle>Items</SectionTitle>
-            {mine.length > 0 && (
-              <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {mine.map((i) => (
-                  <a
-                    key={i.id}
-                    href={`#item-${i.id}`}
-                    className="block overflow-hidden rounded-lg border border-border bg-surface-container-low shadow-card transition hover:border-surface-tint"
-                  >
+            <MenuSearch>
+              {mine.length > 0 && (
+                <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {mine.map((i) => (
+                    <a
+                      key={i.id}
+                      href={`#item-${i.id}`}
+                      data-search={`${i.name} ${i.quick_code ?? ''}`}
+                      className="block overflow-hidden rounded-lg border border-border bg-surface-container-low shadow-card transition hover:border-surface-tint"
+                    >
                     {i.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -182,10 +184,9 @@ export default async function MenuPage() {
                       </p>
                     </div>
                   </a>
-                ))}
-              </div>
-            )}
-            <MenuSearch>
+                  ))}
+                </div>
+              )}
               {mine.map((i) => {
                 const gallery = imagesByItem.get(i.id) ?? [];
                 return (

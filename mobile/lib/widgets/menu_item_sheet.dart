@@ -117,12 +117,17 @@ class _MenuItemSheetState extends State<MenuItemSheet> {
     final url =
         '${storage.getPublicUrl(path)}?v=${DateTime.now().millisecondsSinceEpoch}';
     final sortOrder = await _nextSortOrder(itemId);
-    await Supabase.instance.client.from('menu_item_image').insert({
-      'id': imageId,
-      'menu_item_id': itemId,
-      'url': url,
-      'sort_order': sortOrder,
-    });
+    try {
+      await Supabase.instance.client.from('menu_item_image').insert({
+        'id': imageId,
+        'menu_item_id': itemId,
+        'url': url,
+        'sort_order': sortOrder,
+      });
+    } catch (e) {
+      await storage.remove([path]);
+      rethrow;
+    }
   }
 
   Future<void> _deleteImage(String imageId) async {
