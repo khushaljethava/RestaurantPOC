@@ -244,11 +244,7 @@ export async function removeItemImage(imageId: string, itemId: string) {
   revalidatePath('/menu');
 }
 
-// Task 3 will wire page to removeItemImage(imageId, itemId)
 export const uploadItemImage = addItemImage;
-export async function clearItemImage(_itemId: string) {
-  throw new Error('use removeItemImage(imageId, itemId) — gallery UI pending Task 3');
-}
 
 // --- Tables ---------------------------------------------------------------
 // Lives here rather than in settings/: /settings is owner-only in the sidebar,
