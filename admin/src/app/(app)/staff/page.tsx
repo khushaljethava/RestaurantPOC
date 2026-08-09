@@ -1,8 +1,12 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveStall } from '@/lib/active-stall';
-import { createStallInvite } from '../group/actions';
-import { revokeInvite, changeRole, removeMember } from './actions';
+import {
+  generateInvite,
+  revokeInvite,
+  changeRole,
+  removeMember,
+} from './actions';
 import { RedeemInviteForm } from './redeem-form';
 import { InviteShare } from './invite-share';
 import {
@@ -19,12 +23,15 @@ import {
 } from '@/components/ui';
 
 /**
- * Called by: App Router /staff.
- * Exists: admin/src/app/(app)/staff/page.tsx (Glob confirmed).
- * Data: staff_membership {id,stall_id,user_id,role}, stall_invite {code,role,revoked_at}.
- * User: "Implement the plan as specified, it is attached for your reference. Do NOT edit the plan file itself."
+ * Staff invites and membership for the active stall.
+ * Court join is mobile-only; this page is stall people only.
  */
-export default async function StaffPage() {
+export default async function StaffPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: actionError } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -55,6 +62,10 @@ export default async function StaffPage() {
     <div className="space-y-6">
       <PageTitle subtitle="Invite codes and stall members">Staff</PageTitle>
 
+      {actionError ? (
+        <Card className="border-error text-sm text-error">{actionError}</Card>
+      ) : null}
+
       <RedeemInviteForm />
 
       <section>
@@ -62,21 +73,15 @@ export default async function StaffPage() {
           <SectionTitle className="mb-0">Invite codes</SectionTitle>
           {(isOwner || isManager) && (
             <div className="flex gap-2">
-              <form
-                action={async () => {
-                  'use server';
-                  await createStallInvite(stallId, 'staff');
-                }}
-              >
+              <form action={generateInvite}>
+                <input type="hidden" name="stall_id" value={stallId} />
+                <input type="hidden" name="role" value="staff" />
                 <Btn type="submit">Generate staff invite</Btn>
               </form>
               {isOwner && (
-                <form
-                  action={async () => {
-                    'use server';
-                    await createStallInvite(stallId, 'manager');
-                  }}
-                >
+                <form action={generateInvite}>
+                  <input type="hidden" name="stall_id" value={stallId} />
+                  <input type="hidden" name="role" value="manager" />
                   <Btn type="submit" variant="outlined">
                     Generate manager invite
                   </Btn>
@@ -95,12 +100,7 @@ export default async function StaffPage() {
               <div className="flex items-center gap-1">
                 <InviteShare code={i.code} />
                 {isOwner && (
-                  <form
-                    action={async () => {
-                      'use server';
-                      await revokeInvite(i.code);
-                    }}
-                  >
+                  <form action={revokeInvite.bind(null, i.code)}>
                     <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
                       Revoke
                     </Btn>
@@ -134,7 +134,10 @@ export default async function StaffPage() {
               {memberships?.map((m) => (
                 <Tr key={m.id}>
                   <Td>
-                    <Link href={`/staff/${m.id}`} className="font-mono text-xs text-surface-tint hover:underline">
+                    <Link
+                      href={`/staff/${m.id}`}
+                      className="font-mono text-xs text-surface-tint hover:underline"
+                    >
                       {m.user_id}
                     </Link>
                   </Td>
@@ -168,12 +171,7 @@ export default async function StaffPage() {
                         </Btn>
                       </Link>
                       {isOwner && (
-                        <form
-                          action={async () => {
-                            'use server';
-                            await removeMember(m.id);
-                          }}
-                        >
+                        <form action={removeMember.bind(null, m.id)}>
                           <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
                             Remove
                           </Btn>
