@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import {
   createCourtInvite,
+  deleteCourt,
   removeStallFromCourt,
   renameCourt,
   revokeCourtInvite,
@@ -145,6 +146,23 @@ export default async function CourtPage({ params }: { params: Promise<{ id: stri
             />
             <Btn type="submit" variant="outlined">
               Rename
+            </Btn>
+          </form>
+        </Card>
+        <Card className="mt-3 space-y-2">
+          <p className="text-sm text-on-surface-variant">
+            Delete this food court. Member stalls become standalone; their menus and
+            orders stay. Invites are revoked.
+          </p>
+          <form
+            action={async () => {
+              'use server';
+              await deleteCourt(id);
+              redirect('/courts');
+            }}
+          >
+            <Btn type="submit" variant="danger">
+              Remove court
             </Btn>
           </form>
         </Card>

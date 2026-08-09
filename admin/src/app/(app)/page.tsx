@@ -92,7 +92,7 @@ export default async function DashboardPage() {
     hasStaffOrInvite: false,
   };
 
-  let attention = { upi: 0, upiCount: 0, openShifts: 0, unavailable: 0 };
+  let attention = { upi: 0, upiCount: 0, unavailable: 0 };
 
   if (stallId) {
     const stall = (stalls ?? []).find((s) => s.id === stallId);
@@ -102,7 +102,6 @@ export default async function DashboardPage() {
       { count: memberCount },
       { count: inviteCount },
       { data: billIds },
-      { count: openShifts },
       { count: unavailable },
     ] = await Promise.all([
       supabase.from('category').select('id', { count: 'exact', head: true }).eq('stall_id', stallId),
@@ -121,11 +120,6 @@ export default async function DashboardPage() {
         .eq('stall_id', stallId)
         .is('revoked_at', null),
       supabase.from('bill').select('id').eq('collected_by_stall_id', stallId),
-      supabase
-        .from('shifts')
-        .select('id', { count: 'exact', head: true })
-        .eq('stall_id', stallId)
-        .is('closed_at', null),
       supabase
         .from('menu_item')
         .select('id', { count: 'exact', head: true })
@@ -149,7 +143,6 @@ export default async function DashboardPage() {
       attention.upi = (unverified ?? []).reduce((s, p) => s + Number(p.amount), 0);
       attention.upiCount = unverified?.length ?? 0;
     }
-    attention.openShifts = openShifts ?? 0;
     attention.unavailable = unavailable ?? 0;
   }
 
@@ -204,11 +197,6 @@ export default async function DashboardPage() {
             <li>
               <Link href="/payments/verify" className="text-surface-tint hover:underline">
                 Unverified UPI {formatInr(attention.upi)} ({attention.upiCount})
-              </Link>
-            </li>
-            <li>
-              <Link href="/shifts" className="text-surface-tint hover:underline">
-                Open shifts {attention.openShifts}
               </Link>
             </li>
             <li>

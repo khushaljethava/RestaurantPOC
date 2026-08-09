@@ -40,15 +40,8 @@ export function SetupChecklist({ flags }: { flags: ChecklistFlags }) {
     { ok: flags.hasFiveItems, label: 'Add 5 menu items', href: '/menu' },
     { ok: flags.hasUpi, label: 'Set UPI VPA', href: '/settings' },
     { ok: flags.hasStaffOrInvite, label: 'Invite one staff member', href: '/staff' },
-    {
-      ok: false,
-      label: 'Open your first shift (in the mobile app)',
-      href: null as string | null,
-      optional: true,
-    },
   ];
-  const required = steps.filter((s) => !('optional' in s && s.optional));
-  const doneCount = required.filter((s) => s.ok).length;
+  const required = steps.filter((s) => !('optional' in s && s.optional));  const doneCount = required.filter((s) => s.ok).length;
   const pct = Math.round((doneCount / required.length) * 100);
 
   function dismiss() {

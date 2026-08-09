@@ -34,7 +34,7 @@ export default async function ExceptionsPage() {
     .lt('created_at', to);
   const orderIds = (todayOrders ?? []).map((o) => o.id);
 
-  const [{ data: unverified }, { data: voids }, { data: refunds }, { data: openShifts }] =
+  const [{ data: unverified }, { data: voids }, { data: refunds }] =
     await Promise.all([
       billIds.length
         ? supabase
@@ -61,11 +61,6 @@ export default async function ExceptionsPage() {
             .lt('created_at', to)
             .limit(30)
         : Promise.resolve({ data: [] as never[] }),
-      supabase
-        .from('shifts')
-        .select('id, opened_at')
-        .eq('stall_id', active.stall_id)
-        .is('closed_at', null),
     ]);
 
   const upiTotal = (unverified ?? []).reduce((s, p) => s + Number(p.amount), 0);
@@ -74,19 +69,12 @@ export default async function ExceptionsPage() {
     <div className="space-y-6">
       <PageTitle subtitle="Money leaks and open loops for today">Exceptions</PageTitle>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <p className="text-xs text-on-surface-variant">Unverified UPI</p>
           <p className="text-xl font-semibold tabular-nums">{formatInr(upiTotal)}</p>
           <Link href="/payments/verify" className="text-xs text-surface-tint hover:underline">
             Verify queue →
-          </Link>
-        </Card>
-        <Card>
-          <p className="text-xs text-on-surface-variant">Open shifts</p>
-          <p className="text-xl font-semibold tabular-nums">{(openShifts ?? []).length}</p>
-          <Link href="/shifts" className="text-xs text-surface-tint hover:underline">
-            Shifts →
           </Link>
         </Card>
         <Card>

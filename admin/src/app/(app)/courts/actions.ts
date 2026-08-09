@@ -60,3 +60,14 @@ export async function revokeCourtInvite(groupId: string, code: string) {
   if (error) throw new Error(error.message);
   revalidatePath(`/courts/${groupId}`);
 }
+
+export async function deleteCourt(groupId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('delete_court', {
+    p_group_id: groupId,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath('/courts');
+  revalidatePath(`/courts/${groupId}`);
+  revalidatePath('/group');
+}

@@ -16,7 +16,6 @@ const NAV = [
   { href: '/orders', label: 'Orders', icon: 'receipt_long', stallOnly: true },
   { href: '/bills', label: 'Bills', icon: 'receipt', stallOnly: true },
   { href: '/settlement', label: 'Settlement', icon: 'payments', stallOnly: true },
-  { href: '/shifts', label: 'Shifts', icon: 'schedule', stallOnly: true },
   { href: '/payments/verify', label: 'UPI verify', icon: 'verified', stallOnly: true },
   { href: '/exceptions', label: 'Exceptions', icon: 'warning', stallOnly: true },
   { href: '/reports', label: 'Reports', icon: 'assessment', stallOnly: true },
