@@ -7,8 +7,8 @@ import { StallSwitcher } from '@/app/(app)/stall-switcher';
 
 /**
  * `stallOnly` entries need an active stall and are hidden from an operator who
- * owns none. `/courts` is the operator's own surface — distinct from `/group`,
- * which is the tenant view of the one court the active stall belongs to.
+ * owns none. `/courts` is always visible so any admin can create a food court;
+ * `/group` is the tenant view of the court the active stall belongs to.
  */
 const NAV = [
   { href: '/', label: 'Dashboard', icon: 'dashboard', stallOnly: true },
@@ -23,7 +23,7 @@ const NAV = [
   { href: '/staff', label: 'Staff', icon: 'badge', stallOnly: true },
   { href: '/group', label: 'Court', icon: 'storefront', stallOnly: true },
   { href: '/audit', label: 'Audit', icon: 'history', manageOnly: true, stallOnly: true },
-  { href: '/courts', label: 'Food Courts', icon: 'apartment', operatorOnly: true },
+  { href: '/courts', label: 'Food Courts', icon: 'apartment' },
   { href: '/settings', label: 'Settings', icon: 'settings', manageOnly: true, stallOnly: true },
 ] as const;
 
@@ -40,7 +40,6 @@ export function ShellSidebar({
   role,
   isOwner,
   hasStalls,
-  isOperator,
 }: {
   stalls: { id: string; name: string }[];
   activeId: string;
@@ -48,7 +47,7 @@ export function ShellSidebar({
   role: string;
   isOwner: boolean;
   hasStalls: boolean;
-  isOperator: boolean;
+  isOperator?: boolean;
 }) {
   const pathname = usePathname();
   const roleLabel =
@@ -84,7 +83,6 @@ export function ShellSidebar({
             if ('ownerOnly' in item && item.ownerOnly && !isOwner) return false;
             if ('manageOnly' in item && item.manageOnly && !(isOwner || role === 'manager')) return false;
             if ('stallOnly' in item && item.stallOnly && !hasStalls) return false;
-            if ('operatorOnly' in item && item.operatorOnly && !isOperator) return false;
             return true;
           }).map(
             (item) => {

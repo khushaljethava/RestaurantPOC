@@ -11,7 +11,12 @@ import { Btn, Card, EmptyState, Field, PageTitle, SectionTitle } from '@/compone
  * Data: food_court_membership {food_court_id, role}, food_court {id, name},
  * stall {id, group_id} for tenant counts.
  */
-export default async function CourtsPage() {
+export default async function CourtsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const supabase = await createClient();
 
   const { data: memberships } = await supabase
@@ -35,6 +40,12 @@ export default async function CourtsPage() {
     <div className="space-y-6">
       <PageTitle subtitle="Food courts you operate">Food Courts</PageTitle>
 
+      {error && (
+        <p className="rounded-lg bg-error-container px-3 py-2 text-sm text-on-error-container">
+          {error}
+        </p>
+      )}
+
       <div className="space-y-2">
         {(courts ?? []).map((c) => (
           <Link key={c.id} href={`/courts/${c.id}`} className="block">
@@ -57,13 +68,7 @@ export default async function CourtsPage() {
 
       <Card>
         <SectionTitle>Create a food court</SectionTitle>
-        <form
-          action={async (formData: FormData) => {
-            'use server';
-            await createCourt(String(formData.get('name')));
-          }}
-          className="flex gap-2"
-        >
+        <form action={createCourt} className="flex gap-2">
           <Field name="name" placeholder="Food court name" required className="flex-1" />
           <Btn type="submit">Create</Btn>
         </form>

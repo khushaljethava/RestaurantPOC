@@ -13,12 +13,17 @@ import { createClient } from '@/lib/supabase/server';
  * surface errors and revalidate; they are not a security boundary.
  */
 
-export async function createCourt(name: string) {
+export async function createCourt(formData: FormData) {
+  const name = String(formData.get('name') ?? '').trim();
+  if (!name) redirect('/courts?error=' + encodeURIComponent('Name is required'));
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('create_court', { p_name: name });
-  if (error) throw new Error(error.message);
+  if (error) {
+    redirect(`/courts?error=${encodeURIComponent(error.message)}`);
+  }
   revalidatePath('/courts');
-  return data as string;
+  redirect(`/courts/${data as string}`);
 }
 
 export async function renameCourt(groupId: string, name: string) {
