@@ -16,6 +16,8 @@ type Mode = 'stall' | 'court';
 export default function OnboardingPage() {
   const [mode, setMode] = useState<Mode | null>(null);
   const [name, setName] = useState('');
+  const [timezone, setTimezone] = useState('Asia/Kolkata');
+  const [currency, setCurrency] = useState('INR');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
@@ -24,14 +26,31 @@ export default function OnboardingPage() {
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const { error } =
-      mode === 'court'
-        ? await supabase.rpc('create_court', { p_name: name })
-        : await supabase.rpc('register_stall', { p_name: name });
+    if (mode === 'court') {
+      const { error } = await supabase.rpc('create_court', { p_name: name });
+      setBusy(false);
+      if (error) return setError(error.message);
+      router.push('/courts');
+      router.refresh();
+      return;
+    }
+    const { data: stallId, error } = await supabase.rpc('register_stall', { p_name: name });
+    if (error) {
+      setBusy(false);
+      return setError(error.message);
+    }
+    if (stallId) {
+      const { error: updErr } = await supabase
+        .from('stall')
+        .update({ timezone, currency })
+        .eq('id', stallId);
+      if (updErr) {
+        setBusy(false);
+        return setError(updErr.message);
+      }
+    }
     setBusy(false);
-    if (error) return setError(error.message);
-    // An operator has no stall, so the stall dashboard would be empty.
-    router.push(mode === 'court' ? '/courts' : '/');
+    router.push('/');
     router.refresh();
   }
 
@@ -77,6 +96,20 @@ export default function OnboardingPage() {
                 onChange={(e) => setName(e.target.value)}
                 autoFocus
               />
+              {mode === 'stall' && (
+                <>
+                  <Field
+                    placeholder="Timezone"
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                  />
+                  <Field
+                    placeholder="Currency"
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                  />
+                </>
+              )}
               {error && <p className="text-sm text-error">{error}</p>}
               <Btn
                 type="button"

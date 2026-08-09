@@ -10,6 +10,20 @@ const supabaseUrl = String.fromEnvironment(
 
 const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
+/// Web OAuth client ID from Google Cloud (also configured in Supabase Google provider).
+/// Required as `serverClientId` so the ID token audience matches Supabase.
+const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+
+/// Optional iOS OAuth client ID. Android resolves via package name + SHA-1.
+const googleIosClientId = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
+
+/// Public admin origin for /r/[token] receipt links.
+const receiptSiteUrl = String.fromEnvironment(
+  'RECEIPT_SITE_URL',
+  // Same production host as admin NEXT_PUBLIC_SITE_URL (.env.example).
+  defaultValue: 'https://restaurant-poc-eight.vercel.app',
+);
+
 /// User-facing hint when dart-defines are wrong. Null if config looks ok.
 String? get supabaseConfigHint {
   if (supabaseAnonKey.isEmpty) {
@@ -18,6 +32,17 @@ String? get supabaseConfigHint {
   if (!supabaseAnonKey.startsWith('eyJ')) {
     return 'Anon key looks truncated (should start with eyJ). '
         'Check --dart-define=SUPABASE_ANON_KEY=...';
+  }
+  return null;
+}
+
+/// Null when Google native sign-in can be attempted.
+String? get googleConfigHint {
+  if (googleWebClientId.isEmpty) {
+    return 'Missing GOOGLE_WEB_CLIENT_ID. Pass --dart-define=GOOGLE_WEB_CLIENT_ID=...';
+  }
+  if (!googleWebClientId.endsWith('.apps.googleusercontent.com')) {
+    return 'GOOGLE_WEB_CLIENT_ID looks wrong (expected …apps.googleusercontent.com).';
   }
   return null;
 }

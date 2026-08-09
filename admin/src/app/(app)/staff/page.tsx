@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveStall } from '@/lib/active-stall';
 import { createStallInvite } from '../group/actions';
@@ -37,6 +38,7 @@ export default async function StaffPage() {
   const active = await resolveActiveStall(myMemberships);
   const stallId = active.stall_id;
   const isOwner = active.role === 'owner';
+  const isManager = active.role === 'manager';
 
   const { data: memberships } = await supabase
     .from('staff_membership')
@@ -58,7 +60,7 @@ export default async function StaffPage() {
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <SectionTitle className="mb-0">Invite codes</SectionTitle>
-          {isOwner && (
+          {(isOwner || isManager) && (
             <div className="flex gap-2">
               <form
                 action={async () => {
@@ -68,16 +70,18 @@ export default async function StaffPage() {
               >
                 <Btn type="submit">Generate staff invite</Btn>
               </form>
-              <form
-                action={async () => {
-                  'use server';
-                  await createStallInvite(stallId, 'manager');
-                }}
-              >
-                <Btn type="submit" variant="outlined">
-                  Generate manager invite
-                </Btn>
-              </form>
+              {isOwner && (
+                <form
+                  action={async () => {
+                    'use server';
+                    await createStallInvite(stallId, 'manager');
+                  }}
+                >
+                  <Btn type="submit" variant="outlined">
+                    Generate manager invite
+                  </Btn>
+                </form>
+              )}
             </div>
           )}
         </div>
@@ -130,7 +134,9 @@ export default async function StaffPage() {
               {memberships?.map((m) => (
                 <Tr key={m.id}>
                   <Td>
-                    <span className="font-mono text-xs">{m.user_id}</span>
+                    <Link href={`/staff/${m.id}`} className="font-mono text-xs text-surface-tint hover:underline">
+                      {m.user_id}
+                    </Link>
                   </Td>
                   <Td>
                     {isOwner ? (
@@ -155,18 +161,25 @@ export default async function StaffPage() {
                     )}
                   </Td>
                   <Td className="text-right">
-                    {isOwner && (
-                      <form
-                        action={async () => {
-                          'use server';
-                          await removeMember(m.id);
-                        }}
-                      >
-                        <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
-                          Remove
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/staff/${m.id}`}>
+                        <Btn type="button" variant="text" className="h-9 px-2 text-xs">
+                          Open
                         </Btn>
-                      </form>
-                    )}
+                      </Link>
+                      {isOwner && (
+                        <form
+                          action={async () => {
+                            'use server';
+                            await removeMember(m.id);
+                          }}
+                        >
+                          <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
+                            Remove
+                          </Btn>
+                        </form>
+                      )}
+                    </div>
                   </Td>
                 </Tr>
               ))}

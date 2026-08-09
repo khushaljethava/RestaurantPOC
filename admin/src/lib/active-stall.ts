@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 export type Membership = { stall_id: string; role: string };
 
 /** Resolve active stall from cookie, falling back to first membership.
- * Gate: called from layout + menu/staff/group/settings. Glob: new file.
- * User: implement remaining v1 gaps.
+ * Callers: layout + menu/staff/group/settings.
+ * User: Implement the plan as specified, it is attached for your reference.
  */
 export async function resolveActiveStall(
   memberships: Membership[]
@@ -19,18 +19,31 @@ export async function resolveActiveStall(
   return match ?? memberships[0];
 }
 
-/** IANA timezone of the active stall — the day boundary reports must use.
- * Falls back to Asia/Kolkata, the column default.
- */
-export async function activeStallTimezone(): Promise<string> {
+export type StallDayContext = {
+  timezone: string;
+  dayStartMinutes: number;
+};
+
+/** Timezone + business-day offset for the active stall. */
+export async function activeStallDayContext(): Promise<StallDayContext> {
   const supabase = await createClient();
   const jar = await cookies();
   const cookieId = jar.get('active_stall_id')?.value;
   const { data } = await supabase
     .from('stall')
-    .select('id, timezone')
+    .select('id, timezone, day_start_minutes')
     .order('created_at');
   const rows = data ?? [];
   const match = rows.find((s: { id: string }) => s.id === cookieId) ?? rows[0];
-  return match?.timezone ?? 'Asia/Kolkata';
+  return {
+    timezone: match?.timezone ?? 'Asia/Kolkata',
+    dayStartMinutes: Number(match?.day_start_minutes ?? 0),
+  };
+}
+
+/** IANA timezone of the active stall — the day boundary reports must use.
+ * Falls back to Asia/Kolkata, the column default.
+ */
+export async function activeStallTimezone(): Promise<string> {
+  return (await activeStallDayContext()).timezone;
 }

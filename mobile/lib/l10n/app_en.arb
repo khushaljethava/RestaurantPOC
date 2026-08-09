@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "Stall Manager",
+  "newOrder": "New order",
+  "placeOrder": "Place order",
+  "hold": "Hold",
+  "checkout": "Checkout",
+  "openShift": "Open shift",
+  "stallOrders": "Stall orders",
+  "acknowledge": "Acknowledge",
+  "ready": "Ready",
+  "pickupBoard": "Pickup board",
+  "offlineWritesPaused": "Offline — writes paused; cart draft OK",
+  "retry": "Retry"
+}

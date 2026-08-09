@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/supabase/realtime_channels.dart';
+import '../l10n/app_localizations.dart';
 import '../services/errors.dart';
+import '../services/telemetry.dart';
 import '../providers/connectivity.dart';
 import '../providers/stall.dart';
 import '../widgets/ros_ui.dart';
@@ -18,8 +24,11 @@ class StallScreen extends ConsumerStatefulWidget {
 
 class _StallScreenState extends ConsumerState<StallScreen> {
   List<Map<String, dynamic>> _orders = [];
-  RealtimeChannel? _channel;
   String? _error;
+  Timer? _alarm;
+  Timer? _tick;
+  String _conn = 'Connecting…';
+  DateTime _lastEvent = DateTime.now();
 
   @override
   void initState() {
@@ -31,6 +40,13 @@ class _StallScreenState extends ConsumerState<StallScreen> {
       }
       _load();
       _subscribe();
+      _alarm = Timer.periodic(const Duration(seconds: 30), (_) {
+        final unacked = _orders.any(
+          (o) => o['status'] == 'pending' && o['acknowledged_at'] == null,
+        );
+        if (unacked) HapticFeedback.heavyImpact();
+      });
+      _tick = Timer.periodic(const Duration(seconds: 20), (_) => _heartbeat());
     });
   }
 
@@ -50,6 +66,8 @@ class _StallScreenState extends ConsumerState<StallScreen> {
         setState(() {
           _orders = List<Map<String, dynamic>>.from(rows as List);
           _error = null;
+          _lastEvent = DateTime.now();
+          _conn = 'Live';
         });
       }
     } catch (e) {
@@ -60,20 +78,24 @@ class _StallScreenState extends ConsumerState<StallScreen> {
   void _subscribe() {
     final stallId = ref.read(activeStallIdProvider);
     if (stallId == null) return;
-    _channel = Supabase.instance.client
-        .channel('stall-orders-$stallId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'orders',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'stall_id',
-            value: stallId,
-          ),
-          callback: (_) => _load(),
-        )
-        .subscribe();
+    realtimeManager.watchStallOrders(
+      stallId: stallId,
+      onChange: () {
+        _lastEvent = DateTime.now();
+        if (mounted) {
+          setState(() => _conn = 'Live');
+          _load();
+        }
+      },
+    );
+  }
+
+  String _age(dynamic createdAt) {
+    if (createdAt == null) return '';
+    final t = DateTime.tryParse(createdAt.toString());
+    if (t == null) return '';
+    final m = DateTime.now().difference(t.toLocal()).inMinutes;
+    return '$m min';
   }
 
   Future<void> _acknowledge(String id) async {
@@ -109,20 +131,59 @@ class _StallScreenState extends ConsumerState<StallScreen> {
     }
   }
 
+  Future<void> _heartbeat() async {
+    final stallId = ref.read(activeStallIdProvider);
+    if (stallId == null) return;
+    try {
+      final rows = await Supabase.instance.client
+          .from('orders')
+          .select('id')
+          .eq('stall_id', stallId)
+          .eq('status', 'pending');
+      final remote = (rows as List).length;
+      final local = _orders.where((o) => o['status'] == 'pending').length;
+      if (remote != local) {
+        await _load();
+      }
+      final age = DateTime.now().difference(_lastEvent);
+      if (mounted) {
+        setState(() {
+          _conn = age.inSeconds < 45
+              ? 'Live'
+              : age.inSeconds < 120
+                  ? 'Reconnecting…'
+                  : 'Stale — pull to refresh';
+        });
+        if (age.inSeconds >= 45) {
+          Telemetry.event('realtime_drift', {'age_s': age.inSeconds});
+        }
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
-    if (_channel != null) {
-      Supabase.instance.client.removeChannel(_channel!);
-    }
+    _alarm?.cancel();
+    _tick?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stall orders'),
+        title: Text(l10n.stallOrders),
         actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Center(
+              child: Text(
+                _conn,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ),
+          ),
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
         ],
       ),
@@ -155,7 +216,9 @@ class _StallScreenState extends ConsumerState<StallScreen> {
                           Expanded(
                             child: Text(
                               'Token #${o['token_no'] ?? '—'}'
-                              '${o['table_label'] != null ? ' · ${o['table_label']}' : ''}',
+                              '${o['table_label'] != null ? ' · ${o['table_label']}' : ''}'
+                              '${o['order_type'] != null ? ' · ${o['order_type']}' : ''}'
+                              ' · ${_age(o['created_at'])}',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
@@ -173,13 +236,13 @@ class _StallScreenState extends ConsumerState<StallScreen> {
                       if (status == 'pending' && o['acknowledged_at'] == null)
                         FilledButton(
                           onPressed: () => _acknowledge(o['id'] as String),
-                          child: const Text('Acknowledge'),
+                          child: Text(l10n.acknowledge),
                         ),
                       if (status == 'pending' && o['acknowledged_at'] != null)
                         FilledButton(
                           onPressed: () =>
                               _setStatus(o['id'] as String, 'ready'),
-                          child: const Text('Ready'),
+                          child: Text(l10n.ready),
                         ),
                       if (status == 'ready')
                         FilledButton(

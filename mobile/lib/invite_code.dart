@@ -7,3 +7,9 @@ String normalizeInviteCode(String raw) {
   if (c.contains('-') || c.length < 5) return c;
   return '${c.substring(0, 4)}-${c.substring(4)}';
 }
+
+/// Where to send the user after a successful login/signup.
+String pathAfterAuth(String? invite) {
+  if (invite == null || invite.isEmpty) return '/';
+  return '/join?code=${Uri.encodeComponent(invite)}';
+}

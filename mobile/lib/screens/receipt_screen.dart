@@ -3,6 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../config.dart';
+import '../providers/acting_user.dart';
+import '../providers/shift.dart';
+import '../providers/stall.dart';
+import '../widgets/pin_sheet.dart';
+import '../widgets/reason_picker.dart';
 
 import '../services/errors.dart';
 import '../providers/connectivity.dart';
@@ -36,12 +43,12 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     try {
       final bill = await Supabase.instance.client
           .from('bill')
-          .select('id, total, discount, status, table_label')
+          .select('id, total, discount, status, table_label, token_no')
           .eq('id', widget.billId)
           .single();
       final orders = await Supabase.instance.client
           .from('orders')
-          .select('id, token_no, status, order_item(name, qty, line_total)')
+          .select('id, token_no, status, order_item(id, name, qty, unit_price, line_total, voided_at)')
           .eq('bill_id', widget.billId);
       final payments = await Supabase.instance.client
           .from('payment')
@@ -85,11 +92,25 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     await _customerQr();
     final token = _shareToken;
     if (token == null) return;
-    // Public receipt URL host configured per deploy; share text is enough for M5.
-    final link = 'https://app.example.com/r/$token';
+    final base = receiptSiteUrl.replaceAll(RegExp(r'/$'), '');
+    final url = '$base/r/$token';
+    final share = Uri.parse(
+      'https://wa.me/?text=${Uri.encodeComponent('Your receipt: $url')}',
+    );
+    if (await canLaunchUrl(share)) {
+      await launchUrl(share, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(url)),
+      );
+    }
+  }
+
+
+  Future<void> _smsOrEmail(String channel) async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Share via WhatsApp: $link')),
+      SnackBar(content: Text('$channel not configured')),
     );
   }
 
@@ -125,55 +146,91 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     await Printing.layoutPdf(onLayout: (_) => file.readAsBytes());
   }
 
-  Future<void> _refund() async {
-    if (!ref.read(isOnlineProvider)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Offline — cannot refund')));
-      return;
-    }
-    final reasonCtrl = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Refund bill'),
-        content: TextField(
-          controller: reasonCtrl,
-          decoration: const InputDecoration(labelText: 'Reason'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Refund'),
-          ),
-        ],
-      ),
+  Future<String?> _approverIfNeeded() async {
+    final stallId = ref.read(activeStallIdProvider);
+    if (stallId == null) return null;
+    return showManagerPinSheet(
+      context,
+      stallId: stallId,
+      title: 'Refund needs manager PIN',
     );
-    if (ok != true || !mounted) return;
-    final reason = reasonCtrl.text.trim();
-    reasonCtrl.dispose();
-    if (reason.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Reason required')));
+  }
+
+  Future<void> _refund({bool partial = false}) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Offline — cannot refund')),
+      );
       return;
     }
+    final reason = await showReasonPicker(
+          context,
+          title: partial ? 'Partial refund reason' : 'Refund reason',
+          presets: kRefundReasons,
+        );
+    if (reason == null || reason.isEmpty) return;
+
+    final acting = ref.read(actingUserProvider.notifier).actingStaffId;
+    final shift = ref.read(openShiftProvider).asData?.value;
+    String? approver = await _approverIfNeeded();
+
     try {
-      await Supabase.instance.client.rpc(
-        'refund_bill',
-        params: {'p_bill_id': widget.billId, 'p_reason': reason},
-      );
+      if (partial) {
+        final lines = <Map<String, dynamic>>[];
+        for (final o in _orders) {
+          for (final it in (o['order_item'] as List? ?? [])) {
+            final m = Map<String, dynamic>.from(it as Map);
+            if (m['voided_at'] != null) continue;
+            lines.add({
+              'order_item_id': m['id'],
+              'qty': m['qty'],
+              'name': m['name'],
+            });
+          }
+        }
+        if (lines.isEmpty) return;
+        final chosen = await showDialog<Map<String, dynamic>>(
+          context: context,
+          builder: (ctx) => SimpleDialog(
+            title: const Text('Refund which line?'),
+            children: [
+              for (final l in lines)
+                SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, l),
+                  child: Text('${l['name']} × ${l['qty']}'),
+                ),
+            ],
+          ),
+        );
+        if (chosen == null) return;
+        await Supabase.instance.client.rpc('partial_refund_bill', params: {
+          'p_bill_id': widget.billId,
+          'p_lines': [
+            {
+              'order_item_id': chosen['order_item_id'],
+              'qty': chosen['qty'],
+            }
+          ],
+          'p_reason': reason,
+          'p_method': 'cash',
+          'p_approver_id': approver,
+          'p_acting_staff_id': acting,
+          'p_shift_id': shift?.id,
+        });
+      } else {
+        await Supabase.instance.client.rpc('refund_bill', params: {
+          'p_bill_id': widget.billId,
+          'p_reason': reason,
+          'p_acting_staff_id': acting,
+          'p_approver_id': approver,
+        });
+      }
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(mapError(e))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapError(e))),
+      );
     }
   }
 
@@ -305,6 +362,24 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
                   ),
                   icon: const Icon(Icons.qr_code),
                   label: const Text('Customer QR'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _smsOrEmail('SMS'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  icon: const Icon(Icons.sms_outlined),
+                  label: const Text('SMS'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _smsOrEmail('Email'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  icon: const Icon(Icons.email_outlined),
+                  label: const Text('Email'),
                 ),
                 if (_shareToken != null) ...[
                   const SizedBox(height: 12),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../providers/locale.dart';
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -133,8 +135,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               );
               if (v != null) {
                 setState(() => _lang = v);
-                final p = await SharedPreferences.getInstance();
-                await p.setString('settings_lang', v);
+                await ref.read(localeProvider.notifier).setLang(v);
               }
             },
           ),

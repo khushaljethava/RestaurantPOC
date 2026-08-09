@@ -47,15 +47,46 @@ export async function moveCategory(id: string, stallId: string, dir: -1 | 1) {
   revalidatePath('/menu');
 }
 
+
+export async function deleteCategory(formData: FormData) {
+  const supabase = await createClient();
+  const id = String(formData.get('id'));
+  const reassignTo = String(formData.get('reassign_to') || '').trim();
+
+  const { count } = await supabase
+    .from('menu_item')
+    .select('id', { count: 'exact', head: true })
+    .eq('category_id', id);
+
+  if ((count ?? 0) > 0) {
+    if (!reassignTo) {
+      throw new Error('reassign items to another category before deleting');
+    }
+    const { error: moveErr } = await supabase
+      .from('menu_item')
+      .update({ category_id: reassignTo })
+      .eq('category_id', id);
+    if (moveErr) throw new Error(moveErr.message);
+  }
+
+  const { error } = await supabase.from('category').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/menu');
+}
+
 export async function createItem(formData: FormData) {
   const supabase = await createClient();
   const categoryId = String(formData.get('category_id') || '');
+  const parentId = String(formData.get('parent_id') || '').trim();
+  const quick = String(formData.get('quick_code') || '').trim();
   const { error } = await supabase.from('menu_item').insert({
     stall_id: String(formData.get('stall_id')),
     name: String(formData.get('name')),
     price: Number(formData.get('price')),
     description: String(formData.get('description') || '') || null,
     category_id: categoryId || null,
+    quick_code: quick || null,
+    parent_id: parentId || null,
   });
   if (error) throw new Error(error.message);
   revalidatePath('/menu');
@@ -72,6 +103,8 @@ export async function updateItem(formData: FormData) {
       price: Number(formData.get('price')),
       description: String(formData.get('description') || '') || null,
       category_id: categoryId || null,
+      quick_code: String(formData.get('quick_code') || '').trim() || null,
+      parent_id: String(formData.get('parent_id') || '').trim() || null,
     })
     .eq('id', id);
   if (error) throw new Error(error.message);

@@ -14,7 +14,9 @@ import {
   addTable,
   setTableActive,
   deleteTable,
+  deleteCategory,
 } from './actions';
+import { MenuSearch } from './menu-search';
 import { Btn, Card, EmptyState, Field, PageTitle, SectionTitle, Select } from '@/components/ui';
 
 /** Route /menu — App Router. Existing page restyled. Tables: category, menu_item. */
@@ -33,7 +35,7 @@ export default async function MenuPage() {
       .order('sort_order'),
     supabase
       .from('menu_item')
-      .select('id, stall_id, category_id, name, description, price, is_available, image_url')
+      .select('id, stall_id, category_id, name, description, price, is_available, image_url, quick_code, parent_id')
       .order('name'),
     supabase
       .from('restaurant_table')
@@ -48,7 +50,21 @@ export default async function MenuPage() {
 
   return (
     <div className="space-y-8">
-      <PageTitle subtitle="Categories and items for your stall">Menu</PageTitle>
+      <PageTitle
+        subtitle="Categories and items for your stall"
+        trailing={
+          <div className="flex gap-3 text-sm">
+            <a href="/menu/availability" className="text-surface-tint hover:underline">
+              Availability
+            </a>
+            <a href="/menu/import" className="text-surface-tint hover:underline">
+              CSV import
+            </a>
+          </div>
+        }
+      >
+        Menu
+      </PageTitle>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
@@ -104,6 +120,22 @@ export default async function MenuPage() {
                       ↓
                     </Btn>
                   </form>
+                  <form action={deleteCategory} className="flex flex-wrap items-center gap-1">
+                    <input type="hidden" name="id" value={c.id} />
+                    <Select name="reassign_to" className="h-9" defaultValue="">
+                      <option value="">Reassign to…</option>
+                      {(categories ?? [])
+                        .filter((other) => other.id !== c.id)
+                        .map((other) => (
+                          <option key={other.id} value={other.id}>
+                            {other.name}
+                          </option>
+                        ))}
+                    </Select>
+                    <Btn type="submit" variant="danger" className="h-9 px-2 text-xs">
+                      Delete
+                    </Btn>
+                  </form>
                 </Card>
               ))}
             </div>
@@ -111,9 +143,10 @@ export default async function MenuPage() {
 
           <section>
             <SectionTitle>Items</SectionTitle>
-            <div className="space-y-3">
+            <MenuSearch>
               {mine.map((i) => (
-                <Card key={i.id} className="space-y-3">
+                <div key={i.id} data-search={`${i.name} ${i.quick_code ?? ''}`}>
+                <Card className="space-y-3">
                   <div className="flex items-start gap-3">
                     {i.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -144,6 +177,26 @@ export default async function MenuPage() {
                           required
                           className="h-9 w-24 tabular-nums"
                         />
+                        <Field
+                          name="quick_code"
+                          defaultValue={i.quick_code ?? ''}
+                          placeholder="Code"
+                          className="h-9 w-20"
+                        />
+                        <Select
+                          name="parent_id"
+                          defaultValue={i.parent_id ?? ''}
+                          className="h-9"
+                        >
+                          <option value="">No parent (root)</option>
+                          {mine
+                            .filter((p) => p.id !== i.id && !p.parent_id)
+                            .map((p) => (
+                              <option key={p.id} value={p.id}>
+                                Variant of {p.name}
+                              </option>
+                            ))}
+                        </Select>
                         <Field
                           name="description"
                           defaultValue={i.description ?? ''}
@@ -230,6 +283,7 @@ export default async function MenuPage() {
                     </p>
                   </div>
                 </Card>
+                </div>
               ))}
               {mine.length === 0 && (
                 <Card className="p-0">
@@ -238,7 +292,7 @@ export default async function MenuPage() {
                   </EmptyState>
                 </Card>
               )}
-            </div>
+            </MenuSearch>
           </section>
 
           <details className="rounded-md border border-border bg-surface p-5 shadow-card">
@@ -264,6 +318,17 @@ export default async function MenuPage() {
               <input type="hidden" name="stall_id" value={myStallId} />
               <Field name="name" placeholder="Item name" required />
               <Field name="description" placeholder="Description" />
+              <Field name="quick_code" placeholder="Quick code (e.g. 21)" />
+              <Select name="parent_id" className="w-full">
+                <option value="">No parent (root)</option>
+                {mine
+                  .filter((p) => !p.parent_id)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      Variant of {p.name}
+                    </option>
+                  ))}
+              </Select>
               <Field
                 name="price"
                 type="number"
